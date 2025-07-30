@@ -145,15 +145,14 @@
                                     <div class="kapal-card">
                                         <div class="kapal-header">
                                             <div class="kapal-info">
-                                                <h6 class="kapal-name">{{ $data['kapal']->nama_kapal }}</h6>
-                                                <span class="kapal-code">{{ $data['kapal']->kode_kapal ?? 'N/A' }}</span>
+                                                <h6 class="kapal-name">{{ $data->nama_kapal ?? 'Kapal Tidak Ditemukan' }}</h6>
                                             </div>
                                             <div class="kapal-actions">
-                                                <a href="{{ route('abk.kapal', $data['kapal']->id_kapal) }}" 
+                                                {{-- <a href="{{ route('abk.kapal', $data->id ?? 0) }}" 
                                                    class="btn btn-sm btn-outline-primary">
                                                     <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('abk.mutasi.create', $data['kapal']->id_kapal) }}" 
+                                                </a> --}}
+                                                <a href="{{ route('abk.mutasi.create', $data->id ?? 0) }}" 
                                                    class="btn btn-sm btn-outline-success">
                                                     <i class="bi bi-arrow-repeat"></i>
                                                 </a>

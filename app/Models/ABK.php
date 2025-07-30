@@ -37,7 +37,7 @@ class ABK extends Model
      */
     public function kapal()
     {
-        return $this->belongsTo(Kapal::class, 'id_kapal', 'id_kapal');
+        return $this->belongsTo(Kapal::class, 'id_kapal', 'id');
     }
 
     /**

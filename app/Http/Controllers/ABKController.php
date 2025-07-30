@@ -27,10 +27,19 @@ class ABKController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
             
-            // Statistik ABK per kapal
-            $abkPerKapal = Kapal::withCount(['abk', 'abkAktif', 'abkTidakAktif'])
+            // Statistik ABK per kapal - mengubah struktur data
+            $abkPerKapal = Kapal::select('id', 'nama_kapal')
                 ->orderBy('nama_kapal')
-                ->get();
+                ->get()
+                ->map(function($kapal) {
+                    return [
+                        'id' => $kapal->id,
+                        'nama_kapal' => $kapal->nama_kapal,
+                        'total_abk' => ABK::where('id_kapal', $kapal->id)->count(),
+                        'abk_aktif' => ABK::where('id_kapal', $kapal->id)->where('status_abk', 'Aktif')->count(),
+                        'abk_tidak_aktif' => ABK::where('id_kapal', $kapal->id)->where('status_abk', '!=', 'Aktif')->count(),
+                    ];
+                });
 
             // Total statistik keseluruhan
             $statistics = [
@@ -52,7 +61,7 @@ class ABKController extends Controller
             return view('kelolaABK.index', [
                 'abkList' => $abkList,
                 'abkPerKapal' => $abkPerKapal,
-                'totalStatistik' => $statistics, // ubah dari 'statistics' ke 'totalStatistik'
+                'totalStatistik' => $statistics,
                 'mutasiTerbaru' => $mutasiTerbaru,
                 'daftarKapal' => $daftarKapal
             ]);
@@ -76,9 +85,9 @@ class ABKController extends Controller
             }
             
             // Cek apakah ada data jabatan
-            if ($daftarJabatan->isEmpty()) {
-                return back()->with('warning', 'Belum ada data jabatan. Silakan tambah data jabatan terlebih dahulu.');
-            }
+            // if ($daftarJabatan->isEmpty()) {
+            //     return back()->with('warning', 'Belum ada data jabatan. Silakan tambah data jabatan terlebih dahulu.');
+            // }
             
             return view('kelolaABK.create', compact('daftarKapal', 'daftarJabatan'));
     }

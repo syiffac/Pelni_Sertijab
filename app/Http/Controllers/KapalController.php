@@ -75,7 +75,7 @@ class KapalController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nama_kapal' => 'required|string|max:255|unique:kapal,nama_kapal,' . $id . ',id',
+            'nama_kapal' => 'required|string|max:255|unique:kapal,nama_kapal,' . $id,
             'jenis_kapal' => 'required|string|max:100',
         ]);
 

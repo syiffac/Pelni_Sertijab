@@ -127,21 +127,21 @@ class MonitoringController extends Controller
     {
         $monitoringData = DB::table('kapal')
             ->select(
-                'kapal.id_kapal',
+                'kapal.id',
                 'kapal.nama_kapal',
-                DB::raw('COUNT(DISTINCT mutasi.id_mutasi) as total_mutasi'),
-                DB::raw('COUNT(DISTINCT CASE WHEN sertijab.id_sertijab IS NOT NULL THEN mutasi.id_mutasi END) as submitted'),
-                DB::raw('COUNT(DISTINCT CASE WHEN sertijab.status_verifikasi = "verified" THEN mutasi.id_mutasi END) as verified'),
-                DB::raw('COUNT(DISTINCT CASE WHEN sertijab.status_verifikasi = "rejected" THEN mutasi.id_mutasi END) as rejected'),
-                DB::raw('COUNT(DISTINCT CASE WHEN sertijab.status_verifikasi = "pending" THEN mutasi.id_mutasi END) as pending')
+                DB::raw('COUNT(DISTINCT mutasi.id) as total_mutasi'),
+                DB::raw('COUNT(DISTINCT CASE WHEN sertijab.id IS NOT NULL THEN mutasi.id END) as submitted'),
+                DB::raw('COUNT(DISTINCT CASE WHEN sertijab.status_verifikasi = "verified" THEN mutasi.id END) as verified'),
+                DB::raw('COUNT(DISTINCT CASE WHEN sertijab.status_verifikasi = "rejected" THEN mutasi.id END) as rejected'),
+                DB::raw('COUNT(DISTINCT CASE WHEN sertijab.status_verifikasi = "pending" THEN mutasi.id END) as pending')
             )
             ->leftJoin('mutasi', function($join) {
-                $join->on('kapal.id_kapal', '=', 'mutasi.id_kapal_asal')
-                     ->orOn('kapal.id_kapal', '=', 'mutasi.id_kapal_tujuan');
+                $join->on('kapal.id', '=', 'mutasi.id_kapal_asal')
+                     ->orOn('kapal.id', '=', 'mutasi.id_kapal_tujuan');
             })
-            ->leftJoin('sertijab', 'mutasi.id_mutasi', '=', 'sertijab.id_mutasi')
+            ->leftJoin('sertijab', 'mutasi.id', '=', 'sertijab.id')
             ->where('mutasi.perlu_sertijab', true)
-            ->groupBy('kapal.id_kapal', 'kapal.nama_kapal')
+            ->groupBy('kapal.id', 'kapal.nama_kapal')
             ->get();
         
         return $monitoringData;

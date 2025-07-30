@@ -23,12 +23,12 @@ class Kapal extends Model
      */
     public function abk(): HasMany
     {
-        return $this->hasMany(ABK::class, 'id_kapal', 'id_kapal');
+        return $this->hasMany(ABK::class, 'id_kapal', 'id');
     }
 
-        public function abkAktif()
+    public function abkAktif()
     {
-        return $this->hasMany(ABK::class, 'id_kapal', 'id_kapal')->where('status_abk', 'Aktif');
+        return $this->hasMany(ABK::class, 'id_kapal', 'id')->where('status_abk', 'Aktif');
     }
 
     /**
@@ -36,7 +36,7 @@ class Kapal extends Model
      */
     public function abkTidakAktif()
     {
-        return $this->hasMany(ABK::class, 'id_kapal', 'id_kapal')->where('status_abk', '!=', 'Aktif');
+        return $this->hasMany(ABK::class, 'id_kapal', 'id')->where('status_abk', '!=', 'Aktif');
     }
 
     /**
@@ -44,7 +44,7 @@ class Kapal extends Model
      */
     public function mutasiAsal(): HasMany
     {
-        return $this->hasMany(Mutasi::class, 'id_kapal_asal', 'id_kapal');
+        return $this->hasMany(Mutasi::class, 'id_kapal_asal', 'id');
     }
 
     /**
@@ -52,7 +52,7 @@ class Kapal extends Model
      */
     public function mutasiTujuan(): HasMany
     {
-        return $this->hasMany(Mutasi::class, 'id_kapal_tujuan', 'id_kapal');
+        return $this->hasMany(Mutasi::class, 'id_kapal_tujuan', 'id');
     }
 
     /**
@@ -60,8 +60,8 @@ class Kapal extends Model
      */
     public function allMutasi()
     {
-        return Mutasi::where('id_kapal_asal', $this->id_kapal)
-                     ->orWhere('id_kapal_tujuan', $this->id_kapal);
+        return Mutasi::where('id_kapal_asal', $this->id)
+                     ->orWhere('id_kapal_tujuan', $this->id);
     }
 
     /**
