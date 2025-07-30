@@ -85,7 +85,7 @@
                 </a>
                 <ul class="submenu" id="submenu-monitoring">
                     <li><a href="{{ route('monitoring.index') }}" class="submenu-link {{ request()->routeIs('monitoring.index') ? 'active' : '' }}">Dashboard Monitoring</a></li>
-                    <li><a href="{{ route('monitoring.sertijab') }}" class="submenu-link {{ request()->routeIs('monitoring.sertijab*') ? 'active' : '' }}">Monitoring Sertijab</a></li>
+                    <li><a href="{{ route('monitoring.sertijab') }}" class="submenu-link {{ request()->routeIs('monitoring.sertijab') ? 'active' : '' }}">Dokumen Sertijab</a></li>
                 </ul>
             </li>
 

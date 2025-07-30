@@ -1,4 +1,5 @@
 <?php
+// filepath: c:\laragon\www\SertijabPelni\database\migrations\2025_07_23_062219_create_mutasi_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -13,18 +14,6 @@ return new class extends Migration
     {
         Schema::create('mutasi', function (Blueprint $table) {
             $table->integer('id_mutasi')->primary();
-            $table->integer('NRP');
-            $table->timestamps();
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::create('mutasi', function (Blueprint $table) {
-            $table->integer('id_mutasi')->primary();
             $table->integer('nrp_turun');
             $table->integer('nrp_naik')->nullable();
             $table->integer('id_kapal_asal');
@@ -35,7 +24,7 @@ return new class extends Migration
             $table->string('jenis_mutasi');
             $table->string('nama_mutasi');
             $table->string('notes_mutasi')->nullable();
-            $table->boolean('perlu_sertijab');
+            $table->boolean('perlu_sertijab')->default(true);
             $table->date('TMT');
             $table->date('TAT')->nullable();
             $table->timestamps();
@@ -47,5 +36,13 @@ return new class extends Migration
             $table->foreign('id_jabatan_lama')->references('id_jabatan')->on('jabatan');
             $table->foreign('id_jabatan_baru')->references('id_jabatan')->on('jabatan');
         });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('mutasi');
     }
 };

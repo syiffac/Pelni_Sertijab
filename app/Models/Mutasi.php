@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Mutasi extends Model
 {
+    use HasFactory;
+
     protected $table = 'mutasi';
     protected $primaryKey = 'id_mutasi';
-    public $incrementing = false;
-    protected $keyType = 'integer';
-
+    
     protected $fillable = [
-        'id_mutasi',
         'nrp_turun',
         'nrp_naik',
         'id_kapal_asal',
@@ -22,53 +24,71 @@ class Mutasi extends Model
         'case_mutasi',
         'jenis_mutasi',
         'nama_mutasi',
-        'notes_mutasi',
-        'perlu_sertijab',
         'TMT',
-        'TAT'
+        'TAT',
+        'notes_mutasi',
+        'perlu_sertijab'
     ];
 
-    protected $dates = ['TMT', 'TAT'];
+    protected $casts = [
+        'TMT' => 'datetime',
+        'TAT' => 'datetime',
+        'perlu_sertijab' => 'boolean'
+    ];
 
-    // Relasi ke ABK yang turun
-    public function abkTurun()
+    /**
+     * Get the ABK turun
+     */
+    public function abkTurun(): BelongsTo
     {
         return $this->belongsTo(ABK::class, 'nrp_turun', 'NRP');
     }
 
-    // Relasi ke ABK yang naik
-    public function abkNaik()
+    /**
+     * Get the ABK naik
+     */
+    public function abkNaik(): BelongsTo
     {
         return $this->belongsTo(ABK::class, 'nrp_naik', 'NRP');
     }
 
-    // Relasi ke Kapal asal
-    public function kapalAsal()
+    /**
+     * Get the kapal asal
+     */
+    public function kapalAsal(): BelongsTo
     {
-        return $this->belongsTo(Kapal::class, 'id_kapal_asal');
+        return $this->belongsTo(Kapal::class, 'id_kapal_asal', 'id_kapal');
     }
 
-    // Relasi ke Kapal tujuan
-    public function kapalTujuan()
+    /**
+     * Get the kapal tujuan
+     */
+    public function kapalTujuan(): BelongsTo
     {
-        return $this->belongsTo(Kapal::class, 'id_kapal_tujuan');
+        return $this->belongsTo(Kapal::class, 'id_kapal_tujuan', 'id_kapal');
     }
 
-    // Relasi ke Jabatan lama
-    public function jabatanLama()
+    /**
+     * Get the jabatan lama
+     */
+    public function jabatanLama(): BelongsTo
     {
-        return $this->belongsTo(Jabatan::class, 'id_jabatan_lama');
+        return $this->belongsTo(Jabatan::class, 'id_jabatan_lama', 'id_jabatan');
     }
 
-    // Relasi ke Jabatan baru
-    public function jabatanBaru()
+    /**
+     * Get the jabatan baru
+     */
+    public function jabatanBaru(): BelongsTo
     {
-        return $this->belongsTo(Jabatan::class, 'id_jabatan_baru');
+        return $this->belongsTo(Jabatan::class, 'id_jabatan_baru', 'id_jabatan');
     }
 
-    // Relasi ke Sertijab
-    public function sertijab()
+    /**
+     * Get the sertijab
+     */
+    public function sertijab(): HasOne
     {
-        return $this->hasOne(Sertijab::class, 'id_mutasi');
+        return $this->hasOne(Sertijab::class, 'id_mutasi', 'id_mutasi');
     }
 }

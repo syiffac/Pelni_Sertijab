@@ -2,37 +2,46 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Sertijab extends Model
 {
+    use HasFactory;
+
     protected $table = 'sertijab';
     protected $primaryKey = 'id_sertijab';
-    public $incrementing = false;
-    protected $keyType = 'integer';
-
+    public $timestamps = true;
+    
     protected $fillable = [
-        'id_sertijab',
         'id_mutasi',
         'file_path',
         'status_verifikasi',
         'notes',
-        'keterangan_pengunggah_puk',
-        'uploaded_at',
         'verified_by_admin_nrp',
-        'verified_at'
+        'verified_at',
+        'uploaded_at',
+        'keterangan_pengunggah_puk'
     ];
-
-    protected $dates = ['uploaded_at', 'verified_at'];
-
-    // Relasi ke Mutasi
-    public function mutasi()
+    
+    protected $casts = [
+        'verified_at' => 'datetime',
+        'uploaded_at' => 'datetime',
+    ];
+    
+    /**
+     * Get the mutasi that owns the sertijab
+     */
+    public function mutasi(): BelongsTo
     {
-        return $this->belongsTo(Mutasi::class, 'id_mutasi');
+        return $this->belongsTo(Mutasi::class, 'id_mutasi', 'id_mutasi');
     }
-
-    // Relasi ke Admin verifikator
-    public function adminVerifikator()
+    
+    /**
+     * Get the admin verifikator (if Admin model exists)
+     */
+    public function adminVerifikator(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'verified_by_admin_nrp', 'NRP_admin');
     }
