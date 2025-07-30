@@ -9,17 +9,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Exports\ABKExport;
 use App\Exports\ABKTemplateExport;
+use App\Models\Mutasi;
 use Maatwebsite\Excel\Facades\Excel;
-use PDF;
+use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ABKController extends Controller
 {
+
     /**
      * Display a listing of ABK
      */
     public function index()
     {
-        try {
             // Ambil semua ABK dengan relasi kapal dan jabatan
             $abkList = ABK::with(['kapal', 'jabatanNaik', 'jabatanTurun'])
                 ->orderBy('created_at', 'desc')
@@ -42,26 +44,29 @@ class ABKController extends Controller
             // Daftar kapal untuk filter
             $daftarKapal = Kapal::orderBy('nama_kapal')->get();
 
-            return view('kelolaABK.index', compact('abkList', 'abkPerKapal', 'statistics', 'daftarKapal'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
-    }
+            $mutasiTerbaru = Mutasi::with(['kapalAsal', 'kapalTujuan'])
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get();
 
+            return view('kelolaABK.index', [
+                'abkList' => $abkList,
+                'abkPerKapal' => $abkPerKapal,
+                'totalStatistik' => $statistics, // ubah dari 'statistics' ke 'totalStatistik'
+                'mutasiTerbaru' => $mutasiTerbaru,
+                'daftarKapal' => $daftarKapal
+            ]);
+    }
     /**
      * Show the form for creating a new ABK
      */
     public function create()
     {
-        try {
-            // Ambil data kapal aktif
-            $daftarKapal = Kapal::where('status_kapal', 'Aktif')
-                ->orderBy('nama_kapal')
-                ->get();
+            $daftarKapal = Kapal::orderBy('nama_kapal')->get(); 
             
             // Ambil data jabatan
-            $daftarJabatan = Jabatan::where('status_jabatan', 'Aktif')
-                ->orderBy('nama_jabatan')
+            $daftarJabatan = Jabatan::
+                orderBy('nama_jabatan')
                 ->get();
             
             // Cek apakah ada data kapal
@@ -76,9 +81,6 @@ class ABKController extends Controller
             }
             
             return view('kelolaABK.create', compact('daftarKapal', 'daftarJabatan'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
     }
 
     /**
@@ -217,21 +219,15 @@ class ABKController extends Controller
      */
     public function edit($id)
     {
-        try {
             $abk = ABK::with(['kapal', 'jabatanNaik', 'jabatanTurun'])->findOrFail($id);
-            
-            $daftarKapal = Kapal::where('status_kapal', 'Aktif')
-                ->orderBy('nama_kapal')
-                ->get();
-                
+
+            $daftarKapal = Kapal::orderBy('nama_kapal')->get();
+
             $daftarJabatan = Jabatan::where('status_jabatan', 'Aktif')
                 ->orderBy('nama_jabatan')
                 ->get();
             
             return view('kelolaABK.edit', compact('abk', 'daftarKapal', 'daftarJabatan'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Data ABK tidak ditemukan');
-        }
     }
 
     /**
@@ -298,20 +294,15 @@ class ABKController extends Controller
      */
     public function export()
     {
-        try {
             $daftarKapal = Kapal::orderBy('nama_kapal')->get();
             
             $exportStats = [
                 'total_abk' => ABK::count(),
                 'abk_aktif' => ABK::where('status_abk', 'Aktif')->count(),
                 'total_kapal' => Kapal::count(),
-                'kapal_aktif' => Kapal::where('status_kapal', 'Aktif')->count(),
             ];
-            
+
             return view('kelolaABK.export', compact('daftarKapal', 'exportStats'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
     }
 
     /**
@@ -397,9 +388,7 @@ class ABKController extends Controller
      */
     public function getKapalList()
     {
-        try {
             $kapalList = Kapal::select('id_kapal', 'nama_kapal', 'kode_kapal')
-                ->where('status_kapal', 'Aktif')
                 ->orderBy('nama_kapal')
                 ->get();
 
@@ -407,12 +396,6 @@ class ABKController extends Controller
                 'success' => true,
                 'data' => $kapalList
             ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ]);
-        }
     }
 
     /**
@@ -488,7 +471,6 @@ class ABKController extends Controller
      */
     public function mutasiIndex()
     {
-        try {
             $mutasiList = ABK::with(['kapal', 'jabatanNaik', 'jabatanTurun'])
                 ->whereNotNull('nama_mutasi')
                 ->orderBy('tmt', 'desc')
@@ -506,9 +488,6 @@ class ABKController extends Controller
             ];
 
             return view('kelolaABK.mutasi.index', compact('mutasiList', 'statistics'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
     }
 
     /**
@@ -516,19 +495,11 @@ class ABKController extends Controller
      */
     public function mutasiCreate()
     {
-        try {
-            $daftarKapal = Kapal::where('status_kapal', 'Aktif')
-                ->orderBy('nama_kapal')
-                ->get();
-                
-            $daftarJabatan = Jabatan::where('status_jabatan', 'Aktif')
-                ->orderBy('nama_jabatan')
-                ->get();
+            $daftarKapal = Kapal::orderBy('nama_kapal')->get();
+
+            $daftarJabatan = Jabatan::orderBy('nama_jabatan')->get();
 
             return view('kelolaABK.mutasi.create', compact('daftarKapal', 'daftarJabatan'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
     }
 
     /**
@@ -612,22 +583,13 @@ class ABKController extends Controller
      */
     public function mutasiEdit($id)
     {
-        try {
             $mutasi = ABK::with(['kapal', 'jabatanNaik', 'jabatanTurun'])->findOrFail($id);
             
-            $daftarKapal = Kapal::where('status_kapal', 'Aktif')
-                ->orderBy('nama_kapal')
-                ->get();
-                
-            $daftarJabatan = Jabatan::where('status_jabatan', 'Aktif')
-                ->orderBy('nama_jabatan')
-                ->get();
+            $daftarKapal = Kapal::orderBy('nama_kapal')->get();
+            $daftarJabatan = Jabatan::orderBy('nama_jabatan')->get();
             
             return view('kelolaABK.mutasi.edit', compact('mutasi', 'daftarKapal', 'daftarJabatan'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Data mutasi tidak ditemukan');
         }
-    }
 
     /**
      * Update the specified mutation

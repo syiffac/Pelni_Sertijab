@@ -40,7 +40,7 @@
 
     <!-- Statistics Cards -->
     <div class="row mb-4">
-        <div class="col-lg-4 col-md-6 mb-3">
+        <div class="col-lg-6 col-md-6 mb-3">
             <div class="stat-card">
                 <div class="stat-icon bg-primary">
                     <i class="bi bi-ship"></i>
@@ -51,25 +51,14 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-4 col-md-6 mb-3">
+        <div class="col-lg-6 col-md-6 mb-3">
             <div class="stat-card">
                 <div class="stat-icon bg-success">
-                    <i class="bi bi-check-circle"></i>
+                    <i class="bi bi-people"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-number">{{ $statistics['kapal_aktif'] ?? 0 }}</div>
-                    <div class="stat-label">Kapal Aktif</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-md-6 mb-3">
-            <div class="stat-card">
-                <div class="stat-icon bg-warning">
-                    <i class="bi bi-exclamation-triangle"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-number">{{ $statistics['kapal_tidak_aktif'] ?? 0 }}</div>
-                    <div class="stat-label">Tidak Aktif</div>
+                    <div class="stat-number">{{ $statistics['total_abk'] ?? 0 }}</div>
+                    <div class="stat-label">Total ABK</div>
                 </div>
             </div>
         </div>
@@ -98,13 +87,9 @@
                     <thead>
                         <tr>
                             <th width="5%">#</th>
-                            <th width="20%">Nama Kapal</th>
-                            <th width="15%">Kode Kapal</th>
-                            <th width="15%">Jenis Kapal</th>
-                            <th width="10%">Tahun</th>
-                            <th width="10%">Status</th>
-                            <th width="20%">Keterangan</th>
-                            <th width="5%">Aksi</th>
+                            <th width="45%">Nama Kapal</th>
+                            <th width="30%">Jenis Kapal</th>
+                            <th width="20%">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -114,47 +99,16 @@
                             <td>
                                 <div class="kapal-info">
                                     <div class="kapal-name">{{ $kapal->nama_kapal }}</div>
-                                    <small class="text-muted">ID: {{ $kapal->id_kapal }}</small>
+                                    <small class="text-muted">ID: {{ $kapal->id }}</small>
                                 </div>
                             </td>
-                            <td>
-                                <span class="badge bg-info">{{ $kapal->kode_kapal }}</span>
-                            </td>
                             <td>{{ $kapal->jenis_kapal }}</td>
-                            <td>{{ $kapal->tahun_pembuatan ?? '-' }}</td>
-                            <td>
-                                @if($kapal->status_kapal == 'Aktif')
-                                    <span class="badge bg-success">
-                                        <i class="bi bi-check-circle me-1"></i>
-                                        Aktif
-                                    </span>
-                                @elseif($kapal->status_kapal == 'Maintenance')
-                                    <span class="badge bg-warning">
-                                        <i class="bi bi-wrench me-1"></i>
-                                        Maintenance
-                                    </span>
-                                @else
-                                    <span class="badge bg-secondary">
-                                        <i class="bi bi-x-circle me-1"></i>
-                                        Tidak Aktif
-                                    </span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($kapal->keterangan)
-                                    <span class="keterangan-text" title="{{ $kapal->keterangan }}">
-                                        {{ Str::limit($kapal->keterangan, 30) }}
-                                    </span>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editKapal({{ $kapal->id_kapal }})" title="Edit">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editKapal({{ $kapal->id }})" title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteKapal({{ $kapal->id_kapal }}, '{{ $kapal->nama_kapal }}')" title="Hapus">
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteKapal({{ $kapal->id }}, '{{ $kapal->nama_kapal }}')" title="Hapus">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -162,7 +116,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-4">
+                            <td colspan="4" class="text-center py-4">
                                 <div class="empty-state">
                                     <i class="bi bi-ship display-4 text-muted mb-3"></i>
                                     <h6 class="text-muted">Belum ada data kapal</h6>
@@ -600,7 +554,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Edit kapal function
 function editKapal(id) {
-    window.location.href = `{{ route('kapal.edit', '') }}/${id}`;
+    window.location.href = "{{ route('kapal.edit', ':id') }}".replace(':id', id);
 }
 
 // Delete kapal function
@@ -609,7 +563,10 @@ function deleteKapal(id, name) {
     document.getElementById('kapalName').textContent = name;
     
     document.getElementById('confirmDelete').onclick = function() {
-        fetch(`{{ route('kapal.destroy', '') }}/${id}`, {
+        // Ubah cara membangun URL
+        const url = "/kapal/" + id;
+        
+        fetch(url, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),

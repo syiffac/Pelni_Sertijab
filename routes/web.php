@@ -11,28 +11,18 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ProfileController;
 
 
-
-// Root redirect
-Route::get('/', function () {
-    if (auth()->guard('admin')->check()) {
-        return redirect()->route('dashboard');
-    }
-    return redirect()->route('login');
-});
-
 // Guest routes (only accessible when not logged in)
-//Route::middleware(['guest:admin'])->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 //});
 
-// Authenticated routes (only accessible when logged in)
-// Route::middleware(['auth:admin'])->group(function () {
+
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    Route::get('/wak', [ABKController::class, 'index']);
     
     // ABK routes - PERBAIKAN PENTING: Urutkan berdasarkan spesifisitas
     Route::prefix('abk')->name('abk.')->group(function () {

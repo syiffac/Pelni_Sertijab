@@ -71,16 +71,6 @@
                                 </div>
                             </div>
 
-                            <!-- Kode Kapal -->
-                            <div class="col-lg-6">
-                                <div class="form-group mb-3">
-                                    <label for="kode_kapal" class="form-label required">Kode Kapal</label>
-                                    <input type="text" class="form-control" id="kode_kapal" name="kode_kapal" 
-                                           placeholder="Contoh: BR001" required maxlength="50">
-                                    <div class="form-text">Kode unik untuk identifikasi kapal</div>
-                                </div>
-                            </div>
-
                             <!-- Jenis Kapal -->
                             <div class="col-lg-6">
                                 <div class="form-group mb-3">
@@ -95,39 +85,6 @@
                                         <option value="Kapal Penyeberangan">Kapal Penyeberangan</option>
                                         <option value="Lainnya">Lainnya</option>
                                     </select>
-                                </div>
-                            </div>
-
-                            <!-- Tahun Pembuatan -->
-                            <div class="col-lg-6">
-                                <div class="form-group mb-3">
-                                    <label for="tahun_pembuatan" class="form-label">Tahun Pembuatan</label>
-                                    <input type="number" class="form-control" id="tahun_pembuatan" name="tahun_pembuatan" 
-                                           placeholder="Contoh: 2020" min="1900" max="{{ date('Y') }}">
-                                    <div class="form-text">Tahun pembuatan kapal (opsional)</div>
-                                </div>
-                            </div>
-
-                            <!-- Status Kapal -->
-                            <div class="col-lg-6">
-                                <div class="form-group mb-3">
-                                    <label for="status_kapal" class="form-label required">Status Kapal</label>
-                                    <select class="form-select" id="status_kapal" name="status_kapal" required>
-                                        <option value="">-- Pilih Status --</option>
-                                        <option value="Aktif" selected>Aktif</option>
-                                        <option value="Tidak Aktif">Tidak Aktif</option>
-                                        <option value="Maintenance">Maintenance</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Keterangan -->
-                            <div class="col-12">
-                                <div class="form-group mb-3">
-                                    <label for="keterangan" class="form-label">Keterangan</label>
-                                    <textarea class="form-control" id="keterangan" name="keterangan" 
-                                              rows="4" placeholder="Keterangan tambahan tentang kapal (opsional)" maxlength="500"></textarea>
-                                    <div class="form-text">Maksimal 500 karakter</div>
                                 </div>
                             </div>
                         </div>
@@ -441,14 +398,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitText = submitButton.querySelector('.submit-text');
     const submitSpinner = submitButton.querySelector('.spinner-border');
     
-    // Auto uppercase kode kapal
-    const kodeKapalInput = document.getElementById('kode_kapal');
-    if (kodeKapalInput) {
-        kodeKapalInput.addEventListener('input', function() {
-            this.value = this.value.toUpperCase();
-        });
-    }
-    
     // Form submission
     form.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -470,13 +419,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 isValid = false;
             }
         });
-        
-        // Additional validations
-        const tahunPembuatan = document.getElementById('tahun_pembuatan');
-        if (tahunPembuatan.value && (tahunPembuatan.value < 1900 || tahunPembuatan.value > new Date().getFullYear())) {
-            showValidationError(tahunPembuatan, 'Tahun pembuatan tidak valid');
-            isValid = false;
-        }
         
         return isValid;
     }

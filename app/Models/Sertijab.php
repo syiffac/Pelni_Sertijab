@@ -11,7 +11,7 @@ class Sertijab extends Model
     use HasFactory;
 
     protected $table = 'sertijab';
-    protected $primaryKey = 'id_sertijab';
+    protected $primaryKey = 'id';
     public $timestamps = true;
     
     protected $fillable = [

@@ -11,15 +11,11 @@ class Kapal extends Model
     use HasFactory;
 
     protected $table = 'kapal';
-    protected $primaryKey = 'id_kapal';
+    protected $primaryKey = 'id';
     
     protected $fillable = [
         'nama_kapal',
         'jenis_kapal',
-        'kapasitas_penumpang',
-        'tahun_pembuatan',
-        'flag_state',
-        'status_kapal'
     ];
 
     /**
@@ -28,6 +24,19 @@ class Kapal extends Model
     public function abk(): HasMany
     {
         return $this->hasMany(ABK::class, 'id_kapal', 'id_kapal');
+    }
+
+        public function abkAktif()
+    {
+        return $this->hasMany(ABK::class, 'id_kapal', 'id_kapal')->where('status_abk', 'Aktif');
+    }
+
+    /**
+     * Get ABK tidak aktif untuk kapal ini
+     */
+    public function abkTidakAktif()
+    {
+        return $this->hasMany(ABK::class, 'id_kapal', 'id_kapal')->where('status_abk', '!=', 'Aktif');
     }
 
     /**

@@ -13,13 +13,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('mutasi', function (Blueprint $table) {
-            $table->integer('id_mutasi')->primary();
+            $table->id();
             $table->integer('nrp_turun');
             $table->integer('nrp_naik')->nullable();
-            $table->integer('id_kapal_asal');
-            $table->integer('id_kapal_tujuan')->nullable();
-            $table->integer('id_jabatan_lama');
-            $table->integer('id_jabatan_baru')->nullable();
+            $table->unsignedBigInteger('id_kapal_asal');
+            $table->unsignedBigInteger('id_kapal_tujuan')->nullable();
+            $table->unsignedBigInteger('id_jabatan_lama');
+            $table->unsignedBigInteger('id_jabatan_baru')->nullable();
             $table->string('case_mutasi');
             $table->string('jenis_mutasi');
             $table->string('nama_mutasi');
@@ -31,10 +31,10 @@ return new class extends Migration
         
             $table->foreign('nrp_turun')->references('NRP')->on('ABK');
             $table->foreign('nrp_naik')->references('NRP')->on('ABK');
-            $table->foreign('id_kapal_asal')->references('id_kapal')->on('kapal');
-            $table->foreign('id_kapal_tujuan')->references('id_kapal')->on('kapal');
-            $table->foreign('id_jabatan_lama')->references('id_jabatan')->on('jabatan');
-            $table->foreign('id_jabatan_baru')->references('id_jabatan')->on('jabatan');
+            $table->foreign('id_kapal_asal')->references('id')->on('kapal');
+            $table->foreign('id_kapal_tujuan')->references('id')->on('kapal');
+            $table->foreign('id_jabatan_lama')->references('id')->on('jabatan');
+            $table->foreign('id_jabatan_baru')->references('id')->on('jabatan');
         });
     }
 

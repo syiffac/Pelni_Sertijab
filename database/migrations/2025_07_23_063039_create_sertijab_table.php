@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('sertijab', function (Blueprint $table) {
-            $table->integer('id_sertijab')->primary();
-            $table->integer('id_mutasi');
+            $table->id();
+            $table->foreignId('id_mutasi')->constrained('mutasi');
             $table->string('file_path');
             $table->string('status_verifikasi');
             $table->text('notes')->nullable();
@@ -22,8 +22,8 @@ return new class extends Migration
             $table->integer('verified_by_admin_nrp')->nullable();
             $table->timestamp('verified_at')->nullable();
             $table->timestamps();
-        
-            $table->foreign('id_mutasi')->references('id_mutasi')->on('mutasi');
+
+            $table->foreign('id_mutasi')->references('id')->on('mutasi');
             $table->foreign('verified_by_admin_nrp')->references('NRP_admin')->on('users');
         });
     }

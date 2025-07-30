@@ -12,7 +12,7 @@ class Mutasi extends Model
     use HasFactory;
 
     protected $table = 'mutasi';
-    protected $primaryKey = 'id_mutasi';
+    protected $primaryKey = 'id';
     
     protected $fillable = [
         'nrp_turun',
