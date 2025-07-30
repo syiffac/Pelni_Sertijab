@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('abk', function (Blueprint $table) {
             $table->id();
-            $table->integer('NRP')->primary();
+            $table->integer('NRP')->unique();
             $table->string('nama_abk');
             $table->string('status_abk');
             $table->unsignedBigInteger('id_kapal');

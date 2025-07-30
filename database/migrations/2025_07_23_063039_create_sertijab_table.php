@@ -23,7 +23,6 @@ return new class extends Migration
             $table->timestamp('verified_at')->nullable();
             $table->timestamps();
 
-            $table->foreign('id_mutasi')->references('id')->on('mutasi');
             $table->foreign('verified_by_admin_nrp')->references('NRP_admin')->on('users');
         });
     }
