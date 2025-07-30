@@ -605,8 +605,16 @@
                             </div>
                         @endif
                         
-                        <!-- Error Messages -->
-                        @if ($errors->any())
+                        <!-- CSRF Error Handling - TAMBAH INI -->
+                        @if ($errors->has('csrf_token') || session('csrf_error'))
+                            <div class="alert alert-warning" id="csrfAlert">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Session expired. Please refresh the page and try again.
+                            </div>
+                        @endif
+                        
+                        <!-- General Error Messages -->
+                        @if ($errors->any() && !$errors->has('csrf_token'))
                             <div class="alert alert-danger" id="errorAlert">
                                 <i class="bi bi-exclamation-circle me-2"></i>
                                 <span id="errorText">{{ $errors->first() }}</span>

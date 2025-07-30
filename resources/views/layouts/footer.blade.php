@@ -2,15 +2,26 @@
     <div class="footer-container">
         <!-- Footer Main Content -->
         <div class="footer-main">
-            <!-- Logo & Company Info -->
+            <!-- Logo & Company Info - UPDATED -->
             <div class="footer-brand">
                 <div class="footer-logo">
-                    <img src="{{ asset('images/pelni_logo.png') }}" alt="PELNI" class="footer-logo-img">
+                    <!-- Logo PELNI yang ditambahkan -->
+                    <div class="pelni-logo">
+                        <img src="{{ asset('images/pelni_logo.png') }}" 
+                             alt="PELNI Logo" 
+                             style="height: 40px; width: auto;"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    </div>
+                    
+                    <!-- Ship Icon sebagai fallback -->
+                    <div class="ship-icon">
+                        <i class="bi bi-ship" style="font-size: 40px; color: #2A3F8E;"></i>
+                    </div>
                 </div>
                 <div class="footer-company-info">
                     <h3 class="footer-company-name">PT PELNI (Persero)</h3>
                     <p class="footer-address">
-                        Jl. Gajah Mada No. 14, Jakarta Pusat, 10130 DKI Jakarta, Indonesia
+                        Sistem Manajemen Serah Terima Jabatan
                     </p>
                     <div class="footer-contact">
                         <div class="contact-item">
@@ -35,9 +46,9 @@
                     <h4 class="footer-title">Sistem Sertijab</h4>
                     <ul class="footer-menu">
                         <li><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li><a href="{{ route('abk.index') }}">Kelola ABK</a></li>
-                        <li><a href="{{ route('monitoring.index') }}">Monitoring</a></li>
-                        <li><a href="{{ route('arsip.index') }}">Arsip Sertijab</a></li>
+                        <li><a href="#">Kelola ABK</a></li>
+                        <li><a href="#">Monitoring</a></li>
+                        <li><a href="#">Arsip Sertijab</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
@@ -52,15 +63,15 @@
                 <div class="footer-column">
                     <h4 class="footer-title">Pengaturan</h4>
                     <ul class="footer-menu">
-                        <li><a href="{{ route('profile.index') }}">Profil Admin</a></li>
-                        <li><a href="{{ route('settings.index') }}">Pengaturan Sistem</a></li>
+                        <li><a href="#">Profil Admin</a></li>
+                        <li><a href="#">Pengaturan Sistem</a></li>
                         <li><a href="#">Backup Data</a></li>
                         <li><a href="#">Log Aktivitas</a></li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Social Media & App Downloads -->
+            <!-- Social Media -->
             <div class="footer-social">
                 <h4 class="footer-title">Ikuti PELNI</h4>
                 <div class="social-links">
@@ -73,25 +84,9 @@
                     <a href="https://instagram.com/pelni_official" target="_blank" class="social-link instagram">
                         <i class="bi bi-instagram"></i>
                     </a>
-                    <a href="https://tiktok.com/@pelni_official" target="_blank" class="social-link tiktok">
-                        <i class="bi bi-tiktok"></i>
-                    </a>
                     <a href="https://youtube.com/pelniofficial" target="_blank" class="social-link youtube">
                         <i class="bi bi-youtube"></i>
                     </a>
-                </div>
-
-                <!-- App Download Section -->
-                <div class="app-downloads">
-                    <p class="download-text">Unduh Aplikasi Resmi Pelni</p>
-                    <div class="download-buttons">
-                        <a href="#" class="download-btn">
-                            <img src="{{ asset('images/app-store-badge.png') }}" alt="Download on App Store">
-                        </a>
-                        <a href="#" class="download-btn">
-                            <img src="{{ asset('images/google-play-badge.png') }}" alt="Get it on Google Play">
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -117,28 +112,30 @@
 </footer>
 
 <style>
-/* Footer Variables */
+/* Footer dengan Warna E3EEFF - UPDATED dengan Logo PELNI */
 :root {
-    --footer-bg: #1e293b;
-    --footer-bg-light: #334155;
-    --footer-text: #e2e8f0;
-    --footer-text-muted: #94a3b8;
-    --footer-border: #475569;
+    --footer-bg: #E3EEFF;
+    --footer-bg-light: #D1DEFD;
+    --footer-text: #1e293b;
+    --footer-text-muted: #64748b;
+    --footer-border: #cbd5e1;
     --primary-blue: #2A3F8E;
     --secondary-blue: #3b82f6;
     --light-blue: #8CB4F5;
-    --footer-padding: 48px 24px 24px;
+    --footer-padding: 40px 24px 24px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Footer Container */
+/* Footer Container - DIPERBAIKI: FULL WIDTH */
 .app-footer {
-    background: linear-gradient(135deg, var(--footer-bg) 0%, #0f172a 100%);
+    background: var(--footer-bg);
     color: var(--footer-text);
-    margin-left: var(--sidebar-width, 280px);
-    transition: var(--transition);
+    margin-left: 0 !important;
+    width: 100% !important;
     position: relative;
     overflow: hidden;
+    border-top: 3px solid var(--primary-blue);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .app-footer::before {
@@ -147,47 +144,83 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
+    height: 2px;
     background: linear-gradient(90deg, var(--primary-blue) 0%, var(--secondary-blue) 50%, var(--light-blue) 100%);
 }
 
-.app-footer.sidebar-collapsed {
-    margin-left: var(--sidebar-width-collapsed, 70px);
-}
-
 .footer-container {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: var(--footer-padding);
+    width: 100%;
 }
 
 /* Footer Main Content */
 .footer-main {
     display: grid;
-    grid-template-columns: 2fr 2fr 1fr;
-    gap: 48px;
+    grid-template-columns: 1.5fr 2fr 1fr;
+    gap: 40px;
     margin-bottom: 32px;
 }
 
-/* Footer Brand */
+/* Footer Brand - UPDATED dengan Logo */
 .footer-brand {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
 }
 
-.footer-logo-img {
-    height: 60px;
-    width: auto;
-    object-fit: contain;
-    filter: brightness(1.1);
+.footer-logo {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+/* Logo PELNI Styles - BARU */
+.pelni-logo {
+    transition: var(--transition);
+    opacity: 1;
+}
+
+.pelni-logo:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 4px 8px rgba(42, 63, 142, 0.3));
+}
+
+.pelni-logo svg {
+    width: 120px;
+    height: 40px;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Ship Icon sebagai fallback */
+.ship-icon {
+    display: none; /* Hidden by default, shown if SVG fails */
+    transition: var(--transition);
+}
+
+.ship-icon:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 4px 8px rgba(42, 63, 142, 0.3));
+}
+
+/* Show ship icon if SVG fails to load */
+@supports not (display: flex) {
+    .pelni-logo {
+        display: none;
+    }
+    .ship-icon {
+        display: block;
+    }
 }
 
 .footer-company-name {
     font-family: 'Poppins', sans-serif;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
-    color: var(--light-blue);
+    color: var(--primary-blue);
     margin-bottom: 8px;
     line-height: 1.2;
 }
@@ -209,14 +242,14 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 14px;
+    font-size: 13px;
     color: var(--footer-text);
 }
 
 .contact-item i {
     width: 16px;
-    color: var(--light-blue);
-    font-size: 14px;
+    color: var(--primary-blue);
+    font-size: 13px;
 }
 
 /* Footer Links */
@@ -235,8 +268,8 @@
     font-family: 'Poppins', sans-serif;
     font-size: 16px;
     font-weight: 600;
-    color: var(--light-blue);
-    margin-bottom: 16px;
+    color: var(--primary-blue);
+    margin-bottom: 14px;
     line-height: 1.2;
 }
 
@@ -247,7 +280,7 @@
 }
 
 .footer-menu li {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .footer-menu a {
@@ -259,7 +292,7 @@
 }
 
 .footer-menu a:hover {
-    color: var(--light-blue);
+    color: var(--primary-blue);
     transform: translateX(4px);
 }
 
@@ -272,20 +305,20 @@
 
 .social-links {
     display: flex;
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .social-link {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
     transition: var(--transition);
-    font-size: 18px;
+    font-size: 16px;
     border: 2px solid transparent;
 }
 
@@ -304,66 +337,26 @@
     color: white;
 }
 
-.social-link.tiktok {
-    background: #000000;
-    color: white;
-}
-
 .social-link.youtube {
     background: #ff0000;
     color: white;
 }
 
 .social-link:hover {
-    transform: translateY(-2px);
-    border-color: var(--light-blue);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-/* App Downloads */
-.app-downloads {
-    width: 100%;
-}
-
-.download-text {
-    font-size: 14px;
-    color: var(--footer-text-muted);
-    margin-bottom: 12px;
-    font-weight: 500;
-}
-
-.download-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.download-btn {
-    display: block;
-    transition: var(--transition);
-}
-
-.download-btn img {
-    height: 40px;
-    width: auto;
-    border-radius: 8px;
-    transition: var(--transition);
-}
-
-.download-btn:hover img {
-    transform: scale(1.05);
-    filter: brightness(1.1);
+    transform: translateY(-2px) scale(1.05);
+    border-color: var(--primary-blue);
+    box-shadow: 0 6px 16px rgba(42, 63, 142, 0.3);
 }
 
 /* Footer Bottom */
 .footer-bottom {
-    margin-top: 32px;
+    margin-top: 24px;
 }
 
 .footer-divider {
     height: 1px;
     background: var(--footer-border);
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .footer-bottom-content {
@@ -389,6 +382,7 @@
     font-size: 11px !important;
     color: var(--footer-text-muted);
     opacity: 0.8;
+    margin-top: 4px !important;
 }
 
 .footer-bottom-links {
@@ -405,7 +399,7 @@
 }
 
 .footer-bottom-links a:hover {
-    color: var(--light-blue);
+    color: var(--primary-blue);
 }
 
 .separator {
@@ -413,8 +407,8 @@
     font-size: 12px;
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
+/* Responsive Design - UPDATED untuk Logo */
+@media (max-width: 992px) {
     .footer-main {
         grid-template-columns: 1fr 1fr;
         gap: 32px;
@@ -424,20 +418,23 @@
         grid-column: 1 / -1;
         align-items: center;
         text-align: center;
+        margin-top: 16px;
     }
     
     .footer-links {
         grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+    }
+    
+    .pelni-logo svg {
+        width: 100px;
+        height: 33px;
     }
 }
 
 @media (max-width: 768px) {
-    .app-footer {
-        margin-left: 0;
-    }
-    
     .footer-container {
-        padding: 32px 16px 16px;
+        padding: 32px 16px 20px;
     }
     
     .footer-main {
@@ -448,11 +445,19 @@
     
     .footer-links {
         grid-template-columns: 1fr;
-        gap: 24px;
+        gap: 20px;
     }
     
     .footer-brand {
         align-items: center;
+    }
+    
+    .footer-social {
+        align-items: center;
+    }
+    
+    .social-links {
+        justify-content: center;
     }
     
     .footer-bottom-content {
@@ -461,36 +466,85 @@
         gap: 12px;
     }
     
-    .download-buttons {
-        flex-direction: row;
-        justify-content: center;
-        gap: 12px;
+    .footer-company-name {
+        font-size: 18px;
+    }
+    
+    .pelni-logo svg {
+        width: 90px;
+        height: 30px;
     }
 }
 
 @media (max-width: 480px) {
     .footer-container {
-        padding: 24px 12px 12px;
+        padding: 24px 12px 16px;
     }
     
-    .social-links {
-        justify-content: center;
+    .footer-main {
+        gap: 20px;
     }
     
-    .footer-company-name {
-        font-size: 20px;
+    .footer-links {
+        gap: 16px;
     }
     
-    .download-buttons {
-        flex-direction: column;
-        align-items: center;
+    .contact-item {
+        font-size: 12px;
+    }
+    
+    .footer-menu a {
+        font-size: 13px;
+    }
+    
+    .pelni-logo svg {
+        width: 80px;
+        height: 27px;
+    }
+}
+
+/* Animation untuk load */
+.app-footer {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Logo Animation */
+.pelni-logo svg {
+    animation: logoFadeIn 1s ease-out 0.3s both;
+}
+
+@keyframes logoFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 }
 
 /* Print Styles */
 @media print {
     .app-footer {
-        display: none !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    
+    .pelni-logo svg {
+        width: 80px;
+        height: 27px;
     }
 }
 </style>
@@ -498,34 +552,34 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const footer = document.getElementById('appFooter');
-    const sidebar = document.getElementById('sidebar');
+    const pelniLogo = footer.querySelector('.pelni-logo');
+    const shipIcon = footer.querySelector('.ship-icon');
     
-    // Adjust footer margin based on sidebar state
-    function adjustFooter() {
-        if (sidebar && sidebar.classList.contains('collapsed')) {
-            footer.classList.add('sidebar-collapsed');
-        } else {
-            footer.classList.remove('sidebar-collapsed');
+    // Handle SVG fallback
+    if (pelniLogo && shipIcon) {
+        const svg = pelniLogo.querySelector('svg');
+        if (svg) {
+            svg.addEventListener('error', function() {
+                pelniLogo.style.display = 'none';
+                shipIcon.style.display = 'block';
+            });
         }
     }
     
-    // Listen for sidebar changes
-    if (sidebar) {
-        const observer = new MutationObserver(adjustFooter);
-        observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
-        adjustFooter(); // Initial check
+    // Add subtle animation on scroll
+    function handleScroll() {
+        const footerRect = footer.getBoundingClientRect();
+        const isVisible = footerRect.top < window.innerHeight && footerRect.bottom > 0;
+        
+        if (isVisible && pelniLogo) {
+            pelniLogo.style.animationPlayState = 'running';
+        }
     }
     
-    // Handle window resize for mobile
-    window.addEventListener('resize', function() {
-        if (window.innerWidth <= 768) {
-            footer.classList.remove('sidebar-collapsed');
-        } else {
-            adjustFooter();
-        }
-    });
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check
     
-    // Smooth scroll for footer links
+    // Smooth scroll untuk footer links
     const footerLinks = footer.querySelectorAll('a[href^="#"]');
     footerLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -540,13 +594,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Add loading state for external links
+    // Add loading state untuk external links
     const externalLinks = footer.querySelectorAll('a[href^="http"]');
     externalLinks.forEach(link => {
         link.addEventListener('click', function() {
-            // Add loading state if needed
-            console.log('Opening external link:', this.href);
+            this.style.opacity = '0.7';
+            setTimeout(() => {
+                this.style.opacity = '1';
+            }, 200);
         });
     });
+    
+    // Handle responsive social links
+    function adjustSocialLinks() {
+        const socialLinks = footer.querySelector('.social-links');
+        if (socialLinks && window.innerWidth <= 480) {
+            socialLinks.style.maxWidth = '250px';
+        } else if (socialLinks) {
+            socialLinks.style.maxWidth = 'none';
+        }
+    }
+    
+    window.addEventListener('resize', adjustSocialLinks);
+    adjustSocialLinks(); // Initial call
+    
+    console.log('Footer with PELNI logo loaded successfully');
 });
 </script>

@@ -6,40 +6,64 @@ use Illuminate\Database\Eloquent\Model;
 
 class ABK extends Model
 {
-    protected $table = 'ABK';
-    protected $primaryKey = 'NRP';
-    public $incrementing = false;
-    protected $keyType = 'integer';
+    protected $table = 'abk';
+    protected $primaryKey = 'id_abk';
+    public $timestamps = true;
 
-    //protected $fillable = [
-       // 'NRP',
-        //'nama_ABK',
-        //'status_ABK',
-        //'id_kapal',
-        //'id_jabatan'
-   // ];
+    protected $fillable = [
+        'id_kapal',
+        'nrp_naik',
+        'nama_naik',
+        'jabatan_naik',
+        'nama_mutasi',
+        'jenis_mutasi',
+        'tmt',
+        'tat',
+        'nrp_turun',
+        'nama_turun',
+        'jabatan_turun',
+        'alasan_turun',
+        'keterangan_turun',
+        'status_abk'
+    ];
 
-    // Relasi ke Kapal
+    protected $casts = [
+        'tmt' => 'date',
+        'tat' => 'date'
+    ];
+
+    /**
+     * Relationship dengan Kapal
+     */
     public function kapal()
     {
-        return $this->belongsTo(Kapal::class, 'id_kapal');
+        return $this->belongsTo(Kapal::class, 'id_kapal', 'id_kapal');
     }
 
-    // Relasi ke Jabatan
-    public function jabatan()
+    /**
+     * Relationship dengan Jabatan (yang naik)
+     */
+    public function jabatanNaik()
     {
-        return $this->belongsTo(Jabatan::class, 'id_jabatan');
+        return $this->belongsTo(Jabatan::class, 'jabatan_naik', 'id_jabatan');
     }
 
-    // Relasi sebagai nrp_turun di Mutasi
-    public function mutasiTurun()
+    /**
+     * Relationship dengan Jabatan (yang turun)
+     */
+    public function jabatanTurun()
     {
-        return $this->hasMany(Mutasi::class, 'nrp_turun');
+        return $this->belongsTo(Jabatan::class, 'jabatan_turun', 'id_jabatan');
     }
 
-    // Relasi sebagai nrp_naik di Mutasi
-    public function mutasiNaik()
+    // Accessor untuk mendapatkan nama jabatan
+    public function getJabatanNaikNamaAttribute()
     {
-        return $this->hasMany(Mutasi::class, 'nrp_naik');
+        return $this->jabatanNaik ? $this->jabatanNaik->nama_jabatan : '-';
+    }
+
+    public function getJabatanTurunNamaAttribute()
+    {
+        return $this->jabatanTurun ? $this->jabatanTurun->nama_jabatan : '-';
     }
 }

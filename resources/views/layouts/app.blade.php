@@ -24,7 +24,6 @@
             --sidebar-width: 280px;
             --sidebar-width-collapsed: 70px;
             --navbar-height: 70px;
-            --footer-height: auto;
             --primary-blue: #2A3F8E;
             --secondary-blue: #3b82f6;
             --light-blue: #8CB4F5;
@@ -51,7 +50,7 @@
             box-sizing: border-box;
         }
         
-        /* Body */
+        /* Body - DIPERBAIKI LAYOUT */
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--background);
@@ -63,35 +62,47 @@
             flex-direction: column;
         }
         
-        /* App Wrapper */
+        /* App Wrapper - DIPERBAIKI */
         .app-wrapper {
-            display: flex;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        
+        /* Content Wrapper - DIPERBAIKI */
+        .content-wrapper-main {
+            display: flex;
+            flex: 1;
             position: relative;
         }
         
-        /* Main Content Area */
-        .main-content {
-            margin-left: var(--sidebar-width);
-            margin-top: var(--navbar-height);
+        /* Main Layout - DIPERBAIKI */
+        .main-layout {
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: calc(100vh - var(--navbar-height));
+            margin-left: var(--sidebar-width);
             transition: var(--transition);
-            position: relative;
+            min-height: 100vh;
         }
         
-        .main-content.sidebar-collapsed {
+        .main-layout.sidebar-collapsed {
             margin-left: var(--sidebar-width-collapsed);
+        }
+        
+        /* Main Content Area - DIPERBAIKI */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            background: var(--background);
+            padding-top: calc(var(--navbar-height) + 32px);
         }
         
         /* Content Container */
         .content-container {
-            flex: 1;
             max-width: 1400px;
             margin: 0 auto;
-            padding: 24px;
             width: 100%;
         }
         
@@ -240,21 +251,6 @@
             }
         }
         
-        .slide-up {
-            animation: slideUp 0.6s ease-out;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
         /* Utility Classes */
         .text-primary { color: var(--primary-blue) !important; }
         .text-secondary { color: var(--secondary-blue) !important; }
@@ -271,16 +267,21 @@
         
         /* Responsive Design */
         @media (max-width: 768px) {
+            .content-wrapper-main {
+                flex-direction: column;
+            }
+            
+            .main-layout {
+                margin-left: 0;
+            }
+            
+            .main-layout.sidebar-collapsed {
+                margin-left: 0;
+            }
+            
             .main-content {
-                margin-left: 0;
-            }
-            
-            .main-content.sidebar-collapsed {
-                margin-left: 0;
-            }
-            
-            .content-container {
                 padding: 16px;
+                padding-top: calc(var(--navbar-height) + 16px);
             }
             
             .content-wrapper {
@@ -305,8 +306,9 @@
         }
         
         @media (max-width: 480px) {
-            .content-container {
+            .main-content {
                 padding: 12px;
+                padding-top: calc(var(--navbar-height) + 12px);
             }
             
             .content-header {
@@ -331,15 +333,46 @@
                 display: none !important;
             }
             
-            .main-content {
+            .main-layout {
                 margin-left: 0 !important;
-                margin-top: 0 !important;
+            }
+            
+            .main-content {
+                padding-top: 0 !important;
             }
             
             .content-wrapper {
                 box-shadow: none !important;
                 border: none !important;
             }
+        }
+        
+        /* Sidebar Overlay for Mobile */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+        
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Ensure proper stacking */
+        .sidebar {
+            z-index: 999;
+        }
+        
+        .navbar {
+            z-index: 1000;
         }
     </style>
     
@@ -353,33 +386,42 @@
             <div class="loading-spinner"></div>
         </div>
         
-        <!-- Sidebar -->
-        @include('layouts.sidebar')
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
         
-        <!-- Navbar -->
-        @include('layouts.navbar')
-        
-        <!-- Main Content -->
-        <main class="main-content" id="mainContent">
-            <div class="content-container">
-                <div class="content-wrapper page-enter">
-                    <!-- Content Header (Optional) -->
-                    @hasSection('header')
-                        <div class="content-header">
-                            <h1 class="content-title">@yield('page-title', 'Dashboard')</h1>
-                            <p class="content-subtitle">@yield('page-description', 'Sistem Manajemen Sertijab PELNI')</p>
+        <!-- Content Wrapper (Sidebar + Main Layout) -->
+        <div class="content-wrapper-main">
+            <!-- Sidebar -->
+            @include('layouts.sidebar')
+            
+            <!-- Main Layout -->
+            <div class="main-layout" id="mainLayout">
+                <!-- Navbar -->
+                @include('layouts.navbar')
+                
+                <!-- Main Content -->
+                <main class="main-content" id="mainContent">
+                    <div class="content-container">
+                        <div class="content-wrapper page-enter">
+                            <!-- Content Header (Optional) -->
+                            @hasSection('header')
+                                <div class="content-header">
+                                    <h1 class="content-title">@yield('page-title', 'Dashboard')</h1>
+                                    <p class="content-subtitle">@yield('page-description', 'Sistem Manajemen Sertijab PELNI')</p>
+                                </div>
+                            @endif
+                            
+                            <!-- Content Body -->
+                            <div class="content-body">
+                                @yield('content')
+                            </div>
                         </div>
-                    @endif
-                    
-                    <!-- Content Body -->
-                    <div class="content-body">
-                        @yield('content')
                     </div>
-                </div>
+                </main>
             </div>
-        </main>
+        </div>
         
-        <!-- Footer -->
+        <!-- Footer - DIPANGGIL DI SINI -->
         @include('layouts.footer')
     </div>
     
@@ -395,33 +437,60 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
+            const mainLayout = document.getElementById('mainLayout');
             const loadingOverlay = document.getElementById('loadingOverlay');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
             
-            // Adjust main content based on sidebar state
-            function adjustMainContent() {
+            // Adjust layout based on sidebar state
+            function adjustLayout() {
                 if (sidebar && sidebar.classList.contains('collapsed')) {
-                    mainContent.classList.add('sidebar-collapsed');
+                    mainLayout.classList.add('sidebar-collapsed');
                 } else {
-                    mainContent.classList.remove('sidebar-collapsed');
+                    mainLayout.classList.remove('sidebar-collapsed');
                 }
             }
             
             // Listen for sidebar changes
             if (sidebar) {
-                const observer = new MutationObserver(adjustMainContent);
+                const observer = new MutationObserver(adjustLayout);
                 observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
-                adjustMainContent(); // Initial check
+                adjustLayout(); // Initial check
             }
             
             // Handle window resize for mobile
             window.addEventListener('resize', function() {
                 if (window.innerWidth <= 768) {
-                    mainContent.classList.remove('sidebar-collapsed');
+                    mainLayout.classList.remove('sidebar-collapsed');
                 } else {
-                    adjustMainContent();
+                    adjustLayout();
                 }
             });
+            
+            // Mobile sidebar overlay handling
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    if (sidebar) {
+                        sidebar.classList.remove('show');
+                        this.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Listen for sidebar show/hide on mobile
+            if (sidebar) {
+                const sidebarObserver = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.attributeName === 'class') {
+                            if (sidebar.classList.contains('show') && window.innerWidth <= 768) {
+                                sidebarOverlay.classList.add('active');
+                            } else {
+                                sidebarOverlay.classList.remove('active');
+                            }
+                        }
+                    });
+                });
+                sidebarObserver.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+            }
             
             // Loading state management
             window.showLoading = function() {
@@ -554,11 +623,19 @@
                 }
             }
             
-            // Esc key to close dropdowns
+            // Esc key to close dropdowns and mobile sidebar
             if (e.key === 'Escape') {
                 document.querySelectorAll('.dropdown.show, .show').forEach(element => {
                     element.classList.remove('show');
                 });
+                
+                // Close mobile sidebar
+                const sidebar = document.getElementById('sidebar');
+                const sidebarOverlay = document.getElementById('sidebarOverlay');
+                if (sidebar && sidebar.classList.contains('show')) {
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('active');
+                }
             }
         });
     </script>
