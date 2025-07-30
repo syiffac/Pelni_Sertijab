@@ -85,6 +85,7 @@ Route::get('/', function () {
         Route::get('/', [MonitoringController::class, 'index'])->name('index');
         Route::get('/sertijab', [MonitoringController::class, 'sertijab'])->name('sertijab');
         Route::get('/sertijab/detail/{id}', [MonitoringController::class, 'sertijabDetail'])->name('sertijab.detail');
+        Route::put('/sertijab/verify/{id}', [MonitoringController::class, 'verifySertijab'])->name('verify');
         Route::get('/sertijab/export', [MonitoringController::class, 'exportSertijab'])->name('sertijab.export');
     });
     
@@ -100,6 +101,7 @@ Route::get('/', function () {
         Route::delete('/{id}', [ArsipController::class, 'destroy'])->name('destroy');
         Route::get('/laporan/index', [ArsipController::class, 'laporanIndex'])->name('laporan');
         Route::get('/laporan/generate', [ArsipController::class, 'generateLaporan'])->name('laporan.generate');
+        Route::post('/bulk-update-status', [ArsipController::class, 'bulkUpdateStatus'])->name('bulk-update-status');
     });
     
     // Settings routes
