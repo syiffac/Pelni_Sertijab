@@ -18,7 +18,9 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'NRP_admin',
+        'username',
+        'nama_admin',
         'email',
         'password',
     ];
@@ -44,5 +46,10 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function sertijab()
+    {
+        return $this->hasMany(Sertijab::class, 'NRP_admin', 'NRP_admin');
     }
 }

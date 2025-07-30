@@ -34,6 +34,6 @@ class Sertijab extends Model
     // Relasi ke Admin verifikator
     public function adminVerifikator()
     {
-        return $this->belongsTo(Admin::class, 'verified_by_admin_nrp', 'NRP_admin');
+        return $this->belongsTo(User::class, 'verified_by_admin_nrp', 'NRP_admin');
     }
 }
