@@ -191,8 +191,8 @@
                         <img src="{{ asset('images/default-avatar.png') }}" alt="Admin" class="avatar-img">
                     </div>
                     <div class="profile-info">
-                        <span class="profile-name">{{ auth()->guard('admin')->user()->nama_admin ?? 'Administrator' }}</span>
-                        <span class="profile-role">{{ auth()->guard('admin')->user()->jabatan ?? 'Admin' }}</span>
+                        <span class="profile-name">{{ auth()->user()->nama_admin ?? 'Administrator' }}</span>
+                        <span class="profile-role">{{ auth()->user()->jabatan ?? 'Admin' }}</span>
                     </div>
                     <i class="bi bi-chevron-down profile-arrow"></i>
                 </button>
@@ -204,8 +204,8 @@
                             <img src="{{ asset('images/default-avatar.png') }}" alt="Admin">
                         </div>
                         <div class="profile-details">
-                            <div class="profile-name-large">{{ auth()->guard('admin')->user()->nama_admin ?? 'Administrator' }}</div>
-                            <div class="profile-email">{{ auth()->guard('admin')->user()->email ?? 'admin@pelni.co.id' }}</div>
+                            <div class="profile-name-large">{{ auth()->user()->nama_admin ?? 'Administrator' }}</div>
+                            <div class="profile-email">{{ auth()->user()->email ?? 'admin@pelni.co.id' }}</div>
                         </div>
                     </div>
                     <div class="profile-dropdown-menu">

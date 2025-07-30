@@ -18,7 +18,7 @@
                             <i class="bi bi-speedometer2"></i>
                         </div>
                         <div class="welcome-content">
-                            <h2 class="welcome-title">Halo, Admin!</h2>
+                            <h2 class="welcome-title">Halo, {{ auth()->user()->nama_admin }}!</h2>
                             <h2 class="welcome-sertijab">Selamat Datang di Sertijab Manajemen Sistem PELNI</h2>
                             <p class="welcome-text">Kelola sistem serah terima jabatan dengan mudah dan efisien</p>
                             <div class="welcome-meta">
