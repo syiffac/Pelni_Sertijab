@@ -89,6 +89,6 @@ class Mutasi extends Model
      */
     public function sertijab(): HasOne
     {
-        return $this->hasOne(Sertijab::class, 'id_mutasi', 'id_mutasi');
+        return $this->hasOne(Sertijab::class, 'id_mutasi', 'id');
     }
 }

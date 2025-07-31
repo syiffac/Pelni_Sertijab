@@ -10,6 +10,7 @@ use App\Http\Controllers\ArsipController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleSelectionController;
+use App\Http\Controllers\PUKController;
 
 
 // Root redirect - arahkan ke role selection
@@ -26,11 +27,17 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 
 
-// PUK routes (placeholder untuk development)
+// PUK routes - UPDATE BAGIAN INI
 Route::prefix('puk')->name('puk.')->group(function () {
     Route::get('/', function () {
-        return view('puk.dashboard'); // Will be created later
+        return view('puk.dashboard');
     })->name('dashboard');
+    
+    // Upload form routes
+    Route::get('/upload', [PUKController::class, 'uploadForm'])->name('upload.form');
+    Route::post('/get-mutasi-by-kapal', [PUKController::class, 'getMutasiByKapal'])->name('get-mutasi-by-kapal');
+    Route::post('/upload-sertijab', [PUKController::class, 'uploadSertijab'])->name('upload-sertijab');
+    Route::delete('/delete-sertijab', [PUKController::class, 'deleteSertijab'])->name('delete-sertijab');
 });
 
 
