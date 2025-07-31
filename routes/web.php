@@ -56,6 +56,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/export/excel', [ABKController::class, 'exportExcel'])->name('export.excel');
         Route::post('/export/pdf', [ABKController::class, 'exportPdf'])->name('export.pdf');
         
+        // TAMBAHKAN TEMPLATE ROUTES INI
+        Route::get('/template/excel', [ABKController::class, 'downloadExcelTemplate'])->name('template.excel');
+        Route::get('/template/pdf', [ABKController::class, 'downloadPdfTemplate'])->name('template.pdf');
+        Route::post('/import', [ABKController::class, 'import'])->name('import');
+        
         // Mutasi routes - DILETAKKAN SEBELUM ROUTE DENGAN PARAMETER
         Route::prefix('mutasi')->name('mutasi.')->group(function () {
             Route::get('/', [ABKController::class, 'mutasiIndex'])->name('index');

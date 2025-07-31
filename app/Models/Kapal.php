@@ -12,11 +12,28 @@ class Kapal extends Model
 
     protected $table = 'kapal';
     protected $primaryKey = 'id';
+    public $incrementing = false; // Penting: Matikan auto-increment
+    protected $keyType = 'string'; // Menggunakan string untuk ID
     
     protected $fillable = [
+        'id', // Tambahkan id ke fillable
         'nama_kapal',
-        'jenis_kapal',
+        'tipe_pax',
+        'home_base',
     ];
+
+    // Cast tipe_pax sebagai integer
+    protected $casts = [
+        'tipe_pax' => 'integer',
+    ];
+
+    /**
+     * Get kode kapal alias untuk id
+     */
+    public function getKodeKapalAttribute()
+    {
+        return $this->id; // Langsung gunakan id
+    }
 
     /**
      * Get the ABK for this kapal
@@ -90,5 +107,13 @@ class Kapal extends Model
             'final_arsip' => $finalArsip,
             'draft_arsip' => $draftArsip,
         ];
+    }
+
+    /**
+     * Format tipe_pax untuk tampilan
+     */
+    public function getFormattedTipePaxAttribute()
+    {
+        return $this->tipe_pax ? number_format($this->tipe_pax) . ' PAX' : '-';
     }
 }

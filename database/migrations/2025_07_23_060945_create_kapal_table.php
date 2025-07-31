@@ -12,10 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('kapal', function (Blueprint $table) {
-            $table->id();
+            $table->id(); // Primary key auto-increment
             $table->string('nama_kapal');
-            $table->string('jenis_kapal');
-            $table->timestamps();
+            $table->integer('tipe_pax')->nullable();
+            $table->string('home_base')->nullable();
+            $table->timestamps(); // created_at dan updated_at
         });
     }
 
