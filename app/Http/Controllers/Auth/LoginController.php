@@ -92,6 +92,6 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         
-        return redirect()->route('login')->with('status', 'Anda telah berhasil logout.');
+        return redirect()->route('role.selection')->with('success', 'Anda telah berhasil logout.');
     }
 }

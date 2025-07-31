@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
         User::create([
             'NRP_admin' => 1002,
             'username' => 'operator',
-            'nama_admin' => 'Operator SDM',
+            'nama_admin' => 'Operator Pengawakan',
             'email' => 'operator@pelni.co.id',
             'password' => Hash::make('operator123'),
             'created_at' => now(),

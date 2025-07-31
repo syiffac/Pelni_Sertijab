@@ -9,18 +9,35 @@ use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\ArsipController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoleSelectionController;
 
 
-// Guest routes (only accessible when not logged in)
-    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
-//});
+// Root redirect - arahkan ke role selection
+Route::get('/', [RoleSelectionController::class, 'index'])->name('role.selection');
 
 
+// Role selection routes
+Route::get('/select-role', [RoleSelectionController::class, 'index'])->name('role.selection');
+Route::post('/select-role', [RoleSelectionController::class, 'selectRole'])->name('role.select');
+
+
+// Guest routes (hanya bisa diakses jika belum login)
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+
+
+// PUK routes (placeholder untuk development)
+Route::prefix('puk')->name('puk.')->group(function () {
+    Route::get('/', function () {
+        return view('puk.dashboard'); // Will be created later
+    })->name('dashboard');
+});
+
+
+// Protected admin routes
+Route::middleware(['auth'])->group(function () {
     // Dashboard
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-
-    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/wak', [ABKController::class, 'index']);
@@ -107,4 +124,5 @@ use App\Http\Controllers\ProfileController;
         Route::put('/update', [ProfileController::class, 'update'])->name('update');
         Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
     });
+});
 // });
