@@ -152,13 +152,23 @@ class ArsipController extends Controller
      */
     public function create()
     {
-        $kapalList = Kapal::all();
-        $mutasiList = Mutasi::with(['abkTurun', 'kapalAsal'])
-                            ->whereDoesntHave('sertijab')
-                            ->where('perlu_sertijab', true)
-                            ->get();
+        // Ambil data kapal dari table kapal
+        $daftarKapal = \App\Models\Kapal::orderBy('nama_kapal')->get()->map(function($kapal) {
+            return [
+                'id_kapal' => $kapal->id,
+                'nama_kapal' => $kapal->nama_kapal,
+                'id' => $kapal->id, // Kode kapal sama dengan id
+            ];
+        });
 
-        return view('arsip.create', compact('kapalList', 'mutasiList'));
+        // Data dummy untuk jabatan - sama dengan ABK
+        $jabatanList = [
+            (object)['id_jabatan' => 1, 'nama_jabatan' => 'Nakhoda'],
+            (object)['id_jabatan' => 2, 'nama_jabatan' => 'Mualim I'],
+            (object)['id_jabatan' => 3, 'nama_jabatan' => 'KKM (Kepala Kamar Mesin)'],
+        ];
+
+        return view('arsip.create', compact('daftarKapal', 'jabatanList'));
     }
 
     /**

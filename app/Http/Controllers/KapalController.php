@@ -40,6 +40,7 @@ class KapalController extends Controller
             'Jakarta',
             'Makassar',
             'Surabaya',
+            'Kupang'
         ];
         
         // Urutkan berdasarkan abjad
