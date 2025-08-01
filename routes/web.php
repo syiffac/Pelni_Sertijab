@@ -136,5 +136,30 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/update', [ProfileController::class, 'update'])->name('update');
         Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
     });
+    
+    // Mutasi routes - TAMBAHKAN INI
+    Route::prefix('mutasi')->name('mutasi.')->group(function () {
+        Route::get('/', function () {
+            return view('mutasi.index');
+        })->name('index');
+        Route::get('/create', function () {
+            return view('mutasi.create');
+        })->name('create');
+        Route::post('/', function () {
+            return redirect()->route('mutasi.index');
+        })->name('store');
+        Route::get('/{id}', function ($id) {
+            return view('mutasi.show', compact('id'));
+        })->name('show');
+        Route::get('/{id}/edit', function ($id) {
+            return view('mutasi.edit', compact('id'));
+        })->name('edit');
+        Route::put('/{id}', function ($id) {
+            return redirect()->route('mutasi.index');
+        })->name('update');
+        Route::delete('/{id}', function ($id) {
+            return redirect()->route('mutasi.index');
+        })->name('destroy');
+    });
 });
 // });

@@ -74,6 +74,22 @@
                 </ul>
             </li>
 
+            <!-- Kelola Mutasi - MENU BARU -->
+            <li class="nav-item has-submenu {{ request()->routeIs('mutasi.*') ? 'active' : '' }}">
+                <a href="#" class="nav-link" data-submenu="mutasi" data-tooltip="Kelola Mutasi">
+                    <div class="nav-icon">
+                        <i class="bi bi-arrow-left-right"></i>
+                    </div>
+                    <span class="nav-text">Kelola Mutasi</span>
+                    <i class="bi bi-chevron-down submenu-arrow"></i>
+                </a>
+                <ul class="submenu" id="submenu-mutasi">
+                    <li><a href="{{ route('mutasi.index') }}" class="submenu-link {{ request()->routeIs('mutasi.index') ? 'active' : '' }}">Data Mutasi</a></li>
+                    <li><a href="{{ route('mutasi.create') }}" class="submenu-link {{ request()->routeIs('mutasi.create') ? 'active' : '' }}">Tambah Mutasi</a></li>
+                    <li><a href="{{ route('mutasi.edit', 1) }}" class="submenu-link {{ request()->routeIs('mutasi.edit') ? 'active' : '' }}">Edit Mutasi</a></li>
+                </ul>
+            </li>
+
             <!-- Monitoring -->
             <li class="nav-item has-submenu {{ request()->routeIs('monitoring.*') ? 'active' : '' }}">
                 <a href="#" class="nav-link" data-submenu="monitoring" data-tooltip="Monitoring">
@@ -939,20 +955,21 @@
     }
 }
 
-/* Smooth Animations */
+/* Smooth Animations - UPDATE UNTUK MENAMBAH ITEM MUTASI */
 .nav-item {
     opacity: 0;
     animation: slideInLeft 0.3s ease forwards;
 }
 
-.nav-item:nth-child(1) { animation-delay: 0.1s; }
-.nav-item:nth-child(2) { animation-delay: 0.15s; }
-.nav-item:nth-child(3) { animation-delay: 0.2s; }
-.nav-item:nth-child(4) { animation-delay: 0.25s; }
-.nav-item:nth-child(5) { animation-delay: 0.3s; }
-.nav-item:nth-child(6) { animation-delay: 0.35s; }
-.nav-item:nth-child(7) { animation-delay: 0.4s; }
-.nav-item:nth-child(8) { animation-delay: 0.45s; }
+.nav-item:nth-child(1) { animation-delay: 0.1s; }  /* Dashboard */
+.nav-item:nth-child(2) { animation-delay: 0.15s; } /* Kelola ABK */
+.nav-item:nth-child(3) { animation-delay: 0.2s; }  /* Kelola Mutasi - BARU */
+.nav-item:nth-child(4) { animation-delay: 0.25s; } /* Monitoring */
+.nav-item:nth-child(5) { animation-delay: 0.3s; }  /* Arsip Sertijab */
+.nav-item:nth-child(6) { animation-delay: 0.35s; } /* Data Kapal */
+.nav-item:nth-child(7) { animation-delay: 0.4s; }  /* Divider */
+.nav-item:nth-child(8) { animation-delay: 0.45s; } /* Settings */
+.nav-item:nth-child(9) { animation-delay: 0.5s; }  /* Profile */
 
 @keyframes slideInLeft {
     from {
@@ -966,7 +983,7 @@
 }
 </style>
 
-{{-- Keep all existing JavaScript unchanged --}}
+{{-- Keep all existing JavaScript unchanged - UPDATE ANIMATION DELAYS --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar');
@@ -1357,6 +1374,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    console.log('🎯 Enhanced Sidebar with Auto-Collapse initialized successfully!');
+    console.log('🎯 Enhanced Sidebar with Kelola Mutasi Menu initialized successfully!');
 });
 </script>
