@@ -174,12 +174,11 @@
                                             <label for="jabatan_naik" class="form-label required">Jabatan</label>
                                             <select class="form-select" id="jabatan_naik" name="jabatan_naik" required>
                                                 <option value="">-- Pilih Jabatan --</option>
-                                                @foreach($daftarJabatan ?? [] as $jabatan)
-                                                    <option value="{{ $jabatan->id_jabatan }}">
-                                                        {{ $jabatan->nama_jabatan }}
-                                                    </option>
-                                                @endforeach
+                                                <option value="1">Nakhoda</option>
+                                                <option value="2">Mualim I</option>
+                                                <option value="3">KKM (Kepala Kamar Mesin)</option>
                                             </select>
+                                            <div class="form-text">Pilih jabatan sesuai dengan posisi ABK di kapal</div>
                                         </div>
                                     </div>
 
@@ -264,7 +263,7 @@
                                         <input class="form-check-input" type="checkbox" id="adaAbkTurun" name="ada_abk_turun">
                                         <label class="form-check-label" for="adaAbkTurun">
                                             <strong>Ada ABK yang turun/digantikan</strong>
-                                            <small class="d-block text-muted">Centang jika ada ABK yang akan turun dari jabatan ini</small>
+                                            <small class="d-block text-muted">Checklist jika ada ABK yang akan turun dari jabatan ini</small>
                                         </label>
                                     </div>
                                 </div>
@@ -276,7 +275,7 @@
                                         <div class="col-lg-6">
                                             <h6 class="section-title">
                                                 <i class="bi bi-person me-2"></i>
-                                                Data ABK yang Turun
+                                                Data Pribadi ABK yang Turun
                                             </h6>
                                             
                                             <div class="form-group mb-3">
@@ -296,20 +295,19 @@
                                                 <label for="jabatan_turun" class="form-label">Jabatan</label>
                                                 <select class="form-select" id="jabatan_turun" name="jabatan_turun">
                                                     <option value="">-- Pilih Jabatan --</option>
-                                                    @foreach($daftarJabatan ?? [] as $jabatan)
-                                                        <option value="{{ $jabatan->id_jabatan }}">
-                                                            {{ $jabatan->nama_jabatan }}
-                                                        </option>
-                                                    @endforeach
+                                                    <option value="1">Nakhoda</option>
+                                                    <option value="2">Mualim I</option>
+                                                    <option value="3">KKM (Kepala Kamar Mesin)</option>
                                                 </select>
+                                                <div class="form-text">Pilih jabatan ABK yang akan turun</div>
                                             </div>
                                         </div>
 
-                                        <!-- Alasan Turun -->
+                                        <!-- Data Mutasi & Informasi Tambahan ABK Turun -->
                                         <div class="col-lg-6">
                                             <h6 class="section-title">
                                                 <i class="bi bi-info-circle me-2"></i>
-                                                Informasi Tambahan
+                                                Informasi Turun & Mutasi
                                             </h6>
 
                                             <div class="form-group mb-3">
@@ -318,18 +316,43 @@
                                                     <option value="">-- Pilih Alasan --</option>
                                                     <option value="Mutasi Rutin">Mutasi Rutin</option>
                                                     <option value="Promosi">Promosi</option>
+                                                    <option value="Rotasi Berkala">Rotasi Berkala</option>
                                                     <option value="Pensiun">Pensiun</option>
                                                     <option value="Kesehatan">Alasan Kesehatan</option>
                                                     <option value="Disiplin">Alasan Disiplin</option>
                                                     <option value="Permintaan Sendiri">Permintaan Sendiri</option>
+                                                    <option value="Kontrak Habis">Kontrak Habis</option>
                                                     <option value="Lainnya">Lainnya</option>
                                                 </select>
+                                                <div class="form-text">Pilih alasan ABK turun dari jabatan</div>
                                             </div>
 
                                             <div class="form-group mb-3">
-                                                <label for="keterangan_turun" class="form-label">Keterangan</label>
+                                                <label for="status_abk_turun" class="form-label">Status ABK Setelah Turun</label>
+                                                <select class="form-select" id="status_abk_turun" name="status_abk_turun">
+                                                    <option value="">-- Pilih Status --</option>
+                                                    <option value="Aktif - Mutasi Kapal Lain">Aktif - Mutasi ke Kapal Lain</option>
+                                                    <option value="Aktif - Darat">Aktif - Penugasan Darat</option>
+                                                    <option value="Cuti">Cuti</option>
+                                                    <option value="Sakit">Sakit</option>
+                                                    <option value="Non-Aktif">Non-Aktif</option>
+                                                    <option value="Pensiun">Pensiun</option>
+                                                </select>
+                                                <div class="form-text">Status ABK setelah turun dari jabatan</div>
+                                            </div>
+
+                                            <div class="form-group mb-3">
+                                                <label for="kapal_asal_nama" class="form-label">Kapal Asal</label>
+                                                <input type="text" class="form-control" id="kapal_asal_nama" name="kapal_asal_nama" 
+                                                       placeholder="Nama kapal asal ABK (jika dari kapal lain)">
+                                                <div class="form-text">Kosongkan jika ABK turun dari kapal yang sama</div>
+                                            </div>
+
+                                            <div class="form-group mb-3">
+                                                <label for="keterangan_turun" class="form-label">Keterangan Tambahan</label>
                                                 <textarea class="form-control" id="keterangan_turun" name="keterangan_turun" 
-                                                          rows="4" placeholder="Keterangan tambahan (opsional)"></textarea>
+                                                          rows="3" placeholder="Keterangan tambahan tentang ABK yang turun (opsional)"></textarea>
+                                                <div class="form-text">Informasi tambahan terkait proses turun jabatan</div>
                                             </div>
                                         </div>
                                     </div>
@@ -454,15 +477,23 @@
                                                         <span class="review-label">Nama:</span>
                                                         <span id="reviewNamaTurun" class="review-value">-</span>
                                                     </div>
-                                                </div>
-                                                <div class="col-md-6">
                                                     <div class="review-item">
                                                         <span class="review-label">Jabatan:</span>
                                                         <span id="reviewJabatanTurun" class="review-value">-</span>
                                                     </div>
                                                     <div class="review-item">
-                                                        <span class="review-label">Alasan:</span>
+                                                        <span class="review-label">Kapal Asal:</span>
+                                                        <span id="reviewKapalAsal" class="review-value">-</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="review-item">
+                                                        <span class="review-label">Alasan Turun:</span>
                                                         <span id="reviewAlasanTurun" class="review-value">-</span>
+                                                    </div>
+                                                    <div class="review-item">
+                                                        <span class="review-label">Status Setelah Turun:</span>
+                                                        <span id="reviewStatusTurun" class="review-value">-</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1335,7 +1366,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ABK Turun checkbox handler
+    // ABK Turun checkbox handler - Update untuk clear semua field termasuk yang baru
     if (adaAbkTurunCheckbox) {
         adaAbkTurunCheckbox.addEventListener('change', function() {
             if (this.checked) {
@@ -1495,6 +1526,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Update function updateReviewData untuk field baru
     function updateReviewData() {
         if (currentStep === 4) {
             // Update kapal info
@@ -1506,123 +1538,70 @@ document.addEventListener('DOMContentLoaded', function() {
                 reviewKapal.innerHTML = `${selectedKapal.text()} <span class="badge bg-light text-primary">Kode: ${kapalCode}</span>`;
             }
             
-            // Update nama mutasi dengan deskripsi
-            const namaMutasi = document.getElementById('nama_mutasi');
-            if (namaMutasi) {
-                const selectedOption = namaMutasi.options[namaMutasi.selectedIndex];
-                const description = selectedOption.getAttribute('data-desc') || '';
-                const reviewNamaMutasi = document.getElementById('reviewNamaMutasi');
-                
-                if (reviewNamaMutasi) {
-                    if (namaMutasi.value && description) {
-                        reviewNamaMutasi.innerHTML = `
-                            ${selectedOption.text}
-                            <span class="badge bg-warning text-dark ms-2">${description}</span>
-                        `;
-                    } else {
-                        reviewNamaMutasi.textContent = selectedOption.text || '-';
-                    }
-                }
-            }
+            // Update ABK Naik info
+            const nrpNaik = document.getElementById('nrp_naik').value;
+            const namaNaik = document.getElementById('nama_naik').value;
+            const jabatanNaik = document.getElementById('jabatan_naik').options[document.getElementById('jabatan_naik').selectedIndex]?.text;
+            const jenisMutasi = document.getElementById('jenis_mutasi').value;
+            const tmt = document.getElementById('tmt').value;
+            const tat = document.getElementById('tat').value;
             
-            // Update other fields
-            updateElement('reviewNrpNaik', document.getElementById('nrp_naik')?.value);
-            updateElement('reviewNamaNaik', document.getElementById('nama_naik')?.value);
+            document.getElementById('reviewNrpNaik').innerText = nrpNaik || '-';
+            document.getElementById('reviewNamaNaik').innerText = namaNaik || '-';
+            document.getElementById('reviewJabatanNaik').innerText = jabatanNaik || '-';
+            document.getElementById('reviewJenisMutasi').innerText = jenisMutasi || '-';
+            document.getElementById('reviewTmt').innerText = tmt ? new Intl.DateTimeFormat('id-ID').format(new Date(tmt)) : '-';
+            document.getElementById('reviewTat').innerText = tat ? new Intl.DateTimeFormat('id-ID').format(new Date(tat)) : '-';
             
-            const jabatanNaik = document.getElementById('jabatan_naik');
-            if (jabatanNaik) {
-                updateElement('reviewJabatanNaik', jabatanNaik.options[jabatanNaik.selectedIndex]?.text);
-            }
-            
-            updateElement('reviewJenisMutasi', document.getElementById('jenis_mutasi')?.value);
-            updateElement('reviewTmt', formatDate(document.getElementById('tmt')?.value));
-            updateElement('reviewTat', formatDate(document.getElementById('tat')?.value));
-            
-            // Update ABK turun info (if exists)
-            const reviewAbkTurun = document.getElementById('reviewAbkTurun');
-            if (adaAbkTurunCheckbox && adaAbkTurunCheckbox.checked) {
-                if (reviewAbkTurun) reviewAbkTurun.classList.remove('d-none');
+            // Update ABK Turun info if checkbox is checked
+            if (adaAbkTurunCheckbox.checked) {
+                const nrpTurun = document.getElementById('nrp_turun').value;
+                const namaTurun = document.getElementById('nama_turun').value;
+                const jabatanTurun = document.getElementById('jabatan_turun').options[document.getElementById('jabatan_turun').selectedIndex]?.text;
+                const alasanTurun = document.getElementById('alasan_turun').value;
+                const statusTurun = document.getElementById('status_abk_turun').value;
+                const kapalAsal = document.getElementById('kapal_asal_nama').value;
                 
-                updateElement('reviewNrpTurun', document.getElementById('nrp_turun')?.value);
-                updateElement('reviewNamaTurun', document.getElementById('nama_turun')?.value);
+                document.getElementById('reviewNrpTurun').innerText = nrpTurun || '-';
+                document.getElementById('reviewNamaTurun').innerText = namaTurun || '-';
+                document.getElementById('reviewJabatanTurun').innerText = jabatanTurun || '-';
+                document.getElementById('reviewKapalAsal').innerText = kapalAsal || '-';
+                document.getElementById('reviewAlasanTurun').innerText = alasanTurun || '-';
+                document.getElementById('reviewStatusTurun').innerText = statusTurun || '-';
                 
-                const jabatanTurun = document.getElementById('jabatan_turun');
-                if (jabatanTurun) {
-                    updateElement('reviewJabatanTurun', jabatanTurun.options[jabatanTurun.selectedIndex]?.text);
-                }
-                
-                updateElement('reviewAlasanTurun', document.getElementById('alasan_turun')?.value);
+                // Show ABK Turun review section
+                document.getElementById('reviewAbkTurun').classList.remove('d-none');
             } else {
-                if (reviewAbkTurun) reviewAbkTurun.classList.add('d-none');
+                // Hide ABK Turun review section
+                document.getElementById('reviewAbkTurun').classList.add('d-none');
             }
         }
     }
     
-    function updateElement(id, value) {
-        const element = document.getElementById(id);
-        if (element) {
-            element.textContent = value || '-';
-        }
-    }
-    
-    function formatDate(dateString) {
-        if (!dateString) return '';
-        
-        const date = new Date(dateString);
-        return date.toLocaleDateString('id-ID', {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric'
-        });
-    }
-    
+    // Submit form function
     function submitForm() {
-        if (submitButton) {
-            submitButton.classList.add('loading');
-            submitButton.disabled = true;
-        }
+        // Show loading state on submit button
+        submitButton.classList.add('loading');
         
-        const formData = new FormData(form);
-        
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (submitButton) {
-                submitButton.classList.remove('loading');
-                submitButton.disabled = false;
-            }
+        // Simulate form submission
+        setTimeout(() => {
+            // Hide loading state
+            submitButton.classList.remove('loading');
             
-            if (data.success) {
-                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-                successModal.show();
-                
+            // Show success modal
+            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+            successModal.show();
+            
+            // Reset form after delay
+            setTimeout(() => {
                 form.reset();
-                $('#id_kapal').val(null).trigger('change');
                 currentStep = 1;
                 updateStepDisplay();
                 hideKapalInfo();
                 hideMutasiInfo();
-                
-                if (formAbkTurun) formAbkTurun.classList.add('d-none');
-            } else {
-                alert('Error: ' + (data.message || 'Terjadi kesalahan'));
-            }
-        })
-        .catch(error => {
-            if (submitButton) {
-                submitButton.classList.remove('loading');
-                submitButton.disabled = false;
-            }
-            
-            alert('Terjadi kesalahan saat menyimpan data');
-            console.error('Error:', error);
-        });
+                document.getElementById('reviewAbkTurun').classList.add('d-none');
+            }, 2000);
+        }, 1500);
     }
 });
 </script>

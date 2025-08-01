@@ -71,19 +71,22 @@ class ABKController extends Controller
      */
     public function create()
     {
-            // Ambil daftar kapal untuk dropdown
-            $daftarKapal = Kapal::orderBy('nama_kapal')->get()->map(function($kapal) {
-                return [
-                    'id_kapal' => $kapal->id,
-                    'nama_kapal' => $kapal->nama_kapal,
-                    'id' => $kapal->id // Pastikan id (kode kapal) tersedia
-                ];
-            });
-            
-            // Ambil daftar jabatan
-            $daftarJabatan = Jabatan::orderBy('nama_jabatan')->get();
-            
-            return view('kelolaABK.create', compact('daftarKapal', 'daftarJabatan'));
+            // Data dummy untuk kapal
+            $daftarKapal = [
+                ['id_kapal' => 1, 'nama_kapal' => 'KM BINAIYA', 'id' => '113'],
+                ['id_kapal' => 2, 'nama_kapal' => 'KM BUKIT RAYA', 'id' => '114'],
+                ['id_kapal' => 3, 'nama_kapal' => 'KM CIREMAI', 'id' => '115'],
+                ['id_kapal' => 4, 'nama_kapal' => 'KM DOBONSOLO', 'id' => '116'],
+                ['id_kapal' => 5, 'nama_kapal' => 'KM EGON', 'id' => '117'],
+                ['id_kapal' => 6, 'nama_kapal' => 'KM FUDI', 'id' => '118'],
+                ['id_kapal' => 7, 'nama_kapal' => 'KM GUNUNG DEMPO', 'id' => '119'],
+                ['id_kapal' => 8, 'nama_kapal' => 'KM KELUD', 'id' => '120'],
+                ['id_kapal' => 9, 'nama_kapal' => 'KM LEUSER', 'id' => '121'],
+                ['id_kapal' => 10, 'nama_kapal' => 'KM LABOBAR', 'id' => '122'],
+            ];
+
+            // Tidak perlu $daftarJabatan karena hardcode di view
+            return view('kelolaABK.create', compact('daftarKapal'));
     }
 
     /**
