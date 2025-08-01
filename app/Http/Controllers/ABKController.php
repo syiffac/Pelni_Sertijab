@@ -71,23 +71,17 @@ class ABKController extends Controller
      */
     public function create()
     {
-            $daftarKapal = Kapal::orderBy('nama_kapal')->get(); 
+            // Ambil daftar kapal untuk dropdown
+            $daftarKapal = Kapal::orderBy('nama_kapal')->get()->map(function($kapal) {
+                return [
+                    'id_kapal' => $kapal->id,
+                    'nama_kapal' => $kapal->nama_kapal,
+                    'id' => $kapal->id // Pastikan id (kode kapal) tersedia
+                ];
+            });
             
-            // Ambil data jabatan
-            $daftarJabatan = Jabatan::
-                orderBy('nama_jabatan')
-                ->get();
-            
-            // Cek apakah ada data kapal
-            if ($daftarKapal->isEmpty()) {
-                return redirect()->route('kapal.create')
-                    ->with('warning', 'Belum ada data kapal. Silakan tambah data kapal terlebih dahulu.');
-            }
-            
-            // Cek apakah ada data jabatan
-            // if ($daftarJabatan->isEmpty()) {
-            //     return back()->with('warning', 'Belum ada data jabatan. Silakan tambah data jabatan terlebih dahulu.');
-            // }
+            // Ambil daftar jabatan
+            $daftarJabatan = Jabatan::orderBy('nama_jabatan')->get();
             
             return view('kelolaABK.create', compact('daftarKapal', 'daftarJabatan'));
     }

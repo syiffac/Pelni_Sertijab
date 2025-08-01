@@ -217,6 +217,25 @@
             outline: none;
         }
 
+        /* Select styling */
+        .form-control:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        /* Focus effect for select when option is chosen */
+        .form-control.has-value {
+            border-color: var(--primary-blue);
+            background-color: rgba(37, 99, 235, 0.05);
+        }
+
+        /* Selected option styling */
+        .form-control option:checked {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+
         .btn-primary-custom {
             background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-blue) 100%);
             border: none;
@@ -236,6 +255,25 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
             color: white;
+        }
+
+        /* Disabled button styling */
+        .btn-primary-custom:disabled {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            cursor: not-allowed;
+            opacity: 0.7;
+            box-shadow: none;
+            transform: none;
+            pointer-events: none; /* Tambahkan ini */
+        }
+
+        .btn-primary-custom:not(:disabled) {
+            pointer-events: auto; /* Pastikan tombol aktif bisa diklik */
+        }
+
+        .btn-primary-custom:disabled:hover {
+            transform: none;
+            box-shadow: none;
         }
 
         .btn-secondary-custom {
@@ -414,25 +452,6 @@
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
-        }
-
-        .btn-success-sm {
-            background: var(--success-green);
-            color: white;
-        }
-
-        .btn-danger-sm {
-            background: var(--danger-red);
-            color: white;
-        }
-
-        .btn-sm-custom:hover {
-            transform: translateY(-1px);
-        }
-
-        /* Loading states */
-        .loading-overlay {
-            position: absolute;
             top: 0;
             left: 0;
             right: 0;
@@ -668,41 +687,99 @@
             const kapalSelect = document.getElementById('id_kapal');
             const alertContainer = document.getElementById('alertContainer');
 
-            // Step navigation
-            nextStep1Btn.addEventListener('click', function() {
-                const kapalId = kapalSelect.value;
-                if (!kapalId) {
-                    showAlert('Silakan pilih kapal terlebih dahulu.', 'error');
-                    return;
-                }
-
-                // Update steps
-                step1.classList.remove('active');
-                step1.classList.add('completed');
-                step2.classList.remove('inactive');
-                step2.classList.add('active');
-                divider1.classList.add('completed');
-
-                // Switch sections
-                section1.classList.remove('active');
-                section2.classList.add('active');
-
-                // Load mutasi data
-                loadMutasiData(kapalId);
+            // Debug log untuk memastikan elemen ditemukan
+            console.log('Elements found:', {
+                nextStep1Btn: !!nextStep1Btn,
+                kapalSelect: !!kapalSelect,
+                alertContainer: !!alertContainer
             });
 
-            backStep1Btn.addEventListener('click', function() {
-                // Update steps
-                step1.classList.remove('completed');
-                step1.classList.add('active');
-                step2.classList.remove('active');
-                step2.classList.add('inactive');
-                divider1.classList.remove('completed');
+            // Disable next button initially
+            if (nextStep1Btn) {
+                nextStep1Btn.disabled = true;
+            }
+            
+            // Enable next button when kapal is selected
+            if (kapalSelect) {
+                kapalSelect.addEventListener('change', function() {
+                    const selectedValue = this.value;
+                    console.log("Kapal selection changed to:", selectedValue);
+                    
+                    // Aktifkan tombol jika ada nilai yang dipilih
+                    if (selectedValue && selectedValue !== "") {
+                        if (nextStep1Btn) {
+                            nextStep1Btn.disabled = false;
+                            nextStep1Btn.removeAttribute('disabled');
+                            console.log("Button enabled successfully");
+                        }
+                        kapalSelect.classList.add('has-value');
+                        
+                        // Hapus alert jika ada
+                        if (alertContainer) {
+                            alertContainer.innerHTML = '';
+                        }
+                    } else {
+                        if (nextStep1Btn) {
+                            nextStep1Btn.disabled = true;
+                            nextStep1Btn.setAttribute('disabled', 'disabled');
+                            console.log("Button disabled");
+                        }
+                        kapalSelect.classList.remove('has-value');
+                    }
+                });
+            }
 
-                // Switch sections
-                section2.classList.remove('active');
-                section1.classList.add('active');
-            });
+            // Step navigation - pastikan event listener terpasang dengan benar
+            if (nextStep1Btn) {
+                nextStep1Btn.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent default behavior
+                    
+                    const kapalId = kapalSelect ? kapalSelect.value : '';
+                    console.log("Next button clicked, kapalId:", kapalId);
+                    console.log("Button disabled state:", this.disabled);
+                    
+                    // Cek apakah tombol disabled
+                    if (this.disabled) {
+                        console.log("Button is disabled, ignoring click");
+                        return;
+                    }
+                    
+                    if (!kapalId || kapalId === "") {
+                        showAlert('Silakan pilih kapal terlebih dahulu.', 'error');
+                        return;
+                    }
+
+                    // Update steps
+                    if (step1) step1.classList.remove('active');
+                    if (step1) step1.classList.add('completed');
+                    if (step2) step2.classList.remove('inactive');
+                    if (step2) step2.classList.add('active');
+                    if (divider1) divider1.classList.add('completed');
+
+                    // Switch sections
+                    if (section1) section1.classList.remove('active');
+                    if (section2) section2.classList.add('active');
+
+                    // Load mutasi data
+                    loadMutasiData(kapalId);
+                });
+            }
+
+            // Back button event listener
+            if (backStep1Btn) {
+                backStep1Btn.addEventListener('click', function() {
+                    // Update steps
+                    if (step1) step1.classList.remove('completed');
+                    if (step1) step1.classList.add('active');
+                    if (step2) step2.classList.remove('active');
+                    if (step2) step2.classList.add('inactive');
+                    if (divider1) divider1.classList.remove('completed');
+
+                    // Switch sections
+                    if (section2) section2.classList.remove('active');
+                    if (section1) section1.classList.add('active');
+                });
+            }
 
             // Load mutasi data
             function loadMutasiData(kapalId) {
@@ -712,9 +789,9 @@
                 const kapalName = document.getElementById('kapalName');
 
                 // Show loading
-                loadingMutasi.style.display = 'block';
-                emptyMutasi.style.display = 'none';
-                mutasiTableContainer.style.display = 'none';
+                if (loadingMutasi) loadingMutasi.style.display = 'block';
+                if (emptyMutasi) emptyMutasi.style.display = 'none';
+                if (mutasiTableContainer) mutasiTableContainer.style.display = 'none';
 
                 // Get CSRF token
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -731,27 +808,27 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    loadingMutasi.style.display = 'none';
+                    if (loadingMutasi) loadingMutasi.style.display = 'none';
 
                     if (data.success) {
-                        kapalName.textContent = data.kapal.nama_kapal;
+                        if (kapalName) kapalName.textContent = data.kapal.nama_kapal;
 
                         if (data.mutasis.length === 0) {
-                            emptyMutasi.style.display = 'block';
+                            if (emptyMutasi) emptyMutasi.style.display = 'block';
                         } else {
-                            mutasiTableContainer.style.display = 'block';
+                            if (mutasiTableContainer) mutasiTableContainer.style.display = 'block';
                             populateMutasiTable(data.mutasis);
                         }
                     } else {
                         showAlert('Gagal memuat data mutasi.', 'error');
-                        emptyMutasi.style.display = 'block';
+                        if (emptyMutasi) emptyMutasi.style.display = 'block';
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    loadingMutasi.style.display = 'none';
+                    if (loadingMutasi) loadingMutasi.style.display = 'none';
                     showAlert('Terjadi kesalahan saat memuat data.', 'error');
-                    emptyMutasi.style.display = 'block';
+                    if (emptyMutasi) emptyMutasi.style.display = 'block';
                 });
             }
 
@@ -1048,6 +1125,31 @@
                     year: 'numeric'
                 });
             }
+
+            // Fix dengan timeout untuk memastikan DOM sudah siap
+            setTimeout(function() {
+                const kapalSelect = document.getElementById('id_kapal');
+                const nextStep1Btn = document.getElementById('nextStep1');
+                
+                if (kapalSelect && nextStep1Btn) {
+                    console.log("Re-checking kapal select after timeout");
+                    
+                    // Trigger change event secara manual jika sudah ada nilai
+                    if (kapalSelect.value && kapalSelect.value !== "") {
+                        nextStep1Btn.disabled = false;
+                        kapalSelect.classList.add('has-value');
+                        console.log("Enabling button via timeout check");
+                    }
+                    
+                    // Tambahkan event listener untuk re-validate
+                    kapalSelect.addEventListener('click', function() {
+                        if (this.value && this.value !== "") {
+                            nextStep1Btn.disabled = false;
+                            console.log("Enabling button via click check");
+                        }
+                    });
+                }
+            }, 500);
         });
     </script>
 </body>

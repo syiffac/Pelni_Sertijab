@@ -111,41 +111,19 @@
                                     <div class="col-lg-8">
                                         <div class="form-group mb-4">
                                             <label for="id_kapal" class="form-label required">Kapal Tujuan</label>
-                                            <select class="form-select" id="id_kapal" name="id_kapal" required>
+                                            <select class="form-select select2" id="id_kapal" name="id_kapal" required>
                                                 <option value="">-- Pilih Kapal --</option>
                                                 @foreach($daftarKapal ?? [] as $kapal)
-                                                    <option value="{{ $kapal->id_kapal }}" 
-                                                            data-code="{{ $kapal->kode_kapal ?? '' }}"
-                                                            data-type="{{ $kapal->jenis_kapal ?? '' }}">
-                                                        {{ $kapal->nama_kapal }}
+                                                    <option value="{{ $kapal->id_kapal ?? $kapal['id_kapal'] }}" 
+                                                            data-code="{{ $kapal->id ?? $kapal['id'] ?? '' }}">
+                                                        {{ $kapal->nama_kapal ?? $kapal['nama_kapal'] }}
                                                     </option>
                                                 @endforeach
                                             </select>
                                             <div class="form-text">Pilih kapal tempat ABK akan bertugas</div>
                                         </div>
-
-                                        <!-- Kapal Info Card (Will show when kapal selected) -->
-                                        <div id="kapalInfoCard" class="kapal-info-card d-none">
-                                            <div class="info-header">
-                                                <h6><i class="bi bi-info-circle me-2"></i>Informasi Kapal</h6>
-                                            </div>
-                                            <div class="info-body">
-                                                <div class="row">
-                                                    <div class="col-6">
-                                                        <div class="info-item">
-                                                            <span class="info-label">Kode Kapal:</span>
-                                                            <span id="kapalCode" class="info-value">-</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="info-item">
-                                                            <span class="info-label">Jenis Kapal:</span>
-                                                            <span id="kapalType" class="info-value">-</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        
+                                        <!-- Note: Removed old kapal info card, now displayed inline -->
                                     </div>
                                 </div>
                             </div>
@@ -214,22 +192,26 @@
 
                                         <div class="form-group mb-3">
                                             <label for="nama_mutasi" class="form-label required">Nama Mutasi</label>
-                                            <input type="text" class="form-control" id="nama_mutasi" name="nama_mutasi" 
-                                                   placeholder="Contoh: Mutasi Rutin Januari 2025" required>
-                                            <div class="form-text">Nama atau kode mutasi ini</div>
+                                            <select class="form-select" id="nama_mutasi" name="nama_mutasi" required>
+                                                <option value="">-- Pilih Nama Mutasi --</option>
+                                                <option value="MN" data-desc="Berlayar">MN (Berlayar)</option>
+                                                <option value="TOD" data-desc="Tour of Duty">TOD (Tour of Duty)</option>
+                                                <option value="CW" data-desc="Cuti Wajib">CW (Cuti Wajib)</option>
+                                                <option value="MI" data-desc="Mutasi Internal">MI (Mutasi Internal)</option>
+                                                <option value="MS" data-desc="Sakit">MS (Sakit)</option>
+                                                <option value="PC" data-desc="Pengganti Cuti">PC (Pengganti Cuti)</option>
+                                                <option value="AJS" data-desc="Antar Jabatan Sementara">AJS (Antar Jabatan Sementara)</option>
+                                                <option value="AJT" data-desc="Antar Jabatan Tetap">AJT (Antar Jabatan Tetap)</option>
+                                            </select>
+                                            <div class="form-text">Pilih jenis nama mutasi sesuai dengan kondisi ABK</div>
                                         </div>
 
                                         <div class="form-group mb-3">
                                             <label for="jenis_mutasi" class="form-label required">Jenis Mutasi</label>
                                             <select class="form-select" id="jenis_mutasi" name="jenis_mutasi" required>
                                                 <option value="">-- Pilih Jenis Mutasi --</option>
-                                                <option value="Mutasi Rutin">Mutasi Rutin</option>
-                                                <option value="Mutasi Darurat">Mutasi Darurat</option>
-                                                <option value="Mutasi Promosi">Mutasi Promosi</option>
-                                                <option value="Mutasi Demosi">Mutasi Demosi</option>
-                                                <option value="Mutasi Kesehatan">Mutasi Kesehatan</option>
-                                                <option value="Mutasi Disiplin">Mutasi Disiplin</option>
-                                                <option value="Lainnya">Lainnya</option>
+                                                <option value="Mutasi Sementara">Mutasi Sementara</option>
+                                                <option value="Mutasi Definitif">Mutasi Definitif</option>
                                             </select>
                                         </div>
 
@@ -385,7 +367,7 @@
                                     <div class="review-section">
                                         <h6 class="review-title">
                                             <i class="bi bi-ship me-2"></i>
-                                            Informasi Kapal
+                                            Informasi Kapal & Mutasi
                                         </h6>
                                         <div class="review-content">
                                             <div class="row">
@@ -393,6 +375,22 @@
                                                     <div class="review-item">
                                                         <span class="review-label">Kapal Tujuan:</span>
                                                         <span id="reviewKapal" class="review-value">-</span>
+                                                    </div>
+                                                    <div class="review-item">
+                                                        <span class="review-label">Nama Mutasi:</span>
+                                                        <span id="reviewNamaMutasi" class="review-value">-</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="review-item">
+                                                        <span class="review-label">Jenis Mutasi:</span>
+                                                        <span id="reviewJenisMutasi" class="review-value">-</span>
+                                                    </div>
+                                                    <div class="review-item">
+                                                        <span class="review-label">Periode:</span>
+                                                        <span id="reviewPeriode" class="review-value">
+                                                            <span id="reviewTmt">-</span> s/d <span id="reviewTat">-</span>
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -519,6 +517,11 @@
 @endsection
 
 @push('styles')
+<!-- Tambahkan CSS Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+<!-- Existing styles... -->
 <style>
 /* Variables */
 :root {
@@ -969,8 +972,20 @@
 }
 
 .btn:disabled {
-    opacity: 0.6;
     cursor: not-allowed;
+    opacity: 0.6;
+    position: relative;
+}
+
+.btn:disabled::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
 }
 
 .btn-primary {
@@ -1046,78 +1061,116 @@
     }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .progress-steps {
-        flex-direction: column;
-        gap: 20px;
-        padding: 24px 20px;
-    }
-
-    .progress-steps::before {
-        display: none;
-    }
-
-    .step-item {
-        flex-direction: row;
-        text-align: left;
-    }
-
-    .step-circle {
-        width: 48px;
-        height: 48px;
-        font-size: 18px;
-    }
-
-    .step-card {
-        padding: 24px 20px;
-    }
-
-    .step-heading {
-        font-size: 20px;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .step-footer {
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .step-footer .btn {
-        width: 100%;
-    }
-
-    .header-content {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .review-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
+/* Select2 custom placeholder */
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
+    color: #6c757d;
+    font-style: italic;
 }
 
-@media (max-width: 480px) {
-    .page-header {
-        padding: 16px;
-    }
+/* Select2 dropdown items */
+.select2-container--bootstrap-5 .select2-dropdown .select2-results__option {
+    padding: 8px 12px;
+    transition: background-color 0.2s;
+}
 
-    .step-card {
-        padding: 20px 16px;
-    }
+.select2-container--bootstrap-5 .select2-dropdown .select2-results__option--highlighted {
+    background-color: var(--primary-blue);
+    color: white;
+}
 
-    .form-container {
-        margin: 0 -12px;
-        border-radius: 0;
+/* Perbaiki CSS untuk dropdown */
+.select2-result-kapal {
+    padding: 8px 0;
+}
+
+.select2-result-kapal__title {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.select2-result-kapal__meta {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.select2-result-kapal__code {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Style untuk info kapal yang dipilih */
+.kapal-info-inline {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.kapal-info-badge {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.kapal-info-badge i {
+    font-size: 10px;
+}
+
+/* Tambahkan CSS untuk mutasi info badge */
+.mutasi-info-inline {
+    margin: 8px 0 4px 0;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.mutasi-info-badge {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #fbbf24;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    animation: fadeInScale 0.3s ease-out;
+}
+
+.mutasi-info-badge i {
+    font-size: 10px;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
     }
 }
 </style>
 @endpush
 
 @push('scripts')
+<!-- Tambahkan JS Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let currentStep = 1;
@@ -1133,42 +1186,153 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Form elements
     const kapalSelect = document.getElementById('id_kapal');
+    const nextStep1Button = document.querySelector('[data-step="1"] .btn-next');
     const adaAbkTurunCheckbox = document.getElementById('adaAbkTurun');
     const formAbkTurun = document.getElementById('formAbkTurun');
     
     // Initialize
     updateStepDisplay();
     
-    // Debug logging
-    console.log('Form initialized with:', {
-        stepItems: stepItems.length,
-        stepContents: stepContents.length,
-        nextButtons: nextButtons.length,
-        prevButtons: prevButtons.length
-    });
-    
-    // Kapal selection handler
-    if (kapalSelect) {
-        kapalSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const kapalInfoCard = document.getElementById('kapalInfoCard');
-            const nextButton = document.querySelector('[data-step="1"] .btn-next');
+    // Initialize Select2 for kapal dropdown
+    $(document).ready(function() {
+        $('#id_kapal').select2({
+            theme: 'bootstrap-5',
+            placeholder: '-- Pilih Kapal --',
+            allowClear: true,
+            width: '100%',
+            templateResult: formatKapal,
+            templateSelection: formatKapalSelection
+        });
+        
+        // Event handler untuk kapal selection
+        $('#id_kapal').on('change', function() {
+            const selectedValue = $(this).val();
+            const selectedOption = $(this).find('option:selected');
+            const kodeKapal = selectedOption.data('code') || '-';
             
-            if (this.value) {
-                // Show kapal info
-                const kapalCode = selectedOption.dataset.code || 'N/A';
-                const kapalType = selectedOption.dataset.type || 'N/A';
+            console.log('Kapal selection changed to:', selectedValue);
+            
+            if (selectedValue && selectedValue !== "") {
+                if (nextStep1Button) {
+                    nextStep1Button.disabled = false;
+                    nextStep1Button.removeAttribute('disabled');
+                    console.log("Button enabled successfully");
+                }
                 
-                document.getElementById('kapalCode').textContent = kapalCode;
-                document.getElementById('kapalType').textContent = kapalType;
-                
-                kapalInfoCard.classList.remove('d-none');
-                if (nextButton) nextButton.disabled = false;
+                // Update kapal info
+                updateKapalInfo(kodeKapal);
             } else {
-                kapalInfoCard.classList.add('d-none');
-                if (nextButton) nextButton.disabled = true;
+                if (nextStep1Button) {
+                    nextStep1Button.disabled = true;
+                    nextStep1Button.setAttribute('disabled', 'disabled');
+                    console.log("Button disabled");
+                }
+                
+                hideKapalInfo();
             }
         });
+    });
+    
+    // Format kapal untuk dropdown
+    function formatKapal(kapal) {
+        if (!kapal.id) {
+            return kapal.text;
+        }
+        
+        const kodeKapal = $(kapal.element).data('code') || '-';
+        
+        const $container = $(
+            `<div class="select2-result-kapal">
+                <div class="select2-result-kapal__title">${kapal.text}</div>
+                <div class="select2-result-kapal__meta">
+                    <span class="select2-result-kapal__code">
+                        <i class="bi bi-tag-fill me-1"></i>Kode: ${kodeKapal}
+                    </span>
+                </div>
+            </div>`
+        );
+        
+        return $container;
+    }
+    
+    function formatKapalSelection(kapal) {
+        if (!kapal.id) {
+            return kapal.text;
+        }
+        
+        const kodeKapal = $(kapal.element).data('code') || '-';
+        return kapal.text + ' (' + kodeKapal + ')';
+    }
+    
+    function updateKapalInfo(kodeKapal) {
+        hideKapalInfo();
+        
+        const infoContainer = document.createElement('div');
+        infoContainer.id = 'kapalInfoInline';
+        infoContainer.className = 'kapal-info-inline';
+        infoContainer.innerHTML = `
+            <div class="kapal-info-badge">
+                <i class="bi bi-tag-fill"></i>
+                <span>Kode: ${kodeKapal}</span>
+            </div>
+        `;
+        
+        const select2Container = document.querySelector('.select2-container');
+        if (select2Container) {
+            select2Container.parentNode.insertBefore(infoContainer, select2Container.nextSibling);
+        }
+    }
+    
+    function hideKapalInfo() {
+        const existingInfo = document.getElementById('kapalInfoInline');
+        if (existingInfo) {
+            existingInfo.remove();
+        }
+    }
+    
+    // Nama mutasi handler
+    const namaMutasiSelect = document.getElementById('nama_mutasi');
+    if (namaMutasiSelect) {
+        namaMutasiSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const selectedValue = this.value;
+            const description = selectedOption.getAttribute('data-desc') || '';
+            
+            updateMutasiInfo(selectedValue, description);
+        });
+    }
+    
+    function updateMutasiInfo(kode, description) {
+        hideMutasiInfo();
+        
+        if (kode && description) {
+            const infoContainer = document.createElement('div');
+            infoContainer.id = 'mutasiInfoInline';
+            infoContainer.className = 'mutasi-info-inline';
+            infoContainer.innerHTML = `
+                <div class="mutasi-info-badge">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>${description}</span>
+                </div>
+            `;
+            
+            const selectContainer = namaMutasiSelect.parentNode;
+            if (selectContainer) {
+                const formText = selectContainer.querySelector('.form-text');
+                if (formText) {
+                    selectContainer.insertBefore(infoContainer, formText);
+                } else {
+                    selectContainer.appendChild(infoContainer);
+                }
+            }
+        }
+    }
+    
+    function hideMutasiInfo() {
+        const existingInfo = document.getElementById('mutasiInfoInline');
+        if (existingInfo) {
+            existingInfo.remove();
+        }
     }
     
     // ABK Turun checkbox handler
@@ -1177,22 +1341,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.checked) {
                 formAbkTurun.classList.remove('d-none');
                 formAbkTurun.classList.add('show');
-                
-                // Make fields required
-                const requiredFields = formAbkTurun.querySelectorAll('input, select');
-                requiredFields.forEach(field => {
-                    if (field.id !== 'keterangan_turun') {
-                        field.required = true;
-                    }
-                });
             } else {
                 formAbkTurun.classList.add('d-none');
                 formAbkTurun.classList.remove('show');
                 
-                // Remove required and clear values
-                const fields = formAbkTurun.querySelectorAll('input, select, textarea');
-                fields.forEach(field => {
-                    field.required = false;
+                // Clear ABK turun fields
+                const abkTurunFields = formAbkTurun.querySelectorAll('input, select, textarea');
+                abkTurunFields.forEach(field => {
                     field.value = '';
                 });
             }
@@ -1235,7 +1390,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Functions
     function updateStepDisplay() {
         console.log('Updating step display to step:', currentStep);
         
@@ -1251,12 +1405,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (icon) icon.className = 'bi bi-check';
             } else if (stepNumber === currentStep) {
                 item.classList.add('active');
-                // Restore original icon
                 const icons = ['bi-ship', 'bi-person-up', 'bi-person-down', 'bi-check-circle'];
                 const icon = item.querySelector('.step-circle i');
                 if (icon) icon.className = `bi ${icons[index]}`;
             } else {
-                // Restore original icon
                 const icons = ['bi-ship', 'bi-person-up', 'bi-person-down', 'bi-check-circle'];
                 const icon = item.querySelector('.step-circle i');
                 if (icon) icon.className = `bi ${icons[index]}`;
@@ -1284,13 +1436,27 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let isValid = true;
         
+        // Clear previous errors
+        document.querySelectorAll('.is-invalid').forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        document.querySelectorAll('.invalid-feedback').forEach(error => {
+            error.remove();
+        });
+        
         requiredFields.forEach(field => {
             if (!field.value.trim()) {
                 field.classList.add('is-invalid');
                 isValid = false;
                 
-                // Show validation message
-                showValidationError(field, 'Field ini wajib diisi');
+                let message = 'Field ini wajib diisi';
+                if (field.id === 'nama_mutasi') {
+                    message = 'Silakan pilih nama mutasi';
+                } else if (field.id === 'id_kapal') {
+                    message = 'Silakan pilih kapal';
+                }
+                
+                showValidationError(field, message);
             } else {
                 field.classList.remove('is-invalid');
                 removeValidationError(field);
@@ -1299,7 +1465,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Additional validations
         if (currentStep === 2) {
-            // Validate dates
             const tmt = document.getElementById('tmt');
             const tat = document.getElementById('tat');
             
@@ -1314,10 +1479,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function showValidationError(field, message) {
-        // Remove existing error
         removeValidationError(field);
         
-        // Add error message
         const errorDiv = document.createElement('div');
         errorDiv.className = 'invalid-feedback';
         errorDiv.textContent = message;
@@ -1335,80 +1498,70 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateReviewData() {
         if (currentStep === 4) {
             // Update kapal info
-            const selectedKapal = kapalSelect.options[kapalSelect.selectedIndex];
+            const selectedKapal = $('#id_kapal').find('option:selected');
             const reviewKapal = document.getElementById('reviewKapal');
-            if (reviewKapal) reviewKapal.textContent = selectedKapal.text || '-';
+            const kapalCode = selectedKapal.data('code') || '-';
             
-            // Update ABK naik info
-            const nrpNaik = document.getElementById('nrp_naik');
-            const namaNaik = document.getElementById('nama_naik');
+            if (reviewKapal) {
+                reviewKapal.innerHTML = `${selectedKapal.text()} <span class="badge bg-light text-primary">Kode: ${kapalCode}</span>`;
+            }
+            
+            // Update nama mutasi dengan deskripsi
+            const namaMutasi = document.getElementById('nama_mutasi');
+            if (namaMutasi) {
+                const selectedOption = namaMutasi.options[namaMutasi.selectedIndex];
+                const description = selectedOption.getAttribute('data-desc') || '';
+                const reviewNamaMutasi = document.getElementById('reviewNamaMutasi');
+                
+                if (reviewNamaMutasi) {
+                    if (namaMutasi.value && description) {
+                        reviewNamaMutasi.innerHTML = `
+                            ${selectedOption.text}
+                            <span class="badge bg-warning text-dark ms-2">${description}</span>
+                        `;
+                    } else {
+                        reviewNamaMutasi.textContent = selectedOption.text || '-';
+                    }
+                }
+            }
+            
+            // Update other fields
+            updateElement('reviewNrpNaik', document.getElementById('nrp_naik')?.value);
+            updateElement('reviewNamaNaik', document.getElementById('nama_naik')?.value);
+            
             const jabatanNaik = document.getElementById('jabatan_naik');
-            const jenisMutasi = document.getElementById('jenis_mutasi');
-            const tmt = document.getElementById('tmt');
-            const tat = document.getElementById('tat');
-            
-            if (nrpNaik) {
-                const reviewNrp = document.getElementById('reviewNrpNaik');
-                if (reviewNrp) reviewNrp.textContent = nrpNaik.value || '-';
-            }
-            
-            if (namaNaik) {
-                const reviewNama = document.getElementById('reviewNamaNaik');
-                if (reviewNama) reviewNama.textContent = namaNaik.value || '-';
-            }
-            
             if (jabatanNaik) {
-                const reviewJabatan = document.getElementById('reviewJabatanNaik');
-                if (reviewJabatan) reviewJabatan.textContent = jabatanNaik.options[jabatanNaik.selectedIndex].text || '-';
+                updateElement('reviewJabatanNaik', jabatanNaik.options[jabatanNaik.selectedIndex]?.text);
             }
             
-            if (jenisMutasi) {
-                const reviewJenis = document.getElementById('reviewJenisMutasi');
-                if (reviewJenis) reviewJenis.textContent = jenisMutasi.value || '-';
-            }
-            
-            if (tmt) {
-                const reviewTmtEl = document.getElementById('reviewTmt');
-                if (reviewTmtEl) reviewTmtEl.textContent = formatDate(tmt.value) || '-';
-            }
-            
-            if (tat) {
-                const reviewTatEl = document.getElementById('reviewTat');
-                if (reviewTatEl) reviewTatEl.textContent = formatDate(tat.value) || '-';
-            }
+            updateElement('reviewJenisMutasi', document.getElementById('jenis_mutasi')?.value);
+            updateElement('reviewTmt', formatDate(document.getElementById('tmt')?.value));
+            updateElement('reviewTat', formatDate(document.getElementById('tat')?.value));
             
             // Update ABK turun info (if exists)
             const reviewAbkTurun = document.getElementById('reviewAbkTurun');
             if (adaAbkTurunCheckbox && adaAbkTurunCheckbox.checked) {
                 if (reviewAbkTurun) reviewAbkTurun.classList.remove('d-none');
                 
-                const nrpTurun = document.getElementById('nrp_turun');
-                const namaTurun = document.getElementById('nama_turun');
+                updateElement('reviewNrpTurun', document.getElementById('nrp_turun')?.value);
+                updateElement('reviewNamaTurun', document.getElementById('nama_turun')?.value);
+                
                 const jabatanTurun = document.getElementById('jabatan_turun');
-                const alasanTurun = document.getElementById('alasan_turun');
-                
-                if (nrpTurun) {
-                    const reviewNrpTurun = document.getElementById('reviewNrpTurun');
-                    if (reviewNrpTurun) reviewNrpTurun.textContent = nrpTurun.value || '-';
-                }
-                
-                if (namaTurun) {
-                    const reviewNamaTurun = document.getElementById('reviewNamaTurun');
-                    if (reviewNamaTurun) reviewNamaTurun.textContent = namaTurun.value || '-';
-                }
-                
                 if (jabatanTurun) {
-                    const reviewJabatanTurun = document.getElementById('reviewJabatanTurun');
-                    if (reviewJabatanTurun) reviewJabatanTurun.textContent = jabatanTurun.options[jabatanTurun.selectedIndex].text || '-';
+                    updateElement('reviewJabatanTurun', jabatanTurun.options[jabatanTurun.selectedIndex]?.text);
                 }
                 
-                if (alasanTurun) {
-                    const reviewAlasan = document.getElementById('reviewAlasanTurun');
-                    if (reviewAlasan) reviewAlasan.textContent = alasanTurun.value || '-';
-                }
+                updateElement('reviewAlasanTurun', document.getElementById('alasan_turun')?.value);
             } else {
                 if (reviewAbkTurun) reviewAbkTurun.classList.add('d-none');
             }
+        }
+    }
+    
+    function updateElement(id, value) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = value || '-';
         }
     }
     
@@ -1424,16 +1577,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function submitForm() {
-        // Add loading state
         if (submitButton) {
             submitButton.classList.add('loading');
             submitButton.disabled = true;
         }
         
-        // Get form data
         const formData = new FormData(form);
         
-        // Submit via AJAX
         fetch(form.action, {
             method: 'POST',
             body: formData,
@@ -1443,32 +1593,28 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            // Remove loading state
             if (submitButton) {
                 submitButton.classList.remove('loading');
                 submitButton.disabled = false;
             }
             
             if (data.success) {
-                // Show success modal
                 const successModal = new bootstrap.Modal(document.getElementById('successModal'));
                 successModal.show();
                 
-                // Reset form
                 form.reset();
+                $('#id_kapal').val(null).trigger('change');
                 currentStep = 1;
                 updateStepDisplay();
+                hideKapalInfo();
+                hideMutasiInfo();
                 
-                // Hide ABK turun form
                 if (formAbkTurun) formAbkTurun.classList.add('d-none');
-                const kapalInfoCard = document.getElementById('kapalInfoCard');
-                if (kapalInfoCard) kapalInfoCard.classList.add('d-none');
             } else {
-                alert('Error: ' + data.message);
+                alert('Error: ' + (data.message || 'Terjadi kesalahan'));
             }
         })
         .catch(error => {
-            // Remove loading state
             if (submitButton) {
                 submitButton.classList.remove('loading');
                 submitButton.disabled = false;
@@ -1476,17 +1622,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             alert('Terjadi kesalahan saat menyimpan data');
             console.error('Error:', error);
-        });
-    }
-    
-    // Auto-save draft (optional)
-    let saveTimeout;
-    if (form) {
-        form.addEventListener('input', function() {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                console.log('Draft saved...');
-            }, 1000);
         });
     }
 });
