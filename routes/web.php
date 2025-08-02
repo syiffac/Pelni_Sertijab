@@ -11,7 +11,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleSelectionController;
 use App\Http\Controllers\PUKController;
-use App\Http\Controllers\MutasiController; // Import MutasiController
+use App\Http\Controllers\MutasiController;
 
 
 // Root redirect - arahkan ke role selection
@@ -28,7 +28,7 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 
 
-// PUK routes - UPDATE BAGIAN INI
+// PUK routes
 Route::prefix('puk')->name('puk.')->group(function () {
     Route::get('/', function () {
         return view('puk.dashboard');
@@ -40,7 +40,6 @@ Route::prefix('puk')->name('puk.')->group(function () {
     Route::post('/upload-sertijab', [PUKController::class, 'uploadSertijab'])->name('upload-sertijab');
     Route::delete('/delete-sertijab', [PUKController::class, 'deleteSertijab'])->name('delete-sertijab');
 });
-
 
 // Route untuk check NRP (tanpa middleware auth)
 Route::post('/abk/check-nrp', [ABKController::class, 'checkNRP'])->name('abk.check-nrp');
@@ -54,38 +53,26 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/wak', [ABKController::class, 'index']);
     
-    // ABK routes - PERBAIKAN PENTING: Urutkan berdasarkan spesifisitas
+    // ABK routes
     Route::prefix('abk')->name('abk.')->group(function () {
         // Export routes - DILETAKKAN SEBELUM ROUTE DENGAN PARAMETER
         Route::get('/export', [ABKController::class, 'export'])->name('export');
         Route::post('/export/excel', [ABKController::class, 'exportExcel'])->name('export.excel');
         Route::post('/export/pdf', [ABKController::class, 'exportPdf'])->name('export.pdf');
         
-        // TAMBAHKAN TEMPLATE ROUTES INI
+        // Template routes
         Route::get('/template/excel', [ABKController::class, 'downloadExcelTemplate'])->name('template.excel');
         Route::get('/template/pdf', [ABKController::class, 'downloadPdfTemplate'])->name('template.pdf');
         Route::post('/import', [ABKController::class, 'import'])->name('import');
         
-        // Mutasi routes - DILETAKKAN SEBELUM ROUTE DENGAN PARAMETER
-        Route::prefix('mutasi')->name('mutasi.')->group(function () {
-            Route::get('/', [ABKController::class, 'mutasiIndex'])->name('index');
-            Route::get('/create', [ABKController::class, 'mutasiCreate'])->name('create');
-            Route::post('/', [ABKController::class, 'mutasiStore'])->name('store');
-            Route::get('/{id}', [ABKController::class, 'mutasiShow'])->name('show');
-            Route::get('/{id}/edit', [ABKController::class, 'mutasiEdit'])->name('edit');
-            Route::put('/{id}', [ABKController::class, 'mutasiUpdate'])->name('update');
-            Route::delete('/{id}', [ABKController::class, 'mutasiDestroy'])->name('destroy');
-        });
-        
         // AJAX routes - DILETAKKAN SEBELUM ROUTE DENGAN PARAMETER
         Route::get('/ajax/kapal', [ABKController::class, 'getKapalList'])->name('ajax.kapal');
         Route::get('/ajax/jabatan', [ABKController::class, 'getJabatanList'])->name('ajax.jabatan');
-        Route::post('/ajax/check-nrp', [ABKController::class, 'checkNRP'])->name('ajax.check-nrp'); // PERBAIKI NAMA METHOD
         Route::get('/ajax/abk-by-kapal', [ABKController::class, 'getAbkByKapal'])->name('ajax.abk-by-kapal');
         Route::get('/kapal/{id_kapal}/abk', [ABKController::class, 'showByKapal'])->name('by-kapal');
         
-        // TAMBAHKAN ROUTE CHECK NRP DI SINI (ALTERNATIF)
-        Route::post('/check-nrp', [ABKController::class, 'checkNRP'])->name('check-nrp');
+        // Check NRP route
+        Route::get('/check-nrp', [ABKController::class, 'checkNRP'])->name('check-nrp');
         
         // Basic CRUD - DILETAKKAN DI BAWAH ROUTE YANG LEBIH SPESIFIK
         Route::get('/', [ABKController::class, 'index'])->name('index');
@@ -106,6 +93,34 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/edit', [KapalController::class, 'edit'])->name('edit');
         Route::put('/{id}', [KapalController::class, 'update'])->name('update');
         Route::delete('/{id}', [KapalController::class, 'destroy'])->name('destroy');
+    });
+    
+    // MUTASI ROUTES - PERBAIKAN: KELUARKAN DARI GRUP ABK DAN BUAT GRUP SENDIRI
+    Route::prefix('mutasi')->name('mutasi.')->group(function () {
+        // AJAX Routes untuk search ABK - HARUS DI ATAS ROUTES DENGAN PARAMETER
+        Route::get('/search-abk', [MutasiController::class, 'searchAbk'])->name('search-abk');
+        Route::get('/abk-detail/{id}', [MutasiController::class, 'getAbkDetail'])->name('abk-detail');
+        Route::get('/ajax/abk-list', [MutasiController::class, 'getAbkList'])->name('ajax.abk-list');
+        Route::get('/ajax/jabatan-list', [MutasiController::class, 'getJabatanList'])->name('ajax.jabatan-list');
+        Route::get('/ajax/kapal-list', [MutasiController::class, 'getKapalList'])->name('ajax.kapal-list');
+        
+        // Dokumen Routes
+        Route::post('/{id}/upload-dokumen', [MutasiController::class, 'uploadDokumen'])->name('upload-dokumen');
+        Route::delete('/{id}/delete-dokumen', [MutasiController::class, 'deleteDokumen'])->name('delete-dokumen');
+        
+        // Approval Routes
+        Route::post('/{id}/approve', [MutasiController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [MutasiController::class, 'reject'])->name('reject');
+        Route::post('/{id}/complete', [MutasiController::class, 'complete'])->name('complete');
+        
+        // Basic CRUD Routes - DI BAWAH ROUTES YANG LEBIH SPESIFIK
+        Route::get('/', [MutasiController::class, 'index'])->name('index');
+        Route::get('/create', [MutasiController::class, 'create'])->name('create');
+        Route::post('/', [MutasiController::class, 'store'])->name('store');
+        Route::get('/{id}', [MutasiController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [MutasiController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [MutasiController::class, 'update'])->name('update');
+        Route::delete('/{id}', [MutasiController::class, 'destroy'])->name('destroy');
     });
     
     // Monitoring routes
@@ -144,30 +159,4 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/update', [ProfileController::class, 'update'])->name('update');
         Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
     });
-    
-    // Mutasi routes - TAMBAHKAN INI
-    Route::prefix('mutasi')->name('mutasi.')->group(function () {
-        Route::get('/', [MutasiController::class, 'index'])->name('index');
-        Route::get('/create', [MutasiController::class, 'create'])->name('create');
-        Route::post('/', [MutasiController::class, 'store'])->name('store');
-        Route::get('/{id}', [MutasiController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [MutasiController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [MutasiController::class, 'update'])->name('update');
-        Route::delete('/{id}', [MutasiController::class, 'destroy'])->name('destroy');
-        
-        // AJAX Routes
-        Route::get('/ajax/abk-list', [MutasiController::class, 'getAbkList'])->name('ajax.abk-list');
-        Route::get('/ajax/jabatan-list', [MutasiController::class, 'getJabatanList'])->name('ajax.jabatan-list');
-        Route::get('/ajax/kapal-list', [MutasiController::class, 'getKapalList'])->name('ajax.kapal-list'); // TAMBAHKAN INI
-        
-        // Dokumen Routes
-        Route::post('/{id}/upload-dokumen', [MutasiController::class, 'uploadDokumen'])->name('upload-dokumen');
-        Route::delete('/{id}/delete-dokumen', [MutasiController::class, 'deleteDokumen'])->name('delete-dokumen');
-        
-        // Approval Routes
-        Route::post('/{id}/approve', [MutasiController::class, 'approve'])->name('approve');
-        Route::post('/{id}/reject', [MutasiController::class, 'reject'])->name('reject');
-        Route::post('/{id}/complete', [MutasiController::class, 'complete'])->name('complete');
-    });
 });
-// });

@@ -584,4 +584,84 @@ class MutasiController extends Controller
             ]);
         }
     }
+
+    /**
+     * Search ABK for Select2 - untuk ABK Naik dan Turun
+     */
+    public function searchAbk(Request $request)
+    {
+        try {
+            $search = $request->get('q', '');
+            $type = $request->get('type', 'naik'); // 'naik' atau 'turun'
+            
+            $abkList = ABKNew::with('jabatanTetap')
+                ->when($search, function($query, $search) {
+                    return $query->where(function($q) use ($search) {
+                        $q->where('nama_abk', 'LIKE', "%{$search}%")
+                          ->orWhere('id', 'LIKE', "%{$search}%");
+                    });
+                })
+                ->where('status_abk', '!=', 'Pensiun') // Exclude pensiun
+                ->orderBy('nama_abk')
+                ->limit(20)
+                ->get()
+                ->map(function ($abk) {
+                    return [
+                        'id' => $abk->id,
+                        'text' => $abk->id . ' - ' . $abk->nama_abk,
+                        'nrp' => $abk->id,
+                        'nama_abk' => $abk->nama_abk,
+                        'jabatan_id' => $abk->id_jabatan_tetap,
+                        'jabatan_nama' => $abk->jabatanTetap ? $abk->jabatanTetap->nama_jabatan : 'Tidak ada',
+                        'status_abk' => $abk->status_abk
+                    ];
+                });
+
+            return response()->json([
+                'results' => $abkList,
+                'pagination' => ['more' => false]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'results' => [],
+                'error' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get ABK detail by ID/NRP
+     */
+    public function getAbkDetail($id)
+    {
+        try {
+            $abk = ABKNew::with('jabatanTetap')->find($id);
+            
+            if (!$abk) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ABK tidak ditemukan'
+                ], 404);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $abk->id,
+                    'nrp' => $abk->id,
+                    'nama_abk' => $abk->nama_abk,
+                    'jabatan_id' => $abk->id_jabatan_tetap,
+                    'jabatan_nama' => $abk->jabatanTetap ? $abk->jabatanTetap->nama_jabatan : 'Tidak ada',
+                    'status_abk' => $abk->status_abk
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

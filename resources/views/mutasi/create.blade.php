@@ -173,66 +173,100 @@
                                     <i class="bi bi-person-up me-2"></i>
                                     Data ABK yang Naik
                                 </h4>
-                                <p class="step-description">Masukkan informasi lengkap ABK yang akan naik/bertugas di kapal</p>
+                                <p class="step-description">Pilih ABK yang akan naik/bertugas di kapal</p>
                             </div>
                             
                             <div class="step-body">
                                 <div class="row">
-                                    <!-- Personal Data -->
+                                    <!-- Personal Data ABK Naik -->
                                     <div class="col-lg-6">
                                         <h6 class="section-title">
                                             <i class="bi bi-person me-2"></i>
-                                            Data Pribadi
+                                            Data Pribadi ABK
                                         </h6>
                                         
+                                        <!-- Search ABK Naik -->
                                         <div class="form-group mb-3">
-                                            <label for="nrp_naik" class="form-label required">NRP</label>
-                                            <input type="text" class="form-control" id="nrp_naik" name="nrp_naik" 
-                                                   placeholder="Masukkan NRP ABK" required>
-                                            <div class="form-text">Nomor Registrasi Pokok ABK</div>
-                                        </div>
-
-                                        <div class="form-group mb-3">
-                                            <label for="nama_naik" class="form-label required">Nama Lengkap</label>
-                                            <input type="text" class="form-control" id="nama_naik" name="nama_naik" 
-                                                   placeholder="Masukkan nama lengkap ABK" required>
-                                        </div>
-
-                                        <div class="form-group mb-3">
-                                            <label for="jabatan_naik" class="form-label required">Jabatan Tetap</label>
-                                            <select class="form-select jabatan-select" id="jabatan_naik" name="jabatan_naik" required>
-                                                <option value="">-- Pilih Jabatan Tetap --</option>
-                                                @foreach($daftarJabatan as $jabatan)
-                                                    <option value="{{ $jabatan->id }}" 
-                                                            data-level="{{ $jabatan->level_jabatan ?? 0 }}"
-
-
-                                                            data-kode="{{ $jabatan->kode_jabatan ?? '' }}">
-
-                                                        {{ $jabatan->nama_jabatan }}
-                                                        @if($jabatan->kode_jabatan)
-                                                            ({{ $jabatan->kode_jabatan }})
-                                                        @endif
-                                                        @if(isset($jabatan->level_jabatan))
-                                                            - Level {{ $jabatan->level_jabatan }}
-                                                        @endif
-                                                    </option>
-                                                @endforeach
+                                            <label for="abk_naik_search" class="form-label required">Cari ABK</label>
+                                            <select class="form-select" id="abk_naik_search" name="abk_naik_search" required>
+                                                <option value="">-- Cari berdasarkan NRP atau Nama --</option>
                                             </select>
-                                            <div class="form-text">Pilih jabatan tetap ABK</div>
+                                            <div class="form-text">
+                                                <i class="bi bi-info-circle"></i>
+                                                Ketik NRP atau nama ABK untuk mencari
+                                            </div>
                                         </div>
 
-                                        <div class="form-group mb-3">
+                                        <!-- Hidden fields for form submission -->
+                                        <input type="hidden" id="nrp_naik" name="nrp_naik" required>
+                                        <input type="hidden" id="nama_naik" name="nama_naik" required>
+                                        <input type="hidden" id="jabatan_naik" name="jabatan_naik" required>
+
+                                        <!-- Display selected ABK info -->
+                                        <div id="selectedAbkNaikInfo" class="selected-abk-info d-none">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6 class="card-title">
+                                                        <i class="bi bi-person-check-fill"></i>
+                                                        ABK Terpilih
+                                                    </h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="abk-info-compact">
+                                                        <div class="abk-info-row">
+                                                            <div class="label">
+                                                                <i class="bi bi-hash"></i>
+                                                                NRP
+                                                            </div>
+                                                            <div class="value" id="displayNrpNaik">-</div>
+                                                        </div>
+                                                        <div class="abk-info-row">
+                                                            <div class="label">
+                                                                <i class="bi bi-person"></i>
+                                                                Nama
+                                                            </div>
+                                                            <div class="value" id="displayNamaNaik">-</div>
+                                                        </div>
+                                                        <div class="abk-info-row">
+                                                            <div class="label">
+                                                                <i class="bi bi-briefcase"></i>
+                                                                Jabatan
+                                                            </div>
+                                                            <div class="value" id="displayJabatanNaik">-</div>
+                                                        </div>
+                                                        <div class="abk-info-row">
+                                                            <div class="label">
+                                                                <i class="bi bi-shield-check"></i>
+                                                                Status
+                                                            </div>
+                                                            <div class="value">
+                                                                <span class="abk-status-compact" id="displayStatusNaik">-</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="abk-actions-compact">
+                                                        <div class="abk-selected-compact">
+                                                            <i class="bi bi-check-circle-fill"></i>
+                                                            <span>Terpilih</span>
+                                                        </div>
+                                                        <button type="button" class="abk-change-compact" onclick="clearAbkSelection('naik')">
+                                                            <i class="bi bi-arrow-repeat"></i>
+                                                            Ganti
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Jabatan Mutasi -->
+                                        <div class="form-group mb-3 mt-3">
                                             <label for="id_jabatan_mutasi" class="form-label required">Jabatan Mutasi</label>
                                             <select class="form-select jabatan-select" id="id_jabatan_mutasi" name="id_jabatan_mutasi" required>
                                                 <option value="">-- Pilih Jabatan Mutasi --</option>
                                                 @foreach($daftarJabatan as $jabatan)
                                                     <option value="{{ $jabatan->id }}" 
                                                             data-level="{{ $jabatan->level_jabatan ?? 0 }}"
-
-
                                                             data-kode="{{ $jabatan->kode_jabatan ?? '' }}">
-
                                                         {{ $jabatan->nama_jabatan }}
                                                         @if($jabatan->kode_jabatan)
                                                             ({{ $jabatan->kode_jabatan }})
@@ -343,41 +377,77 @@
                                                 Data Pribadi ABK yang Turun
                                             </h6>
                                             
+                                            <!-- Search ABK Turun -->
                                             <div class="form-group mb-3">
-                                                <label for="nrp_turun" class="form-label">NRP</label>
-                                                <input type="text" class="form-control" id="nrp_turun" name="nrp_turun" 
-                                                       placeholder="Masukkan NRP ABK yang turun">
-                                                <div class="form-text">Nomor Registrasi Pokok ABK yang turun</div>
-                                            </div>
-
-                                            <div class="form-group mb-3">
-                                                <label for="nama_turun" class="form-label">Nama Lengkap</label>
-                                                <input type="text" class="form-control" id="nama_turun" name="nama_turun" 
-                                                       placeholder="Masukkan nama lengkap ABK yang turun">
-                                            </div>
-
-                                            <div class="form-group mb-3">
-                                                <label for="jabatan_turun" class="form-label">Jabatan</label>
-                                                <select class="form-select jabatan-select" id="jabatan_turun" name="jabatan_turun">
-                                                    <option value="">-- Pilih Jabatan --</option>
-                                                    @foreach($daftarJabatan as $jabatan)
-                                                        <option value="{{ $jabatan->id }}" 
-                                                                data-level="{{ $jabatan->level_jabatan ?? 0 }}"
-
-
-                                                                data-kode="{{ $jabatan->kode_jabatan ?? '' }}">
-
-                                                            {{ $jabatan->nama_jabatan }}
-                                                            @if($jabatan->kode_jabatan)
-                                                                ({{ $jabatan->kode_jabatan }})
-                                                            @endif
-                                                            @if(isset($jabatan->level_jabatan))
-                                                                - Level {{ $jabatan->level_jabatan }}
-                                                            @endif
-                                                        </option>
-                                                    @endforeach
+                                                <label for="abk_turun_search" class="form-label">Cari ABK yang Turun</label>
+                                                <select class="form-select" id="abk_turun_search" name="abk_turun_search">
+                                                    <option value="">-- Cari berdasarkan NRP atau Nama --</option>
                                                 </select>
-                                                <div class="form-text">Pilih jabatan ABK yang akan turun</div>
+                                                <div class="form-text">
+                                                    <i class="bi bi-info-circle"></i>
+                                                    Ketik NRP atau nama ABK yang akan turun
+                                                </div>
+                                            </div>
+
+                                            <!-- Hidden fields for ABK turun -->
+                                            <input type="hidden" id="nrp_turun" name="nrp_turun">
+                                            <input type="hidden" id="nama_turun" name="nama_turun">
+                                            <input type="hidden" id="jabatan_turun" name="jabatan_turun">
+
+                                            <!-- Display selected ABK turun info -->
+                                            <div id="selectedAbkTurunInfo" class="selected-abk-info d-none">
+                                                <div class="card">
+                                                    <div class="card-header border-warning">
+                                                        <h6 class="card-title">
+                                                            <i class="bi bi-person-dash-fill"></i>
+                                                            ABK yang Turun
+                                                        </h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="abk-info-compact">
+                                                            <div class="abk-info-row">
+                                                                <div class="label">
+                                                                    <i class="bi bi-hash"></i>
+                                                                    NRP
+                                                                </div>
+                                                                <div class="value" id="displayNrpTurun">-</div>
+                                                            </div>
+                                                            <div class="abk-info-row">
+                                                                <div class="label">
+                                                                    <i class="bi bi-person"></i>
+                                                                    Nama
+                                                                </div>
+                                                                <div class="value" id="displayNamaTurun">-</div>
+                                                            </div>
+                                                            <div class="abk-info-row">
+                                                                <div class="label">
+                                                                    <i class="bi bi-briefcase"></i>
+                                                                    Jabatan
+                                                                </div>
+                                                                <div class="value" id="displayJabatanTurun">-</div>
+                                                            </div>
+                                                            <div class="abk-info-row">
+                                                                <div class="label">
+                                                                    <i class="bi bi-shield-check"></i>
+                                                                    Status
+                                                                </div>
+                                                                <div class="value">
+                                                                    <span class="abk-status-compact" id="displayStatusTurun">-</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="abk-actions-compact">
+                                                            <div class="abk-selected-compact">
+                                                                <i class="bi bi-check-circle-fill"></i>
+                                                                <span>Terpilih</span>
+                                                            </div>
+                                                            <button type="button" class="abk-change-compact" onclick="clearAbkSelection('turun')">
+                                                                <i class="bi bi-arrow-repeat"></i>
+                                                                Ganti
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -436,17 +506,17 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div class="step-footer">
-                                <button type="button" class="btn btn-outline-secondary btn-prev">
-                                    <i class="bi bi-arrow-left me-2"></i>
-                                    Sebelumnya
-                                </button>
-                                <button type="button" class="btn btn-primary btn-next">
-                                    <i class="bi bi-arrow-right me-2"></i>
-                                    Review Data
-                                </button>
+                                
+                                <div class="step-footer">
+                                    <button type="button" class="btn btn-outline-secondary btn-prev">
+                                        <i class="bi bi-arrow-left me-2"></i>
+                                        Sebelumnya
+                                    </button>
+                                    <button type="button" class="btn btn-primary btn-next">
+                                        <i class="bi bi-arrow-right me-2"></i>
+                                        Review Data
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1018,95 +1088,183 @@
     font-weight: 600;
 }
 
-/* Buttons */
-.btn {
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
+/* Selected ABK Info Styling - Compact Version */
+.selected-abk-info {
+    margin-top: 16px;
+    animation: slideInUp 0.3s ease-out;
+}
+
+.selected-abk-info .card {
     border: none;
-    cursor: pointer;
-    transition: var(--transition);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    background: white;
 }
 
-.btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-.btn-primary {
-    background: var(--primary-blue);
+.selected-abk-info .card-header {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    border: none;
+    padding: 12px 16px;
     color: white;
 }
 
-.btn-primary:hover:not(:disabled) {
-    background: #1d4ed8;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-medium);
+.selected-abk-info .card-header.border-warning {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
 }
 
-.btn-success {
-    background: var(--success-color);
-    color: white;
-}
-
-.btn-success:hover:not(:disabled) {
-    background: #059669;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-medium);
-}
-
-.btn-outline-secondary {
-    background: transparent;
-    color: var(--text-muted);
-    border: 2px solid var(--border-color);
-}
-
-.btn-outline-secondary:hover {
-    background: var(--text-muted);
-    color: white;
-    border-color: var(--text-muted);
-}
-
-.btn-submit .spinner-border {
-    width: 16px;
-    height: 16px;
-}
-
-.btn-submit.loading .submit-text {
-    display: none;
-}
-
-.btn-submit.loading .spinner-border {
-    display: inline-block !important;
-}
-
-/* Success Modal */
-.success-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto;
-    background: linear-gradient(135deg, var(--success-color), #34d399);
-    border-radius: 50%;
+.selected-abk-info .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 6px;
     color: white;
-    font-size: 36px;
 }
 
-/* Kapal Info Badge */
-.kapal-info-inline {
+.selected-abk-info .card-title i {
+    font-size: 14px;
+}
+
+.selected-abk-info .card-body {
+    padding: 16px;
+    background: white;
+}
+
+/* Compact ABK Info Layout */
+.abk-info-compact {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 0;
+}
+
+.abk-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border-left: 3px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.abk-info-row:hover {
+    background: #eff6ff;
+    border-left-color: #3b82f6;
+}
+
+.abk-info-row .label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.abk-info-row .label i {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.abk-info-row .value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2937;
+    text-align: right;
+}
+
+/* Compact Status Badge */
+.abk-status-compact {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.abk-status-compact.status-organik {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.abk-status-compact.status-non-organik {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+}
+
+.abk-status-compact.status-pensiun {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.abk-status-compact i {
+    font-size: 9px;
+}
+
+/* Compact Actions */
+.abk-actions-compact {
     margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.abk-selected-compact {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #059669;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.abk-selected-compact i {
+    font-size: 12px;
+}
+
+.abk-change-compact {
+    background: none;
+    border: 1px solid #e2e8f0;
+    color: #6b7280;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.abk-change-compact:hover {
+    background: #f8fafc;
+    border-color: #d1d5db;
+    color: #374151;
+}
+
+/* Style untuk info kapal yang dipilih */
+.kapal-info-inline {
+    margin-top: 8px;
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
     align-items: center;
+    animation: fadeInScale 0.3s ease-out;
 }
 
 .kapal-info-badge {
@@ -1114,106 +1272,52 @@
     color: #1e40af;
     border: 1px solid #93c5fd;
     border-radius: 6px;
-    padding: 6px 10px;
+    padding: 6px 12px;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    animation: fadeInScale 0.3s ease-out;
+    gap: 6px;
+    transition: all 0.3s ease;
 }
 
 .kapal-info-badge i {
-    font-size: 10px;
-}
-
-/* Tambahkan ke bagian CSS existing */
-
-/* Jabatan Option Styling */
-.jabatan-option {
-    padding: 8px 0;
-}
-
-.jabatan-name {
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 4px;
-    font-size: 14px;
-}
-
-.jabatan-meta {
-    display: flex;
-    gap: 8px;
-    align-items: center;
     font-size: 12px;
+    color: #3b82f6;
 }
 
-.jabatan-level {
-    background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
-    color: #0277bd;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 500;
+.kapal-info-badge:hover {
+    background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
 }
 
-.jabatan-kode {
-    background: #f3f4f6;
-    color: #374151;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-weight: 500;
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
-/* Select2 Jabatan Customization */
-.select2-container--bootstrap-5 .select2-results__option--highlighted .jabatan-level {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-.select2-container--bootstrap-5 .select2-results__option--highlighted .jabatan-kode {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-}
-
-/* Responsive Design */
+/* Responsive untuk compact version */
 @media (max-width: 768px) {
-    .page-header {
-        padding: 16px;
+    .abk-info-compact {
+        grid-template-columns: 1fr;
+        gap: 8px;
     }
     
-    .header-content {
+    .selected-abk-info .card-body {
+        padding: 12px;
+    }
+    
+    .abk-actions-compact {
         flex-direction: column;
-        gap: 16px;
-    }
-    
-    .progress-steps {
-        padding: 20px 16px;
-        flex-direction: column;
-        gap: 20px;
-    }
-    
-    .progress-steps::before {
-        display: none;
-    }
-    
-    .step-item {
-        flex-direction: row;
-        max-width: none;
-        text-align: left;
-    }
-    
-    .step-card {
-        padding: 24px 16px;
-    }
-    
-    .step-footer {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .step-footer .btn {
-        width: 100%;
+        gap: 6px;
+        align-items: stretch;
     }
 }
 </style>
@@ -1228,7 +1332,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     let currentStep = 1;
     const totalSteps = 4;
-    let validationTriggered = false; // Flag untuk kontrol kapan validasi dimulai
+    let validationTriggered = false;
     
     // Elements
     const stepItems = document.querySelectorAll('.step-item');
@@ -1240,17 +1344,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Form elements
     const kapalSelect = document.getElementById('id_kapal');
-    const nextStep1Button = document.querySelector('[data-step="1"] .btn-next');
     const adaAbkTurunCheckbox = document.getElementById('adaAbkTurun');
     const formAbkTurun = document.getElementById('formAbkTurun');
     
     // Initialize
     updateStepDisplay();
     initializeSelect2();
+    initializeAbkSelect2();
+    initializeValidationListeners();
     
-    // Initialize Select2 untuk dropdown kapal dan jabatan (PERBAIKAN: Kembalikan ke format lama)
+    // Initialize Select2 untuk dropdown kapal dan jabatan
     function initializeSelect2() {
-        // Kapal dropdown - Format seperti sebelumnya
+        // Kapal dropdown
         $('#id_kapal').select2({
             theme: 'bootstrap-5',
             placeholder: '-- Pilih Kapal --',
@@ -1268,41 +1373,280 @@ document.addEventListener('DOMContentLoaded', function() {
             width: '100%'
         });
         
-        // Event handler untuk kapal selection - PERBAIKAN: Simplified
+        // Event handler untuk kapal selection - PERBAIKAN
         $('#id_kapal').on('change', function() {
             const selectedValue = $(this).val();
             
-            console.log('Kapal selection changed to:', selectedValue);
+            console.log('Kapal changed to:', selectedValue); // Debug log
             
             if (selectedValue && selectedValue !== "") {
-                enableNextButton(1);
-                // Show kapal info jika diperlukan
                 const selectedOption = $(this).find('option:selected');
                 const kodeKapal = selectedOption.data('code') || '-';
                 const namaKapal = selectedOption.data('nama') || selectedOption.text();
+                
+                // Update kapal info badge
                 updateKapalInfo(namaKapal, kodeKapal);
+                
+                // Remove validation error if exists
+                removeValidationError(this);
+                
+                // Enable next button if validation passes
+                if (validationTriggered) {
+                    setTimeout(() => validateCurrentStep(), 100);
+                } else {
+                    enableNextButton(1);
+                }
             } else {
-                disableNextButton(1);
                 hideKapalInfo();
-            }
-            
-            // Validate only if user has tried to proceed
-            if (validationTriggered) {
-                validateCurrentStep();
-            }
-        });
-        
-        // Event handler untuk jabatan validation
-        $('#jabatan_naik, #id_jabatan_mutasi').on('change', function() {
-            if (validationTriggered) {
-                validateJabatanMutasi();
-                validateCurrentStep();
+                disableNextButton(1);
+                
+                if (validationTriggered) {
+                    setTimeout(() => validateCurrentStep(), 100);
+                }
             }
         });
     }
     
-    // Kapal info functions - PERBAIKAN: Simplified
+    // Initialize Select2 untuk search ABK
+    function initializeAbkSelect2() {
+        // ABK Naik Search
+        $('#abk_naik_search').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Ketik NRP atau nama ABK...',
+            allowClear: true,
+            width: '100%',
+            minimumInputLength: 2,
+            ajax: {
+                url: '{{ route("mutasi.search-abk") }}',
+                dataType: 'json',
+                delay: 300,
+                data: function (params) {
+                    return {
+                        q: params.term,
+                        type: 'naik'
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.results || []
+                    };
+                },
+                cache: true
+            },
+            templateResult: formatAbkResult,
+            templateSelection: formatAbkSelection,
+            escapeMarkup: function (markup) { return markup; }
+        });
+
+        // ABK Turun Search  
+        $('#abk_turun_search').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Ketik NRP atau nama ABK...',
+            allowClear: true,
+            width: '100%',
+            minimumInputLength: 2,
+            ajax: {
+                url: '{{ route("mutasi.search-abk") }}',
+                dataType: 'json',
+                delay: 300,
+                data: function (params) {
+                    return {
+                        q: params.term,
+                        type: 'turun'
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.results || []
+                    };
+                },
+                cache: true
+            },
+            templateResult: formatAbkResult,
+            templateSelection: formatAbkSelection,
+            escapeMarkup: function (markup) { return markup; }
+        });
+
+        // Event handlers untuk ABK selection
+        $('#abk_naik_search').on('select2:select', function (e) {
+            const data = e.params.data;
+            console.log('ABK Naik selected:', data);
+            
+            if (data.id) {
+                // Set hidden fields
+                document.getElementById('nrp_naik').value = data.nrp || data.id;
+                document.getElementById('nama_naik').value = data.nama_abk || '';
+                document.getElementById('jabatan_naik').value = data.jabatan_id || '';
+                
+                // Update display
+                updateSelectedAbkDisplay('naik', data);
+                
+                if (validationTriggered) {
+                    validateCurrentStep();
+                }
+            }
+        });
+
+        $('#abk_naik_search').on('select2:clear', function () {
+            // Clear hidden fields
+            document.getElementById('nrp_naik').value = '';
+            document.getElementById('nama_naik').value = '';
+            document.getElementById('jabatan_naik').value = '';
+            
+            // Hide display
+            document.getElementById('selectedAbkNaikInfo').classList.add('d-none');
+            
+            if (validationTriggered) {
+                validateCurrentStep();
+            }
+        });
+
+        $('#abk_turun_search').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Ketik NRP atau nama ABK...',
+            allowClear: true,
+            width: '100%',
+            minimumInputLength: 2,
+            ajax: {
+                url: '{{ route("mutasi.search-abk") }}',
+                dataType: 'json',
+                delay: 300,
+                data: function (params) {
+                    return {
+                        q: params.term,
+                        type: 'turun'
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.results || []
+                    };
+                },
+                cache: true
+            },
+            templateResult: formatAbkResult,
+            templateSelection: formatAbkSelection,
+            escapeMarkup: function (markup) { return markup; }
+        });
+
+        // Event handlers untuk ABK selection
+        $('#abk_turun_search').on('select2:select', function (e) {
+            const data = e.params.data;
+            console.log('ABK Turun selected:', data);
+            
+            if (data.id) {
+                // Set hidden fields
+                document.getElementById('nrp_turun').value = data.nrp || data.id;
+                document.getElementById('nama_turun').value = data.nama_abk || '';
+                document.getElementById('jabatan_turun').value = data.jabatan_id || '';
+                
+                // Update display
+                updateSelectedAbkDisplay('turun', data);
+            }
+        });
+
+        $('#abk_turun_search').on('select2:clear', function () {
+            // Clear hidden fields
+            document.getElementById('nrp_turun').value = '';
+            document.getElementById('nama_turun').value = '';
+            document.getElementById('jabatan_turun').value = '';
+            
+            // Hide display
+            document.getElementById('selectedAbkTurunInfo').classList.add('d-none');
+        });
+    }
+
+    // Format ABK result untuk dropdown
+    function formatAbkResult(abk) {
+        if (abk.loading) {
+            return `
+                <div class="abk-search-loading">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span>Mencari ABK...</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        if (!abk.nrp) {
+            return abk.text;
+        }
+
+        const statusClass = (abk.status_abk || '').toLowerCase() === 'organik' ? 'success' : 
+                           (abk.status_abk || '').toLowerCase() === 'non organik' ? 'info' : 'secondary';
+
+        return `
+            <div class="abk-search-result-card">
+                <div class="abk-search-header">
+                    <div class="abk-identity">
+                        <span class="abk-nrp">${abk.nrp}</span>
+                        <span class="abk-separator">•</span>
+                        <span class="abk-name">${abk.nama_abk}</span>
+                    </div>
+                    <span class="badge bg-${statusClass} abk-status-mini">${abk.status_abk}</span>
+                </div>
+                <div class="abk-search-details">
+                    <div class="abk-detail-item">
+                        <i class="bi bi-briefcase"></i>
+                        <span>${abk.jabatan_nama}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Format ABK selection untuk display
+    function formatAbkSelection(abk) {
+        if (!abk.nrp) {
+            return abk.text;
+        }
+        return `${abk.nrp} - ${abk.nama_abk}`;
+    }
+
+    // Update display selected ABK
+    function updateSelectedAbkDisplay(type, data) {
+        const prefix = type === 'naik' ? 'Naik' : 'Turun';
+        const infoElement = document.getElementById(`selectedAbk${prefix}Info`);
+        
+        if (infoElement) {
+            // Update display elements
+            document.getElementById(`displayNrp${prefix}`).textContent = data.nrp || data.id;
+            document.getElementById(`displayNama${prefix}`).textContent = data.nama_abk || '-';
+            document.getElementById(`displayJabatan${prefix}`).textContent = data.jabatan_nama || '-';
+            
+            // Update status badge dengan styling compact
+            const statusElement = document.getElementById(`displayStatus${prefix}`);
+            if (statusElement) {
+                statusElement.className = 'abk-status-compact';
+                
+                // Add appropriate status class
+                const statusLower = (data.status_abk || '').toLowerCase();
+                if (statusLower === 'organik') {
+                    statusElement.classList.add('status-organik');
+                    statusElement.innerHTML = '<i class="bi bi-check-circle"></i> Organik';
+                } else if (statusLower === 'non organik') {
+                    statusElement.classList.add('status-non-organik');
+                    statusElement.innerHTML = '<i class="bi bi-info-circle"></i> Non Organik';
+                } else if (statusLower === 'pensiun') {
+                    statusElement.classList.add('status-pensiun');
+                    statusElement.innerHTML = '<i class="bi bi-clock"></i> Pensiun';
+                } else {
+                    statusElement.classList.add('status-organik');
+                    statusElement.innerHTML = '<i class="bi bi-question-circle"></i> ' + (data.status_abk || 'N/A');
+                }
+            }
+            
+            // Show the info card
+            infoElement.classList.remove('d-none');
+        }
+    }
+
+    // Kapal info functions - PERBAIKAN
     function updateKapalInfo(namaKapal, kodeKapal) {
+        // Hide existing info first
         hideKapalInfo();
         
         const kapalInfoElement = document.getElementById('kapalInfo');
@@ -1310,9 +1654,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedKapalName = document.getElementById('selectedKapalName');
             const selectedKapalCode = document.getElementById('selectedKapalCode');
             
+            // Update content
             if (selectedKapalName) selectedKapalName.textContent = namaKapal || '-';
             if (selectedKapalCode) selectedKapalCode.textContent = kodeKapal || '-';
             
+            // Show the info badges
             kapalInfoElement.style.display = 'flex';
         }
     }
@@ -1323,85 +1669,7 @@ document.addEventListener('DOMContentLoaded', function() {
             kapalInfoElement.style.display = 'none';
         }
     }
-    
-    // Validasi jabatan mutasi
-    function validateJabatanMutasi() {
-        const jabatanTetap = document.getElementById('jabatan_naik');
-        const jabatanMutasi = document.getElementById('id_jabatan_mutasi');
-        
-        // Clear previous validation errors for jabatan
-        jabatanMutasi.classList.remove('is-invalid');
-        removeValidationError(jabatanMutasi);
-        
-        if (jabatanTetap.value && jabatanMutasi.value) {
-            // Error jika jabatan sama
-            if (jabatanTetap.value === jabatanMutasi.value) {
-                jabatanMutasi.classList.add('is-invalid');
-                showValidationError(jabatanMutasi, 'Jabatan tetap dan jabatan mutasi tidak boleh sama');
-                return false;
-            }
-            
-            // Warning jika mutasi ke level yang lebih rendah (opsional)
-            const levelTetap = parseInt(jabatanTetap.options[jabatanTetap.selectedIndex].dataset.level || 0);
-            const levelMutasi = parseInt(jabatanMutasi.options[jabatanMutasi.selectedIndex].dataset.level || 0);
-            
-            if (levelMutasi < levelTetap) {
-                showAlert('Perhatian: Mutasi ke jabatan dengan level lebih rendah', 'warning');
-            }
-        }
-        
-        return true;
-    }
-    
-    // Nama mutasi handler
-    const namaMutasiSelect = document.getElementById('nama_mutasi');
-    if (namaMutasiSelect) {
-        namaMutasiSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const selectedValue = this.value;
-            const description = selectedOption.getAttribute('data-desc') || '';
-            
-            updateMutasiInfo(selectedValue, description);
-            
-            if (validationTriggered) {
-                validateCurrentStep();
-            }
-        });
-    }
-    
-    function updateMutasiInfo(kode, description) {
-        hideMutasiInfo();
-        
-        if (kode && description) {
-            const infoContainer = document.createElement('div');
-            infoContainer.id = 'mutasiInfoInline';
-            infoContainer.className = 'mutasi-info-inline';
-            infoContainer.innerHTML = `
-                <div class="mutasi-info-badge">
-                    <i class="bi bi-info-circle-fill"></i>
-                    <span>${description}</span>
-                </div>
-            `;
-            
-            const selectContainer = namaMutasiSelect.parentNode;
-            if (selectContainer) {
-                const formText = selectContainer.querySelector('.form-text');
-                if (formText) {
-                    selectContainer.insertBefore(infoContainer, formText);
-                } else {
-                    selectContainer.appendChild(infoContainer);
-                }
-            }
-        }
-    }
-    
-    function hideMutasiInfo() {
-        const existingInfo = document.getElementById('mutasiInfoInline');
-        if (existingInfo) {
-            existingInfo.remove();
-        }
-    }
-    
+
     // ABK Turun checkbox handler
     if (adaAbkTurunCheckbox) {
         adaAbkTurunCheckbox.addEventListener('change', function() {
@@ -1413,7 +1681,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 formAbkTurun.classList.remove('show');
                 
                 // Clear ABK turun fields
-                const abkTurunFields = formAbkTurun.querySelectorAll('input, select, textarea');
+                $('#abk_turun_search').val(null).trigger('change');
+                document.getElementById('nrp_turun').value = '';
+                document.getElementById('nama_turun').value = '';
+                document.getElementById('jabatan_turun').value = '';
+                document.getElementById('selectedAbkTurunInfo').classList.add('d-none');
+                
+                // Clear other turun fields
+                const abkTurunFields = formAbkTurun.querySelectorAll('select:not(#abk_turun_search), textarea, input[type="file"]');
                 abkTurunFields.forEach(field => {
                     field.value = '';
                     field.classList.remove('is-invalid');
@@ -1426,72 +1701,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // PERBAIKAN: Input change handlers - hanya validasi jika validationTriggered = true
-    document.addEventListener('input', function(e) {
-        if (e.target.matches('input[required], select[required], textarea[required]') && validationTriggered) {
-            validateFieldOnChange(e.target);
-            validateCurrentStep();
-        }
-    });
-    
-    document.addEventListener('change', function(e) {
-        if (e.target.matches('input[required], select[required], textarea[required]') && validationTriggered) {
-            validateFieldOnChange(e.target);
-            validateCurrentStep();
-        }
-    });
-    
-    function validateFieldOnChange(field) {
-        if (field.value.trim()) {
-            field.classList.remove('is-invalid');
-            removeValidationError(field);
-        }
-    }
-    
-    // TMT/TAT validation handler
-    const tmtField = document.getElementById('TMT');
-    const tatField = document.getElementById('TAT');
-    
-    if (tmtField && tatField) {
-        [tmtField, tatField].forEach(field => {
-            field.addEventListener('change', function() {
-                if (validationTriggered) {
-                    validateDateRange();
-                    validateCurrentStep();
-                }
-            });
-        });
-    }
-    
-    function validateDateRange() {
-        const tmt = document.getElementById('TMT');
-        const tat = document.getElementById('TAT');
-        
-        // Clear previous validation errors
-        tat.classList.remove('is-invalid');
-        removeValidationError(tat);
-        
-        if (tmt.value && tat.value) {
-            const tmtDate = new Date(tmt.value);
-            const tatDate = new Date(tat.value);
-            
-            if (tmtDate >= tatDate) {
-                tat.classList.add('is-invalid');
-                showValidationError(tat, 'TAT harus setelah TMT');
-                return false;
-            }
-        }
-        
-        return true;
-    }
-    
-    // PERBAIKAN: Next button handlers - trigger validasi saat user klik Next
+
+    // Next button handlers
     nextButtons.forEach(button => {
         button.addEventListener('click', function() {
-            console.log('Next button clicked, currentStep:', currentStep);
-            
-            // Set flag bahwa user sudah mencoba lanjut
             validationTriggered = true;
             
             if (validateCurrentStep()) {
@@ -1505,18 +1718,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
+
     // Previous button handlers
     prevButtons.forEach(button => {
         button.addEventListener('click', function() {
-            console.log('Previous button clicked, currentStep:', currentStep);
             if (currentStep > 1) {
                 currentStep--;
                 updateStepDisplay();
             }
         });
     });
-    
+
     // Form submission
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -1529,10 +1741,128 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    function updateStepDisplay() {
-        console.log('Updating step display to step:', currentStep);
+
+    function validateCurrentStep() {
+        const currentStepContent = document.querySelector(`.step-content[data-step="${currentStep}"]`);
+        if (!currentStepContent) {
+            return false;
+        }
         
+        let isValid = true;
+        
+        // Clear previous validation errors
+        clearValidationErrors(currentStepContent);
+        
+        // Step-specific validation
+        if (currentStep === 1) {
+            // Validate kapal selection
+            const kapalValue = document.getElementById('id_kapal').value;
+            console.log('Kapal value:', kapalValue); // Debug log
+            
+            if (!kapalValue || kapalValue === "") {
+                isValid = false;
+                if (validationTriggered) {
+                    showValidationError(document.getElementById('id_kapal'), 'Silakan pilih kapal tujuan');
+                }
+            }
+        } else if (currentStep === 2) {
+            // Validate ABK naik
+            const nrpNaik = document.getElementById('nrp_naik').value;
+            const namaNaik = document.getElementById('nama_naik').value;
+            const jabatanNaik = document.getElementById('jabatan_naik').value;
+            const jabatanMutasi = document.getElementById('id_jabatan_mutasi').value;
+            const namaMutasi = document.getElementById('nama_mutasi').value;
+            const jenisMutasi = document.getElementById('jenis_mutasi').value;
+            const tmt = document.getElementById('TMT').value;
+            const tat = document.getElementById('TAT').value;
+            
+            console.log('Step 2 validation:', { // Debug log
+                nrpNaik, namaNaik, jabatanNaik, jabatanMutasi, 
+                namaMutasi, jenisMutasi, tmt, tat
+            });
+            
+            // Validate ABK selection
+            if (!nrpNaik || !namaNaik || !jabatanNaik) {
+                isValid = false;
+                if (validationTriggered) {
+                    showAlert('Silakan pilih ABK yang akan naik', 'warning');
+                }
+            }
+            
+            // Validate jabatan mutasi
+            if (!jabatanMutasi || jabatanMutasi === "") {
+                isValid = false;
+                if (validationTriggered) {
+                    showValidationError(document.getElementById('id_jabatan_mutasi'), 'Silakan pilih jabatan mutasi');
+                }
+            }
+            
+            // Validate nama mutasi
+            if (!namaMutasi || namaMutasi === "") {
+                isValid = false;
+                if (validationTriggered) {
+                    showValidationError(document.getElementById('nama_mutasi'), 'Silakan pilih nama mutasi');
+                }
+            }
+            
+            // Validate jenis mutasi
+            if (!jenisMutasi || jenisMutasi === "") {
+                isValid = false;
+                if (validationTriggered) {
+                    showValidationError(document.getElementById('jenis_mutasi'), 'Silakan pilih jenis mutasi');
+                }
+            }
+            
+            // Validate TMT
+            if (!tmt || tmt === "") {
+                isValid = false;
+                if (validationTriggered) {
+                    showValidationError(document.getElementById('TMT'), 'Silakan isi tanggal TMT');
+                }
+            }
+            
+            // Validate TAT
+            if (!tat || tat === "") {
+                isValid = false;
+                if (validationTriggered) {
+                    showValidationError(document.getElementById('TAT'), 'Silakan isi tanggal TAT');
+                }
+            }
+            
+            // Validate date range
+            if (tmt && tat && new Date(tmt) >= new Date(tat)) {
+                isValid = false;
+                if (validationTriggered) {
+                    showValidationError(document.getElementById('TAT'), 'TAT harus setelah TMT');
+                }
+            }
+        } else if (currentStep === 3) {
+            // Step 3 validation - optional step
+            const adaAbkTurun = document.getElementById('adaAbkTurun').checked;
+            
+            if (adaAbkTurun) {
+                // If checkbox is checked, validate ABK turun fields
+                const nrpTurun = document.getElementById('nrp_turun').value;
+                const namaTurun = document.getElementById('nama_turun').value;
+                
+                if (!nrpTurun || !namaTurun) {
+                    isValid = false;
+                    if (validationTriggered) {
+                        showAlert('Silakan pilih ABK yang akan turun', 'warning');
+                    }
+                }
+            }
+            // If checkbox not checked, step is valid regardless
+        }
+        
+        // Update button state
+        updateButtonState(currentStep, isValid);
+        
+        console.log('Step', currentStep, 'validation result:', isValid); // Debug log
+        return isValid;
+    }
+
+    function updateStepDisplay() {
         // Update step indicators
         stepItems.forEach((item, index) => {
             const stepNumber = index + 1;
@@ -1561,185 +1891,27 @@ document.addEventListener('DOMContentLoaded', function() {
             content.classList.toggle('active', stepNumber === currentStep);
         });
         
-        // PERBAIKAN: Reset validationTriggered untuk step baru
-        // validationTriggered = false; // Comment ini agar validasi tetap aktif setelah step pertama
-        
         // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    
-    function validateCurrentStep() {
-        const currentStepContent = document.querySelector(`.step-content[data-step="${currentStep}"]`);
-        if (!currentStepContent) {
-            console.error('Current step content not found for step:', currentStep);
-            return false;
-        }
-        
-        let isValid = true;
-        
-        // Get required fields for current step
-        const requiredFields = currentStepContent.querySelectorAll('input[required], select[required], textarea[required]');
-        
-        console.log(`Validating step ${currentStep}, found ${requiredFields.length} required fields`);
-        
-        // PERBAIKAN: Hanya validasi jika validationTriggered = true
-        if (!validationTriggered) {
-            // Jika belum triggered, hanya cek apakah semua field terisi untuk enable/disable button
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    isValid = false;
-                }
-            });
-            
-            // Update button state tanpa menampilkan error
-            const nextBtn = document.querySelector(`[data-step="${currentStep}"] .btn-next`);
-            if (nextBtn) {
-                if (isValid) {
-                    enableNextButton(currentStep);
-                } else {
-                    disableNextButton(currentStep);
-                }
-            }
-            
-            return isValid;
-        }
-        
-        requiredFields.forEach(field => {
-            const fieldValid = validateField(field);
-            if (!fieldValid) {
-                isValid = false;
-            }
-        });
-        
-        // Additional step-specific validations
-        if (currentStep === 2) {
-            // Validate TMT/TAT
-            if (!validateDateRange()) {
-                isValid = false;
-            }
-            
-            // Validate jabatan mutasi
-            if (!validateJabatanMutasi()) {
-                isValid = false;
-            }
-        }
-        
-        // Enable/disable next button based on validation
-        const nextBtn = document.querySelector(`[data-step="${currentStep}"] .btn-next`);
-        if (nextBtn) {
-            if (isValid) {
-                enableNextButton(currentStep);
-            } else {
-                disableNextButton(currentStep);
-            }
-        }
-        
-        console.log('Validation result for step', currentStep, ':', isValid);
-        return isValid;
-    }
-    
-    function validateField(field) {
-        let isValid = true;
-        
-        // Clear previous validation state
-        field.classList.remove('is-invalid');
-        removeValidationError(field);
-        
-        // Check if field is required and empty
-        if (field.hasAttribute('required') && !field.value.trim()) {
-            field.classList.add('is-invalid');
-            
-            let message = 'Field ini wajib diisi';
-            if (field.id === 'id_kapal') {
-                message = 'Silakan pilih kapal tujuan';
-            } else if (field.id === 'jabatan_naik') {
-                message = 'Silakan pilih jabatan tetap';
-            } else if (field.id === 'id_jabatan_mutasi') {
-                message = 'Silakan pilih jabatan mutasi';
-            } else if (field.id === 'nama_mutasi') {
-                message = 'Silakan pilih nama mutasi';
-            } else if (field.id === 'jenis_mutasi') {
-                message = 'Silakan pilih jenis mutasi';
-            } else if (field.id === 'TMT') {
-                message = 'Tanggal TMT wajib diisi';
-            } else if (field.id === 'TAT') {
-                message = 'Tanggal TAT wajib diisi';
-            } else if (field.id === 'nrp_naik') {
-                message = 'NRP ABK wajib diisi';
-            } else if (field.id === 'nama_naik') {
-                message = 'Nama ABK wajib diisi';
-            }
-            
-            showValidationError(field, message);
-            isValid = false;
-        }
-        
-        return isValid;
-    }
-    
-    function enableNextButton(step) {
-        const nextBtn = document.querySelector(`[data-step="${step}"] .btn-next`);
-        if (nextBtn) {
-            nextBtn.disabled = false;
-            nextBtn.removeAttribute('disabled');
-            nextBtn.classList.remove('disabled');
-        }
-    }
-    
-    function disableNextButton(step) {
-        const nextBtn = document.querySelector(`[data-step="${step}"] .btn-next`);
-        if (nextBtn) {
-            nextBtn.disabled = true;
-            nextBtn.setAttribute('disabled', 'disabled');
-            nextBtn.classList.add('disabled');
-        }
-    }
-    
-    function showValidationError(field, message) {
-        removeValidationError(field);
-        
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'invalid-feedback';
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
-        field.parentNode.appendChild(errorDiv);
-    }
-    
-    function removeValidationError(field) {
-        const existingError = field.parentNode.querySelector('.invalid-feedback');
-        if (existingError) {
-            existingError.remove();
-        }
-    }
-    
-    function showAlert(message, type = 'info') {
-        // Create alert element
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        // Insert at top of form
-        const formContainer = document.querySelector('.form-container');
-        if (formContainer) {
-            formContainer.insertBefore(alertDiv, formContainer.firstChild);
-            
-            // Auto dismiss after 5 seconds
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.remove();
-                }
-            }, 5000);
-        }
-    }
-    
+
     function updateReviewData() {
         // Kapal info
         const kapalSelect = document.getElementById('id_kapal');
         const kapalText = kapalSelect.options[kapalSelect.selectedIndex]?.text || '-';
         setReviewValue('reviewKapal', kapalText);
+        
+        // ABK Naik info
+        setReviewValue('reviewNrpNaik', document.getElementById('nrp_naik').value || '-');
+        setReviewValue('reviewNamaNaik', document.getElementById('nama_naik').value || '-');
+        
+        const jabatanNaikId = document.getElementById('jabatan_naik').value;
+        const jabatanNaikSelect = document.querySelector('#id_jabatan_mutasi option[value="' + jabatanNaikId + '"]');
+        setReviewValue('reviewJabatanNaik', jabatanNaikSelect ? jabatanNaikSelect.text : '-');
+        
+        const jabatanMutasi = document.getElementById('id_jabatan_mutasi');
+        const jabatanMutasiText = jabatanMutasi.options[jabatanMutasi.selectedIndex]?.text || '-';
+        setReviewValue('reviewJabatanMutasi', jabatanMutasiText);
         
         // Mutasi info
         const namaMutasi = document.getElementById('nama_mutasi');
@@ -1754,18 +1926,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setReviewValue('reviewTMT', TMT ? new Intl.DateTimeFormat('id-ID').format(new Date(TMT)) : '-');
         setReviewValue('reviewTAT', TAT ? new Intl.DateTimeFormat('id-ID').format(new Date(TAT)) : '-');
         
-        // ABK Naik info
-        setReviewValue('reviewNrpNaik', document.getElementById('nrp_naik').value || '-');
-        setReviewValue('reviewNamaNaik', document.getElementById('nama_naik').value || '-');
-        
-        const jabatanNaik = document.getElementById('jabatan_naik');
-        const jabatanNaikText = jabatanNaik.options[jabatanNaik.selectedIndex]?.text || '-';
-        setReviewValue('reviewJabatanNaik', jabatanNaikText);
-        
-        const jabatanMutasi = document.getElementById('id_jabatan_mutasi');
-        const jabatanMutasiText = jabatanMutasi.options[jabatanMutasi.selectedIndex]?.text || '-';
-        setReviewValue('reviewJabatanMutasi', jabatanMutasiText);
-        
         // ABK Turun info (if exists)
         const adaAbkTurun = document.getElementById('adaAbkTurun').checked;
         const reviewAbkTurun = document.getElementById('reviewAbkTurun');
@@ -1776,11 +1936,11 @@ document.addEventListener('DOMContentLoaded', function() {
             setReviewValue('reviewNrpTurun', document.getElementById('nrp_turun').value || '-');
             setReviewValue('reviewNamaTurun', document.getElementById('nama_turun').value || '-');
             
-            const jabatanTurun = document.getElementById('jabatan_turun');
-            const jabatanTurunText = jabatanTurun.options[jabatanTurun.selectedIndex]?.text || '-';
-            setReviewValue('reviewJabatanTurun', jabatanTurunText);
+            // Get jabatan turun name
+            const jabatanTurunId = document.getElementById('jabatan_turun').value;
+            const jabatanTurunOption = document.querySelector('.jabatan-select option[value="' + jabatanTurunId + '"]');
+            setReviewValue('reviewJabatanTurun', jabatanTurunOption ? jabatanTurunOption.text : '-');
             
-            const alasanTurun = document.getElementById('alasan_turun').value || '-';
             setReviewValue('reviewAlasanTurun', alasanTurun);
             
             // Count uploaded documents
@@ -1790,37 +1950,30 @@ document.addEventListener('DOMContentLoaded', function() {
             reviewAbkTurun.classList.add('d-none');
         }
     }
-    
-    function setReviewValue(elementId, value) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.textContent = value || '-';
+
+    // Helper functions
+    function enableNextButton(step) {
+        const nextBtn = document.querySelector(`[data-step="${step}"] .btn-next`);
+        if (nextBtn) {
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('disabled');
         }
     }
     
-    function getDokumenCount() {
-        let count = 0;
-        const dokumenInputs = ['dokumen_sertijab', 'dokumen_familisasi', 'dokumen_lampiran'];
-        
-        dokumenInputs.forEach(inputId => {
-            const input = document.getElementById(inputId);
-            if (input && input.files && input.files.length > 0) {
-                count++;
-            }
-        });
-        
-        return count;
+    function disableNextButton(step) {
+        const nextBtn = document.querySelector(`[data-step="${step}"] .btn-next`);
+        if (nextBtn) {
+            nextBtn.disabled = true;
+            nextBtn.classList.add('disabled');
+        }
     }
-    
+
     function submitForm() {
-        // Show loading state on submit button
         submitButton.classList.add('loading');
         submitButton.disabled = true;
         
-        // Create FormData
         const formData = new FormData(form);
         
-        // Submit via AJAX
         fetch(form.action, {
             method: 'POST',
             body: formData,
@@ -1842,7 +1995,6 @@ document.addEventListener('DOMContentLoaded', function() {
             showAlert(error.message || 'Terjadi kesalahan saat menyimpan data', 'danger');
         })
         .finally(() => {
-            // Hide loading state
             submitButton.classList.remove('loading');
             submitButton.disabled = false;
         });
@@ -1852,11 +2004,176 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = new bootstrap.Modal(document.getElementById('successModal'));
         modal.show();
     }
-    
-    // PERBAIKAN: Initial validation - hanya cek untuk enable/disable button tanpa error
+
+    function showValidationError(field, message) {
+        removeValidationError(field);
+        field.classList.add('is-invalid');
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'invalid-feedback';
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        field.parentNode.appendChild(errorDiv);
+    }
+
+    function removeValidationError(field) {
+        field.classList.remove('is-invalid');
+        const existingError = field.parentNode.querySelector('.invalid-feedback');
+        if (existingError) {
+            existingError.remove();
+        }
+    }
+
+    function showAlert(message, type = 'info') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const formContainer = document.querySelector('.form-container');
+        if (formContainer) {
+            formContainer.insertBefore(alertDiv, formContainer.firstChild);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    }
+
+    function setReviewValue(elementId, value) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = value || '-';
+        }
+ }
+
+    function getDokumenCount() {
+        let count = 0;
+        const dokumenInputs = ['dokumen_sertijab', 'dokumen_familisasi', 'dokumen_lampiran'];
+        
+        dokumenInputs.forEach(inputId => {
+            const input = document.getElementById(inputId);
+            if (input && input.files && input.files.length > 0) {
+                count++;
+            }
+        });
+        
+        return count;
+    }
+
+    // Tambahkan event listeners untuk real-time validation
+    function initializeValidationListeners() {
+        // Step 1 - Kapal selection
+        $('#id_kapal').on('change', function() {
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+        
+        // Step 2 - ABK dan form fields
+        $('#abk_naik_search').on('select2:select select2:clear', function() {
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+        
+        $('#id_jabatan_mutasi').on('change', function() {
+            removeValidationError(this);
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+        
+        $('#nama_mutasi').on('change', function() {
+            removeValidationError(this);
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+        
+        $('#jenis_mutasi').on('change', function() {
+            removeValidationError(this);
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+        
+        $('#TMT').on('change', function() {
+            removeValidationError(this);
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+        
+        $('#TAT').on('change', function() {
+            removeValidationError(this);
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+        
+        // Step 3 - ABK turun
+        $('#adaAbkTurun').on('change', function() {
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+        
+        $('#abk_turun_search').on('select2:select select2:clear', function() {
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+    }
+
+    // Initial validation
     setTimeout(() => {
         validateCurrentStep();
     }, 500);
+
+    // Tambahkan helper functions ini setelah validateCurrentStep()
+
+    function clearValidationErrors(container) {
+        // Remove all validation error messages and classes
+        const invalidFields = container.querySelectorAll('.is-invalid');
+        invalidFields.forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        
+        const errorMessages = container.querySelectorAll('.invalid-feedback');
+        errorMessages.forEach(error => {
+            error.remove();
+        });
+    }
+
+    function updateButtonState(step, isValid) {
+        const nextBtn = document.querySelector(`[data-step="${step}"] .btn-next`);
+        const submitBtn = document.querySelector(`[data-step="${step}"] .btn-submit`);
+        
+        if (nextBtn) {
+            if (isValid) {
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('disabled');
+            } else {
+                nextBtn.disabled = true;
+                nextBtn.classList.add('disabled');
+            }
+        }
+        
+        if (submitBtn) {
+            if (isValid) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('disabled');
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('disabled');
+            }
+        }
+    }
 });
 </script>
 @endpush
