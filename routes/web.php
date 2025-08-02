@@ -151,6 +151,7 @@ Route::middleware(['auth'])->group(function () {
         // AJAX Routes
         Route::get('/ajax/abk-list', [MutasiController::class, 'getAbkList'])->name('ajax.abk-list');
         Route::get('/ajax/jabatan-list', [MutasiController::class, 'getJabatanList'])->name('ajax.jabatan-list');
+        Route::get('/ajax/kapal-list', [MutasiController::class, 'getKapalList'])->name('ajax.kapal-list'); // TAMBAHKAN INI
         
         // Dokumen Routes
         Route::post('/{id}/upload-dokumen', [MutasiController::class, 'uploadDokumen'])->name('upload-dokumen');

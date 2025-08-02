@@ -115,7 +115,9 @@
                                                 @foreach($daftarKapal as $kapal)
                                                     <option value="{{ $kapal['id_kapal'] }}" 
                                                             data-code="{{ $kapal['id'] }}"
+
                                                             data-nama="{{ $kapal['nama_kapal'] }}">
+
                                                         {{ $kapal['nama_kapal'] }} ({{ $kapal['id'] }})
                                                     </option>
                                                 @endforeach
@@ -204,7 +206,9 @@
                                                     <option value="{{ $jabatan->id }}" 
                                                             data-level="{{ $jabatan->level_jabatan ?? 0 }}"
 
+
                                                             data-kode="{{ $jabatan->kode_jabatan ?? '' }}">
+
                                                         {{ $jabatan->nama_jabatan }}
                                                         @if($jabatan->kode_jabatan)
                                                             ({{ $jabatan->kode_jabatan }})
@@ -226,7 +230,9 @@
                                                     <option value="{{ $jabatan->id }}" 
                                                             data-level="{{ $jabatan->level_jabatan ?? 0 }}"
 
+
                                                             data-kode="{{ $jabatan->kode_jabatan ?? '' }}">
+
                                                         {{ $jabatan->nama_jabatan }}
                                                         @if($jabatan->kode_jabatan)
                                                             ({{ $jabatan->kode_jabatan }})
@@ -358,7 +364,9 @@
                                                         <option value="{{ $jabatan->id }}" 
                                                                 data-level="{{ $jabatan->level_jabatan ?? 0 }}"
 
+
                                                                 data-kode="{{ $jabatan->kode_jabatan ?? '' }}">
+
                                                             {{ $jabatan->nama_jabatan }}
                                                             @if($jabatan->kode_jabatan)
                                                                 ({{ $jabatan->kode_jabatan }})
@@ -1220,262 +1228,257 @@
 document.addEventListener('DOMContentLoaded', function() {
     let currentStep = 1;
     const totalSteps = 4;
+    let validationTriggered = false; // Flag untuk kontrol kapan validasi dimulai
     
-    // Initialize Select2
+    // Elements
+    const stepItems = document.querySelectorAll('.step-item');
+    const stepContents = document.querySelectorAll('.step-content[data-step]');
+    const nextButtons = document.querySelectorAll('.btn-next');
+    const prevButtons = document.querySelectorAll('.btn-prev');
+    const form = document.getElementById('tambahMutasiForm');
+    const submitButton = document.querySelector('.btn-submit');
+    
+    // Form elements
+    const kapalSelect = document.getElementById('id_kapal');
+    const nextStep1Button = document.querySelector('[data-step="1"] .btn-next');
+    const adaAbkTurunCheckbox = document.getElementById('adaAbkTurun');
+    const formAbkTurun = document.getElementById('formAbkTurun');
+    
+    // Initialize
+    updateStepDisplay();
     initializeSelect2();
     
-    // Initialize step navigation
-    initializeStepNavigation();
-    
-    // Initialize form handlers
-    initializeFormHandlers();
-    
-    // Initialize form submission
-    initializeFormSubmission();
-    
-    // Initialize Select2 untuk dropdown kapal
+    // Initialize Select2 untuk dropdown kapal dan jabatan (PERBAIKAN: Kembalikan ke format lama)
     function initializeSelect2() {
+        // Kapal dropdown - Format seperti sebelumnya
         $('#id_kapal').select2({
             theme: 'bootstrap-5',
             placeholder: '-- Pilih Kapal --',
             allowClear: true,
-            width: '100%',
-            // Optional: Enable search via AJAX jika kapal banyak
-            /*
-            ajax: {
-                url: "{{ route('mutasi.ajax.kapal-list') }}",
-                dataType: 'json',
-                delay: 250,
-                data: function (params) {
-                    return {
-                        search: params.term,
-                        page: params.page
-                    };
-                },
-                processResults: function (data, params) {
-                    return {
-                        results: data.data.map(function(item) {
-                            return {
-                                id: item.id,
-                                text: item.text
-                            };
-                        })
-                    };
-                },
-                cache: true
-            }
-            */
+            width: '100%'
         });
         
-        // Handler untuk kapal selection
-        $('#id_kapal').on('change', function() {
-            const isValid = $(this).val() && $(this).val() !== "";
-            const nextBtn = document.querySelector('[data-step="1"] .btn-next');
-            const kapalInfo = document.getElementById('kapalInfo');
-            
-            if (isValid) {
-                // Enable next button
-                nextBtn.disabled = false;
-                nextBtn.removeAttribute('disabled');
-                
-                // Show kapal info
-                const selectedOption = this.options[this.selectedIndex];
-                const kapalNama = selectedOption.getAttribute('data-nama');
-                const kapalCode = selectedOption.getAttribute('data-code');
-                
-                document.getElementById('selectedKapalName').textContent = kapalNama || '-';
-                document.getElementById('selectedKapalCode').textContent = kapalCode || '-';
-                kapalInfo.style.display = 'flex';
-            } else {
-                // Disable next button
-                nextBtn.disabled = true;
-                nextBtn.setAttribute('disabled', 'disabled');
-                
-                // Hide kapal info
-                kapalInfo.style.display = 'none';
-            }
-        });
-    }
-    
-    // Initialize step navigation
-    function initializeStepNavigation() {
-        // Next buttons
-        document.querySelectorAll('.btn-next').forEach(button => {
-            button.addEventListener('click', function() {
-                if (validateCurrentStep()) {
-                    if (currentStep < totalSteps) {
-                        currentStep++;
-                        updateStepDisplay();
-                        if (currentStep === 4) {
-                            updateReviewData();
-                        }
-                    }
-                }
-            });
-        });
-        
-        // Previous buttons
-        document.querySelectorAll('.btn-prev').forEach(button => {
-            button.addEventListener('click', function() {
-                if (currentStep > 1) {
-                    currentStep--;
-                    updateStepDisplay();
-                }
-            });
-        });
-        
-        updateStepDisplay();
-    }
-    
-    // Update step display
-    function updateStepDisplay() {
-        // Update step items
-        document.querySelectorAll('.step-item').forEach(item => {
-            const stepNum = parseInt(item.getAttribute('data-step'));
-            item.classList.toggle('active', stepNum === currentStep);
-            item.classList.toggle('completed', stepNum < currentStep);
-        });
-        
-        // Update step contents
-        document.querySelectorAll('.step-content[data-step]').forEach(content => {
-            const stepNum = parseInt(content.getAttribute('data-step'));
-            content.classList.toggle('active', stepNum === currentStep);
-        });
-    }
-    
-    // Validate current step
-    function validateCurrentStep() {
-        const currentStepElement = document.querySelector(`.step-content[data-step="${currentStep}"]`);
-        const requiredInputs = currentStepElement.querySelectorAll('[required]');
-        
-        for (let input of requiredInputs) {
-            if (!input.value.trim()) {
-                input.focus();
-                showAlert('Mohon lengkapi semua field yang wajib diisi', 'warning');
-                return false;
-            }
-        }
-        
-        // Validasi khusus untuk step 2 (TMT harus lebih kecil dari TAT)
-        if (currentStep === 2) {
-            const TMT = document.getElementById('TMT').value;
-            const TAT = document.getElementById('TAT').value;
-            
-            if (TMT && TAT && new Date(TMT) >= new Date(TAT)) {
-                showAlert('TAT harus lebih besar dari TMT', 'warning');
-                return false;
-            }
-        }
-        
-        return true;
-    }
-    
-    // Initialize form handlers
-    function initializeFormHandlers() {
-        // ABK Turun checkbox handler
-        const adaAbkTurunCheckbox = document.getElementById('adaAbkTurun');
-        const formAbkTurun = document.getElementById('formAbkTurun');
-        
-        if (adaAbkTurunCheckbox && formAbkTurun) {
-            adaAbkTurunCheckbox.addEventListener('change', function() {
-                if (this.checked) {
-                    formAbkTurun.classList.remove('d-none');
-                    formAbkTurun.classList.add('show');
-                } else {
-                    formAbkTurun.classList.add('d-none');
-                    formAbkTurun.classList.remove('show');
-                    // Clear ABK turun form
-                    formAbkTurun.querySelectorAll('input, select, textarea').forEach(field => {
-                        field.value = '';
-                    });
-                }
-            });
-        }
-        
-        // Auto-fill nama mutasi description
-        const namaMutasiSelect = document.getElementById('nama_mutasi');
-        if (namaMutasiSelect) {
-            namaMutasiSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const description = selectedOption.getAttribute('data-desc') || '';
-                
-                // Show description as small text
-                let descElement = document.getElementById('mutasiDescription');
-                if (!descElement) {
-                    descElement = document.createElement('small');
-                    descElement.id = 'mutasiDescription';
-                    descElement.className = 'text-muted';
-                    this.parentNode.appendChild(descElement);
-                }
-                descElement.textContent = description ? `(${description})` : '';
-            });
-        }
-        
-        // Initialize jabatan handlers
-        initializeJabatanHandlers();
-    }
-    
-    // Initialize Select2 untuk dropdown jabatan jika diperlukan
-    function initializeJabatanHandlers() {
+        // Jabatan dropdown
         $('.jabatan-select').select2({
             theme: 'bootstrap-5',
             placeholder: function() {
                 return $(this).data('placeholder') || '-- Pilih Jabatan --';
             },
             allowClear: true,
-            width: '100%',
-            templateResult: formatJabatanOption,
-            templateSelection: formatJabatanSelection
+            width: '100%'
         });
         
-        // Handler untuk jabatan tetap vs jabatan mutasi validation
+        // Event handler untuk kapal selection - PERBAIKAN: Simplified
+        $('#id_kapal').on('change', function() {
+            const selectedValue = $(this).val();
+            
+            console.log('Kapal selection changed to:', selectedValue);
+            
+            if (selectedValue && selectedValue !== "") {
+                enableNextButton(1);
+                // Show kapal info jika diperlukan
+                const selectedOption = $(this).find('option:selected');
+                const kodeKapal = selectedOption.data('code') || '-';
+                const namaKapal = selectedOption.data('nama') || selectedOption.text();
+                updateKapalInfo(namaKapal, kodeKapal);
+            } else {
+                disableNextButton(1);
+                hideKapalInfo();
+            }
+            
+            // Validate only if user has tried to proceed
+            if (validationTriggered) {
+                validateCurrentStep();
+            }
+        });
+        
+        // Event handler untuk jabatan validation
         $('#jabatan_naik, #id_jabatan_mutasi').on('change', function() {
-            validateJabatanMutasi();
+            if (validationTriggered) {
+                validateJabatanMutasi();
+                validateCurrentStep();
+            }
         });
     }
     
-    // Format option jabatan untuk Select2
-    function formatJabatanOption(jabatan) {
-        if (!jabatan.id) {
-            return jabatan.text;
+    // Kapal info functions - PERBAIKAN: Simplified
+    function updateKapalInfo(namaKapal, kodeKapal) {
+        hideKapalInfo();
+        
+        const kapalInfoElement = document.getElementById('kapalInfo');
+        if (kapalInfoElement) {
+            const selectedKapalName = document.getElementById('selectedKapalName');
+            const selectedKapalCode = document.getElementById('selectedKapalCode');
+            
+            if (selectedKapalName) selectedKapalName.textContent = namaKapal || '-';
+            if (selectedKapalCode) selectedKapalCode.textContent = kodeKapal || '-';
+            
+            kapalInfoElement.style.display = 'flex';
         }
-        
-        var $jabatan = $(
-            '<div class="jabatan-option">' +
-                '<div class="jabatan-name">' + jabatan.text + '</div>' +
-                '<div class="jabatan-meta">' +
-                    '<span class="jabatan-level">Level ' + ($(jabatan.element).data('level') || 0) + '</span>' +
-                    '<span class="jabatan-kode">' + ($(jabatan.element).data('kode') || '') + '</span>' +
-                '</div>' +
-            '</div>'
-        );
-        
-        return $jabatan;
     }
-
-    // Format selection jabatan untuk Select2
-    function formatJabatanSelection(jabatan) {
-        return jabatan.text || jabatan.id;
+    
+    function hideKapalInfo() {
+        const kapalInfoElement = document.getElementById('kapalInfo');
+        if (kapalInfoElement) {
+            kapalInfoElement.style.display = 'none';
+        }
     }
-
+    
     // Validasi jabatan mutasi
     function validateJabatanMutasi() {
         const jabatanTetap = document.getElementById('jabatan_naik');
         const jabatanMutasi = document.getElementById('id_jabatan_mutasi');
         
+        // Clear previous validation errors for jabatan
+        jabatanMutasi.classList.remove('is-invalid');
+        removeValidationError(jabatanMutasi);
+        
         if (jabatanTetap.value && jabatanMutasi.value) {
+            // Error jika jabatan sama
+            if (jabatanTetap.value === jabatanMutasi.value) {
+                jabatanMutasi.classList.add('is-invalid');
+                showValidationError(jabatanMutasi, 'Jabatan tetap dan jabatan mutasi tidak boleh sama');
+                return false;
+            }
+            
+            // Warning jika mutasi ke level yang lebih rendah (opsional)
             const levelTetap = parseInt(jabatanTetap.options[jabatanTetap.selectedIndex].dataset.level || 0);
             const levelMutasi = parseInt(jabatanMutasi.options[jabatanMutasi.selectedIndex].dataset.level || 0);
             
-            // Warning jika mutasi ke level yang lebih rendah
             if (levelMutasi < levelTetap) {
                 showAlert('Perhatian: Mutasi ke jabatan dengan level lebih rendah', 'warning');
             }
+        }
+        
+        return true;
+    }
+    
+    // Nama mutasi handler
+    const namaMutasiSelect = document.getElementById('nama_mutasi');
+    if (namaMutasiSelect) {
+        namaMutasiSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const selectedValue = this.value;
+            const description = selectedOption.getAttribute('data-desc') || '';
             
-            // Error jika jabatan sama
-            if (jabatanTetap.value === jabatanMutasi.value) {
-                showAlert('Jabatan tetap dan jabatan mutasi tidak boleh sama', 'danger');
-                jabatanMutasi.value = '';
+            updateMutasiInfo(selectedValue, description);
+            
+            if (validationTriggered) {
+                validateCurrentStep();
+            }
+        });
+    }
+    
+    function updateMutasiInfo(kode, description) {
+        hideMutasiInfo();
+        
+        if (kode && description) {
+            const infoContainer = document.createElement('div');
+            infoContainer.id = 'mutasiInfoInline';
+            infoContainer.className = 'mutasi-info-inline';
+            infoContainer.innerHTML = `
+                <div class="mutasi-info-badge">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>${description}</span>
+                </div>
+            `;
+            
+            const selectContainer = namaMutasiSelect.parentNode;
+            if (selectContainer) {
+                const formText = selectContainer.querySelector('.form-text');
+                if (formText) {
+                    selectContainer.insertBefore(infoContainer, formText);
+                } else {
+                    selectContainer.appendChild(infoContainer);
+                }
+            }
+        }
+    }
+    
+    function hideMutasiInfo() {
+        const existingInfo = document.getElementById('mutasiInfoInline');
+        if (existingInfo) {
+            existingInfo.remove();
+        }
+    }
+    
+    // ABK Turun checkbox handler
+    if (adaAbkTurunCheckbox) {
+        adaAbkTurunCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                formAbkTurun.classList.remove('d-none');
+                formAbkTurun.classList.add('show');
+            } else {
+                formAbkTurun.classList.add('d-none');
+                formAbkTurun.classList.remove('show');
+                
+                // Clear ABK turun fields
+                const abkTurunFields = formAbkTurun.querySelectorAll('input, select, textarea');
+                abkTurunFields.forEach(field => {
+                    field.value = '';
+                    field.classList.remove('is-invalid');
+                    removeValidationError(field);
+                });
+            }
+            
+            if (validationTriggered) {
+                validateCurrentStep();
+            }
+        });
+    }
+    
+    // PERBAIKAN: Input change handlers - hanya validasi jika validationTriggered = true
+    document.addEventListener('input', function(e) {
+        if (e.target.matches('input[required], select[required], textarea[required]') && validationTriggered) {
+            validateFieldOnChange(e.target);
+            validateCurrentStep();
+        }
+    });
+    
+    document.addEventListener('change', function(e) {
+        if (e.target.matches('input[required], select[required], textarea[required]') && validationTriggered) {
+            validateFieldOnChange(e.target);
+            validateCurrentStep();
+        }
+    });
+    
+    function validateFieldOnChange(field) {
+        if (field.value.trim()) {
+            field.classList.remove('is-invalid');
+            removeValidationError(field);
+        }
+    }
+    
+    // TMT/TAT validation handler
+    const tmtField = document.getElementById('TMT');
+    const tatField = document.getElementById('TAT');
+    
+    if (tmtField && tatField) {
+        [tmtField, tatField].forEach(field => {
+            field.addEventListener('change', function() {
+                if (validationTriggered) {
+                    validateDateRange();
+                    validateCurrentStep();
+                }
+            });
+        });
+    }
+    
+    function validateDateRange() {
+        const tmt = document.getElementById('TMT');
+        const tat = document.getElementById('TAT');
+        
+        // Clear previous validation errors
+        tat.classList.remove('is-invalid');
+        removeValidationError(tat);
+        
+        if (tmt.value && tat.value) {
+            const tmtDate = new Date(tmt.value);
+            const tatDate = new Date(tat.value);
+            
+            if (tmtDate >= tatDate) {
+                tat.classList.add('is-invalid');
+                showValidationError(tat, 'TAT harus setelah TMT');
                 return false;
             }
         }
@@ -1483,7 +1486,255 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
-    // Update review data in step 4
+    // PERBAIKAN: Next button handlers - trigger validasi saat user klik Next
+    nextButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            console.log('Next button clicked, currentStep:', currentStep);
+            
+            // Set flag bahwa user sudah mencoba lanjut
+            validationTriggered = true;
+            
+            if (validateCurrentStep()) {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateStepDisplay();
+                    if (currentStep === 4) {
+                        updateReviewData();
+                    }
+                }
+            }
+        });
+    });
+    
+    // Previous button handlers
+    prevButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            console.log('Previous button clicked, currentStep:', currentStep);
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepDisplay();
+            }
+        });
+    });
+    
+    // Form submission
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            validationTriggered = true;
+            
+            if (validateCurrentStep()) {
+                submitForm();
+            }
+        });
+    }
+    
+    function updateStepDisplay() {
+        console.log('Updating step display to step:', currentStep);
+        
+        // Update step indicators
+        stepItems.forEach((item, index) => {
+            const stepNumber = index + 1;
+            
+            item.classList.remove('active', 'completed');
+            
+            if (stepNumber < currentStep) {
+                item.classList.add('completed');
+                const icon = item.querySelector('.step-circle i');
+                if (icon) icon.className = 'bi bi-check';
+            } else if (stepNumber === currentStep) {
+                item.classList.add('active');
+                const icons = ['bi-ship', 'bi-person-up', 'bi-person-down', 'bi-check-circle'];
+                const icon = item.querySelector('.step-circle i');
+                if (icon) icon.className = `bi ${icons[index]}`;
+            } else {
+                const icons = ['bi-ship', 'bi-person-up', 'bi-person-down', 'bi-check-circle'];
+                const icon = item.querySelector('.step-circle i');
+                if (icon) icon.className = `bi ${icons[index]}`;
+            }
+        });
+        
+        // Update step content
+        stepContents.forEach((content, index) => {
+            const stepNumber = index + 1;
+            content.classList.toggle('active', stepNumber === currentStep);
+        });
+        
+        // PERBAIKAN: Reset validationTriggered untuk step baru
+        // validationTriggered = false; // Comment ini agar validasi tetap aktif setelah step pertama
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    function validateCurrentStep() {
+        const currentStepContent = document.querySelector(`.step-content[data-step="${currentStep}"]`);
+        if (!currentStepContent) {
+            console.error('Current step content not found for step:', currentStep);
+            return false;
+        }
+        
+        let isValid = true;
+        
+        // Get required fields for current step
+        const requiredFields = currentStepContent.querySelectorAll('input[required], select[required], textarea[required]');
+        
+        console.log(`Validating step ${currentStep}, found ${requiredFields.length} required fields`);
+        
+        // PERBAIKAN: Hanya validasi jika validationTriggered = true
+        if (!validationTriggered) {
+            // Jika belum triggered, hanya cek apakah semua field terisi untuk enable/disable button
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                }
+            });
+            
+            // Update button state tanpa menampilkan error
+            const nextBtn = document.querySelector(`[data-step="${currentStep}"] .btn-next`);
+            if (nextBtn) {
+                if (isValid) {
+                    enableNextButton(currentStep);
+                } else {
+                    disableNextButton(currentStep);
+                }
+            }
+            
+            return isValid;
+        }
+        
+        requiredFields.forEach(field => {
+            const fieldValid = validateField(field);
+            if (!fieldValid) {
+                isValid = false;
+            }
+        });
+        
+        // Additional step-specific validations
+        if (currentStep === 2) {
+            // Validate TMT/TAT
+            if (!validateDateRange()) {
+                isValid = false;
+            }
+            
+            // Validate jabatan mutasi
+            if (!validateJabatanMutasi()) {
+                isValid = false;
+            }
+        }
+        
+        // Enable/disable next button based on validation
+        const nextBtn = document.querySelector(`[data-step="${currentStep}"] .btn-next`);
+        if (nextBtn) {
+            if (isValid) {
+                enableNextButton(currentStep);
+            } else {
+                disableNextButton(currentStep);
+            }
+        }
+        
+        console.log('Validation result for step', currentStep, ':', isValid);
+        return isValid;
+    }
+    
+    function validateField(field) {
+        let isValid = true;
+        
+        // Clear previous validation state
+        field.classList.remove('is-invalid');
+        removeValidationError(field);
+        
+        // Check if field is required and empty
+        if (field.hasAttribute('required') && !field.value.trim()) {
+            field.classList.add('is-invalid');
+            
+            let message = 'Field ini wajib diisi';
+            if (field.id === 'id_kapal') {
+                message = 'Silakan pilih kapal tujuan';
+            } else if (field.id === 'jabatan_naik') {
+                message = 'Silakan pilih jabatan tetap';
+            } else if (field.id === 'id_jabatan_mutasi') {
+                message = 'Silakan pilih jabatan mutasi';
+            } else if (field.id === 'nama_mutasi') {
+                message = 'Silakan pilih nama mutasi';
+            } else if (field.id === 'jenis_mutasi') {
+                message = 'Silakan pilih jenis mutasi';
+            } else if (field.id === 'TMT') {
+                message = 'Tanggal TMT wajib diisi';
+            } else if (field.id === 'TAT') {
+                message = 'Tanggal TAT wajib diisi';
+            } else if (field.id === 'nrp_naik') {
+                message = 'NRP ABK wajib diisi';
+            } else if (field.id === 'nama_naik') {
+                message = 'Nama ABK wajib diisi';
+            }
+            
+            showValidationError(field, message);
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+    
+    function enableNextButton(step) {
+        const nextBtn = document.querySelector(`[data-step="${step}"] .btn-next`);
+        if (nextBtn) {
+            nextBtn.disabled = false;
+            nextBtn.removeAttribute('disabled');
+            nextBtn.classList.remove('disabled');
+        }
+    }
+    
+    function disableNextButton(step) {
+        const nextBtn = document.querySelector(`[data-step="${step}"] .btn-next`);
+        if (nextBtn) {
+            nextBtn.disabled = true;
+            nextBtn.setAttribute('disabled', 'disabled');
+            nextBtn.classList.add('disabled');
+        }
+    }
+    
+    function showValidationError(field, message) {
+        removeValidationError(field);
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'invalid-feedback';
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        field.parentNode.appendChild(errorDiv);
+    }
+    
+    function removeValidationError(field) {
+        const existingError = field.parentNode.querySelector('.invalid-feedback');
+        if (existingError) {
+            existingError.remove();
+        }
+    }
+    
+    function showAlert(message, type = 'info') {
+        // Create alert element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at top of form
+        const formContainer = document.querySelector('.form-container');
+        if (formContainer) {
+            formContainer.insertBefore(alertDiv, formContainer.firstChild);
+            
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    }
+    
     function updateReviewData() {
         // Kapal info
         const kapalSelect = document.getElementById('id_kapal');
@@ -1500,8 +1751,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const TMT = document.getElementById('TMT').value || '-';
         const TAT = document.getElementById('TAT').value || '-';
-        setReviewValue('reviewTMT', TMT);
-        setReviewValue('reviewTAT', TAT);
+        setReviewValue('reviewTMT', TMT ? new Intl.DateTimeFormat('id-ID').format(new Date(TMT)) : '-');
+        setReviewValue('reviewTAT', TAT ? new Intl.DateTimeFormat('id-ID').format(new Date(TAT)) : '-');
         
         // ABK Naik info
         setReviewValue('reviewNrpNaik', document.getElementById('nrp_naik').value || '-');
@@ -1540,7 +1791,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Helper function to set review value
     function setReviewValue(elementId, value) {
         const element = document.getElementById(elementId);
         if (element) {
@@ -1548,7 +1798,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Count uploaded documents
     function getDokumenCount() {
         let count = 0;
         const dokumenInputs = ['dokumen_sertijab', 'dokumen_familisasi', 'dokumen_lampiran'];
@@ -1563,81 +1812,51 @@ document.addEventListener('DOMContentLoaded', function() {
         return count;
     }
     
-    // Initialize form submission
-    function initializeFormSubmission() {
-        const form = document.getElementById('tambahMutasiForm');
-        const submitButton = document.querySelector('.btn-submit');
+    function submitForm() {
+        // Show loading state on submit button
+        submitButton.classList.add('loading');
+        submitButton.disabled = true;
         
-        if (form && submitButton) {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                // Show loading state
-                submitButton.classList.add('loading');
-                submitButton.disabled = true;
-                
-                // Create FormData
-                const formData = new FormData(form);
-                
-                // Submit via AJAX
-                fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showSuccessModal();
-                    } else {
-                        throw new Error(data.message || 'Terjadi kesalahan');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert(error.message || 'Terjadi kesalahan saat menyimpan data', 'danger');
-                })
-                .finally(() => {
-                    // Hide loading state
-                    submitButton.classList.remove('loading');
-                    submitButton.disabled = false;
-                });
-            });
-        }
+        // Create FormData
+        const formData = new FormData(form);
+        
+        // Submit via AJAX
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessModal();
+            } else {
+                throw new Error(data.message || 'Terjadi kesalahan');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert(error.message || 'Terjadi kesalahan saat menyimpan data', 'danger');
+        })
+        .finally(() => {
+            // Hide loading state
+            submitButton.classList.remove('loading');
+            submitButton.disabled = false;
+        });
     }
     
-    // Show success modal
     function showSuccessModal() {
         const modal = new bootstrap.Modal(document.getElementById('successModal'));
         modal.show();
     }
     
-    // Show alert
-    function showAlert(message, type = 'info') {
-        // Create alert element
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        // Insert at top of form
-        const formContainer = document.querySelector('.form-container');
-        if (formContainer) {
-            formContainer.insertBefore(alertDiv, formContainer.firstChild);
-            
-            // Auto dismiss after 5 seconds
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.remove();
-                }
-            }, 5000);
-        }
-    }
+    // PERBAIKAN: Initial validation - hanya cek untuk enable/disable button tanpa error
+    setTimeout(() => {
+        validateCurrentStep();
+    }, 500);
 });
 </script>
 @endpush
