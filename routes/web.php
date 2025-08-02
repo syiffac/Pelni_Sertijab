@@ -11,6 +11,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleSelectionController;
 use App\Http\Controllers\PUKController;
+use App\Http\Controllers\MutasiController; // Import MutasiController
 
 
 // Root redirect - arahkan ke role selection
@@ -139,27 +140,26 @@ Route::middleware(['auth'])->group(function () {
     
     // Mutasi routes - TAMBAHKAN INI
     Route::prefix('mutasi')->name('mutasi.')->group(function () {
-        Route::get('/', function () {
-            return view('mutasi.index');
-        })->name('index');
-        Route::get('/create', function () {
-            return view('mutasi.create');
-        })->name('create');
-        Route::post('/', function () {
-            return redirect()->route('mutasi.index');
-        })->name('store');
-        Route::get('/{id}', function ($id) {
-            return view('mutasi.show', compact('id'));
-        })->name('show');
-        Route::get('/{id}/edit', function ($id) {
-            return view('mutasi.edit', compact('id'));
-        })->name('edit');
-        Route::put('/{id}', function ($id) {
-            return redirect()->route('mutasi.index');
-        })->name('update');
-        Route::delete('/{id}', function ($id) {
-            return redirect()->route('mutasi.index');
-        })->name('destroy');
+        Route::get('/', [MutasiController::class, 'index'])->name('index');
+        Route::get('/create', [MutasiController::class, 'create'])->name('create');
+        Route::post('/', [MutasiController::class, 'store'])->name('store');
+        Route::get('/{id}', [MutasiController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [MutasiController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [MutasiController::class, 'update'])->name('update');
+        Route::delete('/{id}', [MutasiController::class, 'destroy'])->name('destroy');
+        
+        // AJAX Routes
+        Route::get('/ajax/abk-list', [MutasiController::class, 'getAbkList'])->name('ajax.abk-list');
+        Route::get('/ajax/jabatan-list', [MutasiController::class, 'getJabatanList'])->name('ajax.jabatan-list');
+        
+        // Dokumen Routes
+        Route::post('/{id}/upload-dokumen', [MutasiController::class, 'uploadDokumen'])->name('upload-dokumen');
+        Route::delete('/{id}/delete-dokumen', [MutasiController::class, 'deleteDokumen'])->name('delete-dokumen');
+        
+        // Approval Routes
+        Route::post('/{id}/approve', [MutasiController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [MutasiController::class, 'reject'])->name('reject');
+        Route::post('/{id}/complete', [MutasiController::class, 'complete'])->name('complete');
     });
 });
 // });
