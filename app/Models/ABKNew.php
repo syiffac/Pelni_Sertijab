@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ABKNew extends Model
 {
@@ -13,10 +16,11 @@ class ABKNew extends Model
 
     protected $table = 'abk_new';
     protected $primaryKey = 'id';
-    public $incrementing = true; // Auto increment ID
-    protected $keyType = 'int'; // Primary key bertipe integer
+    public $incrementing = false;
+    protected $keyType = 'string';
     
     protected $fillable = [
+        'id',
         'nama_abk',
         'id_jabatan_tetap',
         'status_abk'
@@ -36,28 +40,30 @@ class ABKNew extends Model
     }
 
     /**
-     * Relasi ke Mutasi sebagai ABK naik
+     * Relasi ke Kapal aktif
      */
-    public function mutasiSebagaiNaik(): HasMany
+    public function kapalAktif()
     {
-        return $this->hasMany(Mutasi::class, 'id_abk_naik', 'id');
+        // Sesuaikan dengan struktur database Anda
+        return $this->belongsTo(Kapal::class, 'id_kapal_aktif', 'id');
     }
 
-    /**
-     * Relasi ke Mutasi sebagai ABK turun
-     */
-    public function mutasiSebagaiTurun(): HasMany
-    {
-        return $this->hasMany(Mutasi::class, 'id_abk_turun', 'id');
-    }
+    // COMMENT OUT relasi mutasi sampai model Mutasi dibuat
+    // /**
+    //  * Relasi ke Mutasi sebagai ABK naik
+    //  */
+    // public function mutasiSebagaiNaik(): HasMany
+    // {
+    //     return $this->hasMany(Mutasi::class, 'id_abk_naik', 'id');
+    // }
 
-    /**
-     * Relasi ke semua mutasi (naik atau turun)
-     */
-    public function semuaMutasi()
-    {
-        return $this->mutasiSebagaiNaik()->union($this->mutasiSebagaiTurun());
-    }
+    // /**
+    //  * Relasi ke Mutasi sebagai ABK turun
+    //  */
+    // public function mutasiSebagaiTurun(): HasMany
+    // {
+    //     return $this->hasMany(Mutasi::class, 'id_abk_turun', 'id');
+    // }
 
     /**
      * Scope untuk ABK organik
@@ -92,11 +98,14 @@ class ABKNew extends Model
     }
 
     /**
-     * Scope untuk pencarian berdasarkan nama
+     * Scope untuk pencarian berdasarkan nama atau NRP
      */
-    public function scopeCariNama($query, $nama)
+    public function scopeSearch($query, $search)
     {
-        return $query->where('nama_abk', 'LIKE', '%' . $nama . '%');
+        return $query->where(function($q) use ($search) {
+            $q->where('id', 'LIKE', '%' . $search . '%')
+              ->orWhere('nama_abk', 'LIKE', '%' . $search . '%');
+        });
     }
 
     /**
@@ -108,7 +117,7 @@ class ABKNew extends Model
     }
 
     /**
-     * Accessor untuk mendapatkan nama lengkap dengan ID
+     * Accessor untuk mendapatkan nama lengkap dengan NRP
      */
     public function getNamaLengkapAttribute()
     {
@@ -130,30 +139,65 @@ class ABKNew extends Model
     }
 
     /**
-     * Method untuk cek apakah ABK sedang dalam mutasi
+     * Method untuk cek apakah ABK sedang dalam mutasi - DIPERBAIKI
      */
     public function isInMutasi()
     {
-        return $this->mutasiSebagaiNaik()
-                   ->whereIn('status_mutasi', ['Draft', 'Disetujui'])
-                   ->exists() ||
-               $this->mutasiSebagaiTurun()
-                   ->whereIn('status_mutasi', ['Draft', 'Disetujui'])
-                   ->exists();
+        try {
+            // Cek apakah tabel mutasi ada
+            if (!Schema::hasTable('mutasi')) {
+                return false;
+            }
+            
+            // Gunakan query langsung karena relasi belum dibuat
+            $mutasiCount = DB::table('mutasi')
+                ->where(function($query) {
+                    // Cek berbagai kemungkinan nama kolom
+                    if (Schema::hasColumn('mutasi', 'id_abk_naik')) {
+                        $query->where('id_abk_naik', $this->id);
+                    } elseif (Schema::hasColumn('mutasi', 'nrp_naik')) {
+                        $query->where('nrp_naik', $this->id);
+                    }
+                })
+                ->orWhere(function($query) {
+                    if (Schema::hasColumn('mutasi', 'id_abk_turun')) {
+                        $query->where('id_abk_turun', $this->id);
+                    } elseif (Schema::hasColumn('mutasi', 'nrp_turun')) {
+                        $query->where('nrp_turun', $this->id);
+                    }
+                })
+                ->whereIn('status_mutasi', ['Draft', 'Disetujui', 'Pending', 'Proses'])
+                ->count();
+                
+            return $mutasiCount > 0;
+            
+        } catch (\Exception $e) {
+            Log::error('Error checking mutasi for ABK ' . $this->id . ': ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
-     * Method untuk mendapatkan mutasi aktif
+     * Method untuk validasi format NRP
      */
-    public function getMutasiAktif()
+    public static function validateNRP($nrp)
     {
-        return $this->mutasiSebagaiNaik()
-                   ->whereIn('status_mutasi', ['Draft', 'Disetujui'])
-                   ->orWhere(function($query) {
-                       $query->where('id_abk_turun', $this->id)
-                             ->whereIn('status_mutasi', ['Draft', 'Disetujui']);
-                   })
-                   ->first();
+        // Validasi format NRP - hanya angka, 4-20 karakter
+        return preg_match('/^[0-9]{4,20}$/', $nrp);
+    }
+
+    /**
+     * Method untuk cek apakah NRP sudah ada
+     */
+    public static function isNRPExists($nrp, $excludeId = null)
+    {
+        $query = static::where('id', $nrp);
+        
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+        
+        return $query->exists();
     }
 
     /**
@@ -165,12 +209,70 @@ class ABKNew extends Model
 
         // Event ketika ABK dibuat
         static::creating(function ($abk) {
-            // Bisa tambahkan logic khusus disini
+            // Validasi NRP format
+            if (!static::validateNRP($abk->id)) {
+                throw new \InvalidArgumentException('Format NRP tidak valid. Gunakan angka saja, 4-20 digit.');
+            }
+            
+            // Pastikan NRP unique
+            if (static::isNRPExists($abk->id)) {
+                throw new \InvalidArgumentException('NRP sudah terdaftar dalam sistem.');
+            }
         });
 
         // Event ketika ABK diupdate
         static::updating(function ($abk) {
-            // Bisa tambahkan logic khusus disini
+            // Validasi NRP format jika diubah
+            if ($abk->isDirty('id')) {
+                if (!static::validateNRP($abk->id)) {
+                    throw new \InvalidArgumentException('Format NRP tidak valid. Gunakan angka saja, 4-20 digit.');
+                }
+                
+                // Pastikan NRP unique (kecuali untuk record ini sendiri)
+                if (static::isNRPExists($abk->id, $abk->getOriginal('id'))) {
+                    throw new \InvalidArgumentException('NRP sudah terdaftar dalam sistem.');
+                }
+            }
         });
+    }
+
+    /**
+     * Method untuk mendapatkan statistik ABK
+     */
+    public static function getStatistik()
+    {
+        return [
+            'total_abk' => static::count(),
+            'abk_aktif' => static::aktif()->count(),
+            'abk_organik' => static::organik()->count(),
+            'abk_non_organik' => static::nonOrganik()->count(),
+            'abk_pensiun' => static::pensiun()->count()
+        ];
+    }
+
+    /**
+     * Method untuk cek apakah ABK bisa dihapus
+     */
+    public function canBeDeleted()
+    {
+        // Tidak bisa dihapus jika sedang dalam mutasi
+        if ($this->isInMutasi()) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Method untuk mendapatkan status detail ABK
+     */
+    public function getDetailedStatus()
+    {
+        return [
+            'basic_status' => $this->status_abk,
+            'is_active' => in_array($this->status_abk, ['Organik', 'Non Organik']),
+            'is_in_mutasi' => $this->isInMutasi(),
+            'can_be_deleted' => $this->canBeDeleted()
+        ];
     }
 }

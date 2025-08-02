@@ -42,6 +42,10 @@ Route::prefix('puk')->name('puk.')->group(function () {
 });
 
 
+// Route untuk check NRP (tanpa middleware auth)
+Route::post('/abk/check-nrp', [ABKController::class, 'checkNRP'])->name('abk.check-nrp');
+
+
 // Protected admin routes
 Route::middleware(['auth'])->group(function () {
     // Dashboard
@@ -76,9 +80,12 @@ Route::middleware(['auth'])->group(function () {
         // AJAX routes - DILETAKKAN SEBELUM ROUTE DENGAN PARAMETER
         Route::get('/ajax/kapal', [ABKController::class, 'getKapalList'])->name('ajax.kapal');
         Route::get('/ajax/jabatan', [ABKController::class, 'getJabatanList'])->name('ajax.jabatan');
-        Route::post('/ajax/check-nrp', [ABKController::class, 'checkNrp'])->name('ajax.check-nrp');
+        Route::post('/ajax/check-nrp', [ABKController::class, 'checkNRP'])->name('ajax.check-nrp'); // PERBAIKI NAMA METHOD
         Route::get('/ajax/abk-by-kapal', [ABKController::class, 'getAbkByKapal'])->name('ajax.abk-by-kapal');
         Route::get('/kapal/{id_kapal}/abk', [ABKController::class, 'showByKapal'])->name('by-kapal');
+        
+        // TAMBAHKAN ROUTE CHECK NRP DI SINI (ALTERNATIF)
+        Route::post('/check-nrp', [ABKController::class, 'checkNRP'])->name('check-nrp');
         
         // Basic CRUD - DILETAKKAN DI BAWAH ROUTE YANG LEBIH SPESIFIK
         Route::get('/', [ABKController::class, 'index'])->name('index');
