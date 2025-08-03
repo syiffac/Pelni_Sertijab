@@ -20,7 +20,7 @@
                     <i class="bi bi-person-plus"></i>
                     Tambah ABK
                 </a>
-                <a href="{{ route('abk.mutasi.create') }}" class="btn btn-success">
+                <a href="{{ route('mutasi.create') }}" class="btn btn-success">
                     <i class="bi bi-arrow-repeat"></i>
                     Buat Mutasi
                 </a>
@@ -170,7 +170,7 @@
                                                    class="btn btn-sm btn-outline-primary">
                                                     <i class="bi bi-eye"></i>
                                                 </a> --}}
-                                                <a href="{{ route('abk.mutasi.create', $data['id'] ?? 0) }}" 
+                                                <a href="{{ route('mutasi.create', ['abk_id' => $data['id'] ?? 0]) }}" 
                                                    class="btn btn-sm btn-outline-success">
                                                     <i class="bi bi-arrow-repeat"></i>
                                                 </a>
@@ -483,7 +483,7 @@
                         </div>
                         
                         <div class="col-lg-3 col-md-6 mb-3">
-                            <a href="{{ route('abk.mutasi.create') }}" class="quick-action-card">
+                            <a href="{{ route('mutasi.create') }}" class="quick-action-card">
                                 <div class="action-icon bg-success">
                                     <i class="bi bi-arrow-repeat"></i>
                                 </div>

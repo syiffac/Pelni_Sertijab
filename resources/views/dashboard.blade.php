@@ -38,7 +38,7 @@
                             <i class="bi bi-plus-circle me-2"></i>
                             Tambah ABK Baru
                         </a>
-                        <a href="{{ route('abk.mutasi.create') }}" class="btn btn-welcome-secondary">
+                        <a href="{{ route('mutasi.create') }}" class="btn btn-welcome-secondary">
                             <i class="bi bi-arrow-repeat me-2"></i>
                             Buat Mutasi
                         </a>
@@ -292,7 +292,7 @@
                             <span class="quick-action-text">Tambah ABK</span>
                         </a>
                         
-                        <a href="{{ route('abk.mutasi.create') }}" class="quick-action-item" data-action="Buat Mutasi">
+                        <a href="{{ route('mutasi.create') }}" class="quick-action-item" data-action="Buat Mutasi">
                             <div class="quick-action-icon bg-success">
                                 <i class="bi bi-arrow-repeat"></i>
                             </div>
