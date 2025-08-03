@@ -379,7 +379,7 @@
                                             
                                             <!-- Search ABK Turun -->
                                             <div class="form-group mb-3">
-                                                <label for="abk_turun_search" class="form-label">Cari ABK yang Turun</label>
+                                                <label for="abk_turun_search" class="form-label required">Cari ABK</label>
                                                 <select class="form-select" id="abk_turun_search" name="abk_turun_search">
                                                     <option value="">-- Cari berdasarkan NRP atau Nama --</option>
                                                 </select>
@@ -449,59 +449,124 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <!-- Jabatan Mutasi Turun (sama seperti ABK naik) -->
+                                            <div class="form-group mb-3 mt-3">
+                                                <label for="id_jabatan_mutasi_turun" class="form-label required">Jabatan Mutasi Turun</label>
+                                                <select class="form-select jabatan-select" id="id_jabatan_mutasi_turun" name="id_jabatan_mutasi_turun" required>
+                                                    <option value="">-- Pilih Jabatan Mutasi --</option>
+                                                    @foreach($daftarJabatan as $jabatan)
+                                                        <option value="{{ $jabatan->id }}" 
+                                                                data-level="{{ $jabatan->level_jabatan ?? 0 }}"
+                                                                data-kode="{{ $jabatan->kode_jabatan ?? '' }}">
+                                                            {{ $jabatan->nama_jabatan }}
+                                                            @if($jabatan->kode_jabatan)
+                                                                ({{ $jabatan->kode_jabatan }})
+                                                            @endif
+                                                            @if(isset($jabatan->level_jabatan))
+                                                                - Level {{ $jabatan->level_jabatan }}
+                                                            @endif
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <div class="form-text">Pilih jabatan hasil mutasi turun</div>
+                                            </div>
                                         </div>
 
-                                        <!-- Data Mutasi & Informasi Tambahan ABK Turun -->
+                                        <!-- Mutation Data ABK Turun (sama seperti ABK naik) -->
                                         <div class="col-lg-6">
                                             <h6 class="section-title">
-                                                <i class="bi bi-info-circle me-2"></i>
-                                                Informasi Turun & Dokumen
+                                                <i class="bi bi-arrow-repeat me-2"></i>
+                                                Data Mutasi Turun
                                             </h6>
 
                                             <div class="form-group mb-3">
-                                                <label for="alasan_turun" class="form-label">Alasan Turun</label>
-                                                <select class="form-select" id="alasan_turun" name="alasan_turun">
-                                                    <option value="">-- Pilih Alasan --</option>
-                                                    <option value="Mutasi Rutin">Mutasi Rutin</option>
-                                                    <option value="Promosi">Promosi</option>
-                                                    <option value="Rotasi Berkala">Rotasi Berkala</option>
-                                                    <option value="Pensiun">Pensiun</option>
-                                                    <option value="Kesehatan">Alasan Kesehatan</option>
-                                                    <option value="Disiplin">Alasan Disiplin</option>
-                                                    <option value="Permintaan Sendiri">Permintaan Sendiri</option>
-                                                    <option value="Kontrak Habis">Kontrak Habis</option>
-                                                    <option value="Lainnya">Lainnya</option>
+                                                <label for="nama_mutasi_turun" class="form-label required">Nama Mutasi</label>
+                                                <select class="form-select" id="nama_mutasi_turun" name="nama_mutasi_turun" required>
+                                                    <option value="">-- Pilih Nama Mutasi --</option>
+                                                    <option value="MN" data-desc="Berlayar">MN (Berlayar)</option>
+                                                    <option value="TOD" data-desc="Tour of Duty">TOD (Tour of Duty)</option>
+                                                    <option value="CW" data-desc="Cuti Wajib">CW (Cuti Wajib)</option>
+                                                    <option value="MI" data-desc="Mutasi Internal">MI (Mutasi Internal)</option>
+                                                    <option value="MS" data-desc="Sakit">MS (Sakit)</option>
+                                                    <option value="PC" data-desc="Pengganti Cuti">PC (Pengganti Cuti)</option>
+                                                    <option value="AJS" data-desc="Antar Jabatan Sementara">AJS (Antar Jabatan Sementara)</option>
+                                                    <option value="AJT" data-desc="Antar Jabatan Tetap">AJT (Antar Jabatan Tetap)</option>
                                                 </select>
-                                                <div class="form-text">Pilih alasan ABK turun dari jabatan</div>
+                                                <div class="form-text">Pilih jenis nama mutasi sesuai dengan kondisi ABK yang turun</div>
                                             </div>
 
+                                            <div class="form-group mb-3">
+                                                <label for="jenis_mutasi_turun" class="form-label required">Jenis Mutasi</label>
+                                                <select class="form-select" id="jenis_mutasi_turun" name="jenis_mutasi_turun" required>
+                                                    <option value="">-- Pilih Jenis Mutasi --</option>
+                                                    <option value="Sementara">Mutasi Sementara</option>
+                                                    <option value="Definitif">Mutasi Definitif</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <div class="form-group mb-3">
+                                                        <label for="TMT_turun" class="form-label required">TMT Turun</label>
+                                                        <input type="date" class="form-control" id="TMT_turun" name="TMT_turun" required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-group mb-3">
+                                                        <label for="TAT_turun" class="form-label required">TAT Turun</label>
+                                                        <input type="date" class="form-control" id="TAT_turun" name="TAT_turun" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Upload Dokumen Section (tetap ada) -->
+                                    <div class="row mt-4">
+                                        <div class="col-12">
+                                            <h6 class="section-title">
+                                                <i class="bi bi-file-earmark-text me-2"></i>
+                                                Dokumen Pendukung
+                                            </h6>
+                                            
+                                            <div class="row">
+                                                <div class="col-lg-4">
+                                                    <div class="form-group mb-3">
+                                                        <label for="dokumen_sertijab" class="form-label">Dokumen Sertijab</label>
+                                                        <input type="file" class="form-control" id="dokumen_sertijab" name="dokumen_sertijab" 
+                                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                                        <div class="form-text">Upload dokumen serah terima jabatan (PDF, DOC, atau gambar)</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <div class="form-group mb-3">
+                                                        <label for="dokumen_familisasi" class="form-label">Dokumen Familisasi</label>
+                                                        <input type="file" class="form-control" id="dokumen_familisasi" name="dokumen_familisasi" 
+                                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                                        <div class="form-text">Upload dokumen berita acara familisasi</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <div class="form-group mb-3">
+                                                        <label for="dokumen_lampiran" class="form-label">Dokumen Lampiran</label>
+                                                        <input type="file" class="form-control" id="dokumen_lampiran" name="dokumen_lampiran" 
+                                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                                        <div class="form-text">Upload dokumen lampiran lainnya</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Keterangan Tambahan -->
+                                    <div class="row mt-3">
+                                        <div class="col-12">
                                             <div class="form-group mb-3">
                                                 <label for="keterangan_turun" class="form-label">Keterangan Tambahan</label>
                                                 <textarea class="form-control" id="keterangan_turun" name="keterangan_turun" 
                                                           rows="3" placeholder="Keterangan tambahan tentang ABK yang turun (opsional)"></textarea>
                                                 <div class="form-text">Informasi tambahan terkait proses turun jabatan</div>
-                                            </div>
-
-                                            <!-- Upload Dokumen -->
-                                            <div class="form-group mb-3">
-                                                <label for="dokumen_sertijab" class="form-label">Dokumen Sertijab</label>
-                                                <input type="file" class="form-control" id="dokumen_sertijab" name="dokumen_sertijab" 
-                                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                                <div class="form-text">Upload dokumen serah terima jabatan (PDF, DOC, atau gambar)</div>
-                                            </div>
-
-                                            <div class="form-group mb-3">
-                                                <label for="dokumen_familisasi" class="form-label">Dokumen Familisasi</label>
-                                                <input type="file" class="form-control" id="dokumen_familisasi" name="dokumen_familisasi" 
-                                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                                <div class="form-text">Upload dokumen berita acara familisasi</div>
-                                            </div>
-
-                                            <div class="form-group mb-3">
-                                                <label for="dokumen_lampiran" class="form-label">Dokumen Lampiran</label>
-                                                <input type="file" class="form-control" id="dokumen_lampiran" name="dokumen_lampiran" 
-                                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                                <div class="form-text">Upload dokumen lampiran lainnya</div>
                                             </div>
                                         </div>
                                     </div>
@@ -1501,6 +1566,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
+        // ABK Turun Search  
         $('#abk_turun_search').select2({
             theme: 'bootstrap-5',
             placeholder: 'Ketik NRP atau nama ABK...',
@@ -1542,6 +1608,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Update display
                 updateSelectedAbkDisplay('turun', data);
+                
+                if (validationTriggered) {
+                    validateCurrentStep();
+                }
             }
         });
 
@@ -1553,6 +1623,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Hide display
             document.getElementById('selectedAbkTurunInfo').classList.add('d-none');
+            
+            if (validationTriggered) {
+                validateCurrentStep();
+            }
         });
     }
 
@@ -1676,19 +1750,31 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.checked) {
                 formAbkTurun.classList.remove('d-none');
                 formAbkTurun.classList.add('show');
+                
+                // Set required attributes untuk fields wajib (sama seperti ABK naik)
+                document.getElementById('abk_turun_search').setAttribute('required', 'required');
+                document.getElementById('id_jabatan_mutasi_turun').setAttribute('required', 'required');
+                document.getElementById('nama_mutasi_turun').setAttribute('required', 'required');
+                document.getElementById('jenis_mutasi_turun').setAttribute('required', 'required');
+                document.getElementById('TMT_turun').setAttribute('required', 'required');
+                document.getElementById('TAT_turun').setAttribute('required', 'required');
             } else {
                 formAbkTurun.classList.add('d-none');
                 formAbkTurun.classList.remove('show');
                 
-                // Clear ABK turun fields
-                $('#abk_turun_search').val(null).trigger('change');
-                document.getElementById('nrp_turun').value = '';
-                document.getElementById('nama_turun').value = '';
-                document.getElementById('jabatan_turun').value = '';
-                document.getElementById('selectedAbkTurunInfo').classList.add('d-none');
+                // Remove required attributes
+                document.getElementById('abk_turun_search').removeAttribute('required');
+                document.getElementById('id_jabatan_mutasi_turun').removeAttribute('required');
+                document.getElementById('nama_mutasi_turun').removeAttribute('required');
+                document.getElementById('jenis_mutasi_turun').removeAttribute('required');
+                document.getElementById('TMT_turun').removeAttribute('required');
+                document.getElementById('TAT_turun').removeAttribute('required');
                 
-                // Clear other turun fields
-                const abkTurunFields = formAbkTurun.querySelectorAll('select:not(#abk_turun_search), textarea, input[type="file"]');
+                // Clear all ABK turun fields
+                clearAbkSelection('turun');
+                
+                // Clear other turun-specific fields
+                const abkTurunFields = formAbkTurun.querySelectorAll('select:not(#abk_turun_search), textarea, input[type="file"], input[type="date"]');
                 abkTurunFields.forEach(field => {
                     field.value = '';
                     field.classList.remove('is-invalid');
@@ -1837,18 +1923,78 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         } else if (currentStep === 3) {
-            // Step 3 validation - optional step
+            // Step 3 validation - enhanced untuk form yang lengkap seperti ABK naik
             const adaAbkTurun = document.getElementById('adaAbkTurun').checked;
             
             if (adaAbkTurun) {
-                // If checkbox is checked, validate ABK turun fields
+                // Validate ABK turun selection
                 const nrpTurun = document.getElementById('nrp_turun').value;
                 const namaTurun = document.getElementById('nama_turun').value;
+                const jabatanTurun = document.getElementById('jabatan_turun').value;
+                const jabatanMutasiTurun = document.getElementById('id_jabatan_mutasi_turun').value;
+                const namaMutasiTurun = document.getElementById('nama_mutasi_turun').value;
+                const jenisMutasiTurun = document.getElementById('jenis_mutasi_turun').value;
+                const tmtTurun = document.getElementById('TMT_turun').value;
+                const tatTurun = document.getElementById('TAT_turun').value;
                 
-                if (!nrpTurun || !namaTurun) {
+                console.log('Step 3 validation:', { // Debug log
+                    nrpTurun, namaTurun, jabatanTurun, jabatanMutasiTurun, 
+                    namaMutasiTurun, jenisMutasiTurun, tmtTurun, tatTurun
+                });
+                
+                // Validate ABK selection
+                if (!nrpTurun || !namaTurun || !jabatanTurun) {
                     isValid = false;
                     if (validationTriggered) {
                         showAlert('Silakan pilih ABK yang akan turun', 'warning');
+                    }
+                }
+                
+                // Validate jabatan mutasi turun
+                if (!jabatanMutasiTurun || jabatanMutasiTurun === "") {
+                    isValid = false;
+                    if (validationTriggered) {
+                        showValidationError(document.getElementById('id_jabatan_mutasi_turun'), 'Silakan pilih jabatan mutasi turun');
+                    }
+                }
+                
+                // Validate nama mutasi turun
+                if (!namaMutasiTurun || namaMutasiTurun === "") {
+                    isValid = false;
+                    if (validationTriggered) {
+                        showValidationError(document.getElementById('nama_mutasi_turun'), 'Silakan pilih nama mutasi turun');
+                    }
+                }
+                
+                // Validate jenis mutasi turun
+                if (!jenisMutasiTurun || jenisMutasiTurun === "") {
+                    isValid = false;
+                    if (validationTriggered) {
+                        showValidationError(document.getElementById('jenis_mutasi_turun'), 'Silakan pilih jenis mutasi turun');
+                    }
+                }
+                
+                // Validate TMT turun
+                if (!tmtTurun || tmtTurun === "") {
+                    isValid = false;
+                    if (validationTriggered) {
+                        showValidationError(document.getElementById('TMT_turun'), 'Silakan isi tanggal TMT turun');
+                    }
+                }
+                
+                // Validate TAT turun
+                if (!tatTurun || tatTurun === "") {
+                    isValid = false;
+                    if (validationTriggered) {
+                        showValidationError(document.getElementById('TAT_turun'), 'Silakan isi tanggal TAT turun');
+                    }
+                }
+                
+                // Validate date range turun
+                if (tmtTurun && tatTurun && new Date(tmtTurun) >= new Date(tatTurun)) {
+                    isValid = false;
+                    if (validationTriggered) {
+                        showValidationError(document.getElementById('TAT_turun'), 'TAT turun harus setelah TMT turun');
                     }
                 }
             }
@@ -1926,22 +2072,35 @@ document.addEventListener('DOMContentLoaded', function() {
         setReviewValue('reviewTMT', TMT ? new Intl.DateTimeFormat('id-ID').format(new Date(TMT)) : '-');
         setReviewValue('reviewTAT', TAT ? new Intl.DateTimeFormat('id-ID').format(new Date(TAT)) : '-');
         
-        // ABK Turun info (if exists)
+        // ABK Turun info (enhanced)
         const adaAbkTurun = document.getElementById('adaAbkTurun').checked;
         const reviewAbkTurun = document.getElementById('reviewAbkTurun');
-        
+
         if (adaAbkTurun && reviewAbkTurun) {
             reviewAbkTurun.classList.remove('d-none');
             
             setReviewValue('reviewNrpTurun', document.getElementById('nrp_turun').value || '-');
             setReviewValue('reviewNamaTurun', document.getElementById('nama_turun').value || '-');
             
-            // Get jabatan turun name
-            const jabatanTurunId = document.getElementById('jabatan_turun').value;
-            const jabatanTurunOption = document.querySelector('.jabatan-select option[value="' + jabatanTurunId + '"]');
-            setReviewValue('reviewJabatanTurun', jabatanTurunOption ? jabatanTurunOption.text : '-');
+            // Get jabatan mutasi turun name
+            const jabatanMutasiTurunSelect = document.getElementById('id_jabatan_mutasi_turun');
+            const jabatanMutasiTurunText = jabatanMutasiTurunSelect.options[jabatanMutasiTurunSelect.selectedIndex]?.text || '-';
+            setReviewValue('reviewJabatanTurun', jabatanMutasiTurunText);
             
-            setReviewValue('reviewAlasanTurun', alasanTurun);
+            // Nama mutasi turun
+            const namaMutasiTurunSelect = document.getElementById('nama_mutasi_turun');
+            const namaMutasiTurun = namaMutasiTurunSelect.options[namaMutasiTurunSelect.selectedIndex]?.text || '-';
+            setReviewValue('reviewNamaMutasiTurun', namaMutasiTurun);
+            
+            // Jenis mutasi turun
+            const jenisMutasiTurun = document.getElementById('jenis_mutasi_turun').value || '-';
+            setReviewValue('reviewJenisMutasiTurun', jenisMutasiTurun);
+            
+            // TMT/TAT turun
+            const tmtTurun = document.getElementById('TMT_turun').value || '-';
+            const tatTurun = document.getElementById('TAT_turun').value || '-';
+            setReviewValue('reviewTMTTurun', tmtTurun ? new Intl.DateTimeFormat('id-ID').format(new Date(tmtTurun)) : '-');
+            setReviewValue('reviewTATTurun', tatTurun ? new Intl.DateTimeFormat('id-ID').format(new Date(tatTurun)) : '-');
             
             // Count uploaded documents
             const dokumenCount = getDokumenCount();
@@ -2128,6 +2287,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => validateCurrentStep(), 100);
             }
         });
+
+        $('#id_jabatan_mutasi_turun').on('change', function() {
+            removeValidationError(this);
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+
+        $('#nama_mutasi_turun').on('change', function() {
+            removeValidationError(this);
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+
+        $('#jenis_mutasi_turun').on('change', function() {
+            removeValidationError(this);
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+
+        $('#TMT_turun').on('change', function() {
+            removeValidationError(this);
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
+
+        $('#TAT_turun').on('change', function() {
+            removeValidationError(this);
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
+        });
     }
 
     // Initial validation
@@ -2172,6 +2366,49 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.disabled = true;
                 submitBtn.classList.add('disabled');
             }
+        }
+    }
+
+    // Update fungsi clearAbkSelection untuk handle form turun yang lengkap
+    function clearAbkSelection(type) {
+        const searchElement = document.getElementById(`abk_${type}_search`);
+        const infoElement = document.getElementById(`selectedAbk${type === 'naik' ? 'Naik' : 'Turun'}Info`);
+        
+        // Clear Select2
+        if (searchElement) {
+            $(searchElement).val(null).trigger('change');
+        }
+        
+        // Clear hidden fields
+        document.getElementById(`nrp_${type}`).value = '';
+        document.getElementById(`nama_${type}`).value = '';
+        document.getElementById(`jabatan_${type}`).value = '';
+        
+        // Clear specific fields untuk ABK turun
+        if (type === 'turun') {
+            $('#id_jabatan_mutasi_turun').val('').trigger('change');
+            document.getElementById('nama_mutasi_turun').value = '';
+            document.getElementById('jenis_mutasi_turun').value = '';
+            document.getElementById('TMT_turun').value = '';
+            document.getElementById('TAT_turun').value = '';
+            document.getElementById('keterangan_turun').value = '';
+            
+            // Clear validation errors
+            removeValidationError(document.getElementById('id_jabatan_mutasi_turun'));
+            removeValidationError(document.getElementById('nama_mutasi_turun'));
+            removeValidationError(document.getElementById('jenis_mutasi_turun'));
+            removeValidationError(document.getElementById('TMT_turun'));
+            removeValidationError(document.getElementById('TAT_turun'));
+        }
+        
+        // Hide display
+        if (infoElement) {
+            infoElement.classList.add('d-none');
+        }
+        
+        // Re-validate if needed
+        if (validationTriggered) {
+            validateCurrentStep();
         }
     }
 });
