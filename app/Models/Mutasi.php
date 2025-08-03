@@ -11,35 +11,81 @@ class Mutasi extends Model
 {
     use HasFactory;
 
-    protected $table = 'mutasi';
+    protected $table = 'mutasi_new'; // UBAH INI - gunakan tabel baru
     protected $primaryKey = 'id';
     
     protected $fillable = [
+        // Data Kapal
+        'id_kapal',
+        'nama_kapal',
+        
+        // Data ABK naik
         'id_abk_naik',
         'nama_lengkap_naik',
         'jabatan_tetap_naik',
         'id_jabatan_mutasi',
-        'id_abk_turun',
-        'nama_lengkap_turun',
-        'jabatan_tetap_turun',
         'nama_mutasi',
         'jenis_mutasi',
         'TMT',
         'TAT',
+        
+        // Data ABK turun
+        'id_abk_turun',
+        'nama_lengkap_turun',
+        'jabatan_tetap_turun',
+        'id_jabatan_mutasi_turun',
+        'nama_mutasi_turun',
+        'jenis_mutasi_turun',
+        'TMT_turun',
+        'TAT_turun',
+        
+        // Dokumen
         'dokumen_sertijab',
         'dokumen_familisasi',
         'dokumen_lampiran',
+        
+        // Status dan flags
         'status_mutasi',
         'catatan',
+        'keterangan_turun',
+        'ada_abk_turun',
         'perlu_sertijab'
     ];
 
     protected $casts = [
+        // Cast integer fields
+        'id_kapal' => 'integer',
+        'id_abk_naik' => 'integer',
+        'id_abk_turun' => 'integer',
+        'jabatan_tetap_naik' => 'integer',
+        'jabatan_tetap_turun' => 'integer',
+        'id_jabatan_mutasi' => 'integer',
+        'id_jabatan_mutasi_turun' => 'integer',
+        
+        // Cast date fields
         'TMT' => 'date',
         'TAT' => 'date',
+        'TMT_turun' => 'date',
+        'TAT_turun' => 'date',
+        
+        // Cast boolean fields
+        'ada_abk_turun' => 'boolean',
         'perlu_sertijab' => 'boolean',
-        'dokumen_familisasi' => 'array' // Cast JSON ke array jika multiple files
+        
+        // Cast timestamp fields
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+
+    // ===== RELATIONSHIPS =====
+
+    /**
+     * Relasi ke Kapal
+     */
+    public function kapal(): BelongsTo
+    {
+        return $this->belongsTo(Kapal::class, 'id_kapal', 'id');
+    }
 
     /**
      * Relasi ke ABK yang naik
@@ -74,11 +120,43 @@ class Mutasi extends Model
     }
 
     /**
-     * Relasi ke jabatan mutasi (jabatan baru)
+     * Relasi ke jabatan mutasi ABK naik
      */
     public function jabatanMutasi(): BelongsTo
     {
         return $this->belongsTo(Jabatan::class, 'id_jabatan_mutasi', 'id');
+    }
+
+    /**
+     * Relasi ke jabatan mutasi ABK turun
+     */
+    public function jabatanMutasiTurun(): BelongsTo
+    {
+        return $this->belongsTo(Jabatan::class, 'id_jabatan_mutasi_turun', 'id');
+    }
+
+    // ===== ACCESSORS =====
+
+    /**
+     * Accessor untuk mendapatkan info periode mutasi ABK naik
+     */
+    public function getPeriodeMutasiNaikAttribute()
+    {
+        if ($this->TMT && $this->TAT) {
+            return $this->TMT->format('d/m/Y') . ' - ' . $this->TAT->format('d/m/Y');
+        }
+        return '-';
+    }
+
+    /**
+     * Accessor untuk mendapatkan info periode mutasi ABK turun
+     */
+    public function getPeriodeMutasiTurunAttribute()
+    {
+        if ($this->TMT_turun && $this->TAT_turun) {
+            return $this->TMT_turun->format('d/m/Y') . ' - ' . $this->TAT_turun->format('d/m/Y');
+        }
+        return '-';
     }
 
     /**
@@ -104,6 +182,94 @@ class Mutasi extends Model
     {
         return $this->dokumen_lampiran ? Storage::url($this->dokumen_lampiran) : null;
     }
+
+    /**
+     * Accessor untuk status badge
+     */
+    public function getStatusBadgeAttribute()
+    {
+        $badges = [
+            'Draft' => 'bg-secondary',
+            'Disetujui' => 'bg-success',
+            'Ditolak' => 'bg-danger',
+            'Selesai' => 'bg-primary'
+        ];
+        
+        return $badges[$this->status_mutasi] ?? 'bg-secondary';
+    }
+
+    /**
+     * Accessor untuk jenis badge
+     */
+    public function getJenisBadgeAttribute()
+    {
+        $badges = [
+            'Sementara' => 'bg-info',
+            'Definitif' => 'bg-success'
+        ];
+        
+        return $badges[$this->jenis_mutasi] ?? 'bg-warning';
+    }
+
+    // ===== SCOPES =====
+
+    /**
+     * Scope untuk filter berdasarkan kapal
+     */
+    public function scopeByKapal($query, $kapalId)
+    {
+        return $query->where('id_kapal', $kapalId);
+    }
+
+    /**
+     * Scope untuk filter yang ada ABK turun
+     */
+    public function scopeWithAbkTurun($query)
+    {
+        return $query->where('ada_abk_turun', true);
+    }
+
+    /**
+     * Scope untuk filter berdasarkan status
+     */
+    public function scopeByStatus($query, $status)
+    {
+        return $query->where('status_mutasi', $status);
+    }
+
+    /**
+     * Scope untuk filter berdasarkan jenis mutasi
+     */
+    public function scopeByJenis($query, $jenis)
+    {
+        return $query->where('jenis_mutasi', $jenis);
+    }
+
+    /**
+     * Scope untuk filter berdasarkan periode
+     */
+    public function scopeByPeriode($query, $startDate, $endDate)
+    {
+        return $query->whereBetween('TMT', [$startDate, $endDate]);
+    }
+
+    /**
+     * Scope untuk mutasi terbaru
+     */
+    public function scopeLatest($query)
+    {
+        return $query->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Scope untuk mutasi yang memerlukan dokumen
+     */
+    public function scopePerluDokumen($query)
+    {
+        return $query->where('perlu_sertijab', true);
+    }
+
+    // ===== METHODS =====
 
     /**
      * Method untuk cek apakah ada dokumen
@@ -155,64 +321,22 @@ class Mutasi extends Model
     }
 
     /**
-     * Method untuk hapus file dokumen tertentu
+     * Upload dokumen mutasi
      */
-    public function deleteDokumen($jenis)
+    public function uploadDokumen($file, $type)
     {
-        $column = "dokumen_{$jenis}";
-        
-        if (!in_array($jenis, ['sertijab', 'familisasi', 'lampiran'])) {
-            return false;
+        if (!in_array($type, ['sertijab', 'familisasi', 'lampiran'])) {
+            throw new \InvalidArgumentException("Tipe dokumen tidak valid: {$type}");
         }
-        
-        if ($this->$column && Storage::exists($this->$column)) {
-            Storage::delete($this->$column);
-            $this->$column = null;
-            $this->save();
-            return true;
-        }
-        
-        return false;
-    }
 
-    /**
-     * Method untuk hapus semua dokumen
-     */
-    public function deleteAllDokumen()
-    {
-        $dokumenFields = [
-            'dokumen_sertijab',
-            'dokumen_familisasi',
-            'dokumen_lampiran'
-        ];
-        
-        foreach ($dokumenFields as $field) {
-            if ($this->$field && Storage::exists($this->$field)) {
-                Storage::delete($this->$field);
-                $this->$field = null;
-            }
-        }
-        
-        $this->save();
-    }
-
-    /**
-     * Method untuk upload dokumen
-     */
-    public function uploadDokumen($file, $jenis)
-    {
-        if (!in_array($jenis, ['sertijab', 'familisasi', 'lampiran'])) {
-            return false;
-        }
-        
         // Hapus file lama jika ada
-        $this->deleteDokumen($jenis);
-        
+        $this->deleteDokumen($type);
+
         // Upload file baru
-        $filename = time() . '_' . $jenis . '_' . $this->id . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs("dokumen/mutasi/{$jenis}", $filename, 'public');
+        $filename = time() . '_' . $type . '_' . $this->id . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs("dokumen/mutasi/{$type}", $filename, 'public');
         
-        $column = "dokumen_{$jenis}";
+        $column = "dokumen_{$type}";
         $this->$column = $path;
         $this->save();
         
@@ -220,31 +344,83 @@ class Mutasi extends Model
     }
 
     /**
-     * Accessor untuk status badge
+     * Hapus dokumen mutasi
      */
-    public function getStatusBadgeAttribute()
+    public function deleteDokumen($type)
     {
-        $badges = [
-            'Draft' => '<span class="badge bg-secondary">Draft</span>',
-            'Disetujui' => '<span class="badge bg-success">Disetujui</span>',
-            'Ditolak' => '<span class="badge bg-danger">Ditolak</span>',
-            'Selesai' => '<span class="badge bg-primary">Selesai</span>'
-        ];
+        if (!in_array($type, ['sertijab', 'familisasi', 'lampiran'])) {
+            throw new \InvalidArgumentException("Tipe dokumen tidak valid: {$type}");
+        }
+
+        $column = "dokumen_{$type}";
+        if ($this->$column) {
+            Storage::disk('public')->delete($this->$column);
+            $this->update([$column => null]);
+            return true;
+        }
         
-        return $badges[$this->status_mutasi] ?? '<span class="badge bg-warning">Unknown</span>';
+        return false;
     }
 
     /**
-     * Accessor untuk jenis badge
+     * Hapus semua dokumen
      */
-    public function getJenisBadgeAttribute()
+    public function deleteAllDokumen()
     {
-        $badges = [
-            'Sementara' => '<span class="badge bg-info">Sementara</span>',
-            'Definitif' => '<span class="badge bg-success">Definitif</span>'
-        ];
+        $dokumenFields = ['sertijab', 'familisasi', 'lampiran'];
         
-        return $badges[$this->jenis_mutasi] ?? '<span class="badge bg-warning">Unknown</span>';
+        foreach ($dokumenFields as $type) {
+            $this->deleteDokumen($type);
+        }
+    }
+
+    /**
+     * Get URL dokumen
+     */
+    public function getDokumenUrl($type)
+    {
+        if (!in_array($type, ['sertijab', 'familisasi', 'lampiran'])) {
+            return null;
+        }
+
+        $column = "dokumen_{$type}";
+        return $this->$column ? Storage::url($this->$column) : null;
+    }
+
+    /**
+     * Cek apakah mutasi dapat disetujui
+     */
+    public function canBeApproved()
+    {
+        return $this->status_mutasi === 'Draft';
+    }
+
+    /**
+     * Cek apakah mutasi dapat ditolak
+     */
+    public function canBeRejected()
+    {
+        return in_array($this->status_mutasi, ['Draft', 'Disetujui']);
+    }
+
+    /**
+     * Update status mutasi
+     */
+    public function updateStatus($status, $catatan = null)
+    {
+        $allowedStatuses = ['Draft', 'Disetujui', 'Ditolak', 'Selesai'];
+        
+        if (!in_array($status, $allowedStatuses)) {
+            throw new \InvalidArgumentException("Status tidak valid: {$status}");
+        }
+
+        $updateData = ['status_mutasi' => $status];
+        
+        if ($catatan) {
+            $updateData['catatan'] = $catatan;
+        }
+
+        return $this->update($updateData);
     }
 
     /**
@@ -259,38 +435,6 @@ class Mutasi extends Model
         
         // Minimal ada satu dokumen
         return $this->hasDokumen();
-    }
-
-    /**
-     * Scope untuk filter berdasarkan jenis mutasi
-     */
-    public function scopeByJenis($query, $jenis)
-    {
-        return $query->where('jenis_mutasi', $jenis);
-    }
-
-    /**
-     * Scope untuk filter berdasarkan status
-     */
-    public function scopeByStatus($query, $status)
-    {
-        return $query->where('status_mutasi', $status);
-    }
-
-    /**
-     * Scope untuk filter berdasarkan tanggal
-     */
-    public function scopeByDateRange($query, $startDate, $endDate)
-    {
-        return $query->whereBetween('TMT', [$startDate, $endDate]);
-    }
-
-    /**
-     * Scope untuk mutasi yang memerlukan dokumen
-     */
-    public function scopePerluDokumen($query)
-    {
-        return $query->where('perlu_sertijab', true);
     }
 
     /**

@@ -359,7 +359,8 @@
                                 <!-- Checkbox for ABK Turun -->
                                 <div class="form-check-container mb-4">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="adaAbkTurun" name="ada_abk_turun">
+                                        <input class="form-check-input" type="checkbox" id="adaAbkTurun" value="1">
+                                        <input type="hidden" name="ada_abk_turun" id="ada_abk_turun_value" value="0">
                                         <label class="form-check-label" for="adaAbkTurun">
                                             <strong>Ada ABK yang turun/digantikan</strong>
                                             <small class="d-block text-muted">Checklist jika ada ABK yang akan turun dari jabatan ini</small>
@@ -508,51 +509,18 @@
                                             <div class="row">
                                                 <div class="col-6">
                                                     <div class="form-group mb-3">
-                                                        <label for="TMT_turun" class="form-label required">TMT Turun</label>
-                                                        <input type="date" class="form-control" id="TMT_turun" name="TMT_turun" required>
+                                                        <label for="TMT_turun" class="form-label required">TMT</label>
+                                                        <input type="date" class="form-control" id="TMT_turun" name="TMT_turun" 
+                                                               placeholder="Tanggal Mulai Tugas">
+                                                        <div class="form-text">Terhitung Mulai Tanggal</div>
                                                     </div>
                                                 </div>
                                                 <div class="col-6">
                                                     <div class="form-group mb-3">
-                                                        <label for="TAT_turun" class="form-label required">TAT Turun</label>
-                                                        <input type="date" class="form-control" id="TAT_turun" name="TAT_turun" required>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Upload Dokumen Section (tetap ada) -->
-                                    <div class="row mt-4">
-                                        <div class="col-12">
-                                            <h6 class="section-title">
-                                                <i class="bi bi-file-earmark-text me-2"></i>
-                                                Dokumen Pendukung
-                                            </h6>
-                                            
-                                            <div class="row">
-                                                <div class="col-lg-4">
-                                                    <div class="form-group mb-3">
-                                                        <label for="dokumen_sertijab" class="form-label">Dokumen Sertijab</label>
-                                                        <input type="file" class="form-control" id="dokumen_sertijab" name="dokumen_sertijab" 
-                                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                                        <div class="form-text">Upload dokumen serah terima jabatan (PDF, DOC, atau gambar)</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-4">
-                                                    <div class="form-group mb-3">
-                                                        <label for="dokumen_familisasi" class="form-label">Dokumen Familisasi</label>
-                                                        <input type="file" class="form-control" id="dokumen_familisasi" name="dokumen_familisasi" 
-                                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                                        <div class="form-text">Upload dokumen berita acara familisasi</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-4">
-                                                    <div class="form-group mb-3">
-                                                        <label for="dokumen_lampiran" class="form-label">Dokumen Lampiran</label>
-                                                        <input type="file" class="form-control" id="dokumen_lampiran" name="dokumen_lampiran" 
-                                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                                        <div class="form-text">Upload dokumen lampiran lainnya</div>
+                                                        <label for="TAT_turun" class="form-label required">TAT</label>
+                                                        <input type="date" class="form-control" id="TAT_turun" name="TAT_turun" 
+                                                               placeholder="Tanggal Akhir Tugas">
+                                                        <div class="form-text">Terhitung Akhir Tanggal</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -692,10 +660,6 @@
                                                     <div class="review-item">
                                                         <span class="review-label">Alasan Turun:</span>
                                                         <span id="reviewAlasanTurun" class="review-value">-</span>
-                                                    </div>
-                                                    <div class="review-item">
-                                                        <span class="review-label">Dokumen:</span>
-                                                        <span id="reviewDokumen" class="review-value">-</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1417,6 +1381,44 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeSelect2();
     initializeAbkSelect2();
     initializeValidationListeners();
+    initializeStepButtons();
+    
+    // Pastikan bahwa tombol Next step 1 dinonaktifkan saat halaman dimuat
+    // kecuali jika kapal sudah dipilih
+    const kapalValue = document.getElementById('id_kapal').value;
+    const step1NextBtn = document.querySelector('.step-content[data-step="1"] .btn-next');
+    
+    if (step1NextBtn) {
+        if (kapalValue && kapalValue !== "") {
+            step1NextBtn.disabled = false;
+            step1NextBtn.classList.remove('disabled');
+        } else {
+            step1NextBtn.disabled = true;
+            step1NextBtn.classList.add('disabled');
+        }
+    }
+    
+    // Inisialisasi tombol next pada step 1 berdasarkan nilai kapal
+    setTimeout(function() {
+        const kapalValue = document.getElementById('id_kapal').value;
+        const nextBtn = document.querySelector('.step-content[data-step="1"] .btn-next');
+        
+        console.log('Initial kapal value:', kapalValue); // Debug log
+        
+        if (kapalValue && kapalValue !== "") {
+            if (nextBtn) {
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('disabled');
+                console.log('Next button enabled on page load');
+            }
+        } else {
+            if (nextBtn) {
+                nextBtn.disabled = true;
+                nextBtn.classList.add('disabled');
+                console.log('Next button disabled on page load');
+            }
+        }
+    }, 100);
     
     // Initialize Select2 untuk dropdown kapal dan jabatan
     function initializeSelect2() {
@@ -1426,6 +1428,63 @@ document.addEventListener('DOMContentLoaded', function() {
             placeholder: '-- Pilih Kapal --',
             allowClear: true,
             width: '100%'
+        }).on('select2:open', function() {
+            // Focus select2 dropdown when opened
+            document.querySelector('.select2-search__field').focus();
+        });
+        
+        // Event handler untuk kapal selection - PERBAIKAN DISINI
+        $('#id_kapal').on('change', function() {
+            const selectedValue = $(this).val();
+            
+            if (selectedValue && selectedValue !== "") {
+                const selectedOption = $(this).find('option:selected');
+                const kodeKapal = selectedOption.data('code') || '-';
+                const namaKapal = selectedOption.data('nama') || selectedOption.text();
+                
+                // Update kapal info badge
+                const kapalInfoElement = document.getElementById('kapalInfo');
+                if (kapalInfoElement) {
+                    const selectedKapalName = document.getElementById('selectedKapalName');
+                    const selectedKapalCode = document.getElementById('selectedKapalCode');
+                    
+                    if (selectedKapalName) selectedKapalName.textContent = namaKapal;
+                    if (selectedKapalCode) selectedKapalCode.textContent = kodeKapal;
+                    
+                    // Show the info badges
+                    kapalInfoElement.style.display = 'flex';
+                }
+                
+                // Remove validation error if exists
+                $(this).removeClass('is-invalid');
+                const existingError = $(this).closest('.form-group').find('.invalid-feedback');
+                if (existingError) existingError.remove();
+                
+                // PERBAIKAN PENTING: Enable next button untuk step 1 dengan cara yang lebih sederhana
+                const nextBtn = document.querySelector('.step-content[data-step="1"] .btn-next');
+                if (nextBtn) {
+                    nextBtn.disabled = false;
+                    nextBtn.classList.remove('disabled');
+                }
+            } else {
+                // Hide kapal info if nothing selected
+                const kapalInfoElement = document.getElementById('kapalInfo');
+                if (kapalInfoElement) {
+                    kapalInfoElement.style.display = 'none';
+                }
+                
+                // PERBAIKAN: Disable next button untuk step 1
+                const nextBtn = document.querySelector('.step-content[data-step="1"] .btn-next');
+                if (nextBtn) {
+                    nextBtn.disabled = true;
+                    nextBtn.classList.add('disabled');
+                }
+            }
+            
+            // Jalankan validasi jika sudah pernah dipicu sebelumnya
+            if (validationTriggered) {
+                setTimeout(() => validateCurrentStep(), 100);
+            }
         });
         
         // Jabatan dropdown
@@ -1436,39 +1495,6 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             allowClear: true,
             width: '100%'
-        });
-        
-        // Event handler untuk kapal selection - PERBAIKAN
-        $('#id_kapal').on('change', function() {
-            const selectedValue = $(this).val();
-            
-            console.log('Kapal changed to:', selectedValue); // Debug log
-            
-            if (selectedValue && selectedValue !== "") {
-                const selectedOption = $(this).find('option:selected');
-                const kodeKapal = selectedOption.data('code') || '-';
-                const namaKapal = selectedOption.data('nama') || selectedOption.text();
-                
-                // Update kapal info badge
-                updateKapalInfo(namaKapal, kodeKapal);
-                
-                // Remove validation error if exists
-                removeValidationError(this);
-                
-                // Enable next button if validation passes
-                if (validationTriggered) {
-                    setTimeout(() => validateCurrentStep(), 100);
-                } else {
-                    enableNextButton(1);
-                }
-            } else {
-                hideKapalInfo();
-                disableNextButton(1);
-                
-                if (validationTriggered) {
-                    setTimeout(() => validateCurrentStep(), 100);
-                }
-            }
         });
     }
     
@@ -1538,10 +1564,10 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('ABK Naik selected:', data);
             
             if (data.id) {
-                // Set hidden fields
-                document.getElementById('nrp_naik').value = data.nrp || data.id;
-                document.getElementById('nama_naik').value = data.nama_abk || '';
-                document.getElementById('jabatan_naik').value = data.jabatan_id || '';
+                // Set hidden fields dengan data dari database
+                document.getElementById('nrp_naik').value = data.id; // ID adalah NRP
+                document.getElementById('nama_naik').value = data.nama_abk;
+                document.getElementById('jabatan_naik').value = data.jabatan_id;
                 
                 // Update display
                 updateSelectedAbkDisplay('naik', data);
@@ -1552,59 +1578,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        $('#abk_naik_search').on('select2:clear', function () {
-            // Clear hidden fields
-            document.getElementById('nrp_naik').value = '';
-            document.getElementById('nama_naik').value = '';
-            document.getElementById('jabatan_naik').value = '';
-            
-            // Hide display
-            document.getElementById('selectedAbkNaikInfo').classList.add('d-none');
-            
-            if (validationTriggered) {
-                validateCurrentStep();
-            }
-        });
-
-        // ABK Turun Search  
-        $('#abk_turun_search').select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Ketik NRP atau nama ABK...',
-            allowClear: true,
-            width: '100%',
-            minimumInputLength: 2,
-            ajax: {
-                url: '{{ route("mutasi.search-abk") }}',
-                dataType: 'json',
-                delay: 300,
-                data: function (params) {
-                    return {
-                        q: params.term,
-                        type: 'turun'
-                    };
-                },
-                processResults: function (data) {
-                    return {
-                        results: data.results || []
-                    };
-                },
-                cache: true
-            },
-            templateResult: formatAbkResult,
-            templateSelection: formatAbkSelection,
-            escapeMarkup: function (markup) { return markup; }
-        });
-
-        // Event handlers untuk ABK selection
+        // Event handler untuk ABK turun
         $('#abk_turun_search').on('select2:select', function (e) {
             const data = e.params.data;
             console.log('ABK Turun selected:', data);
             
             if (data.id) {
-                // Set hidden fields
-                document.getElementById('nrp_turun').value = data.nrp || data.id;
-                document.getElementById('nama_turun').value = data.nama_abk || '';
-                document.getElementById('jabatan_turun').value = data.jabatan_id || '';
+                // Set hidden fields dengan data dari database
+                document.getElementById('nrp_turun').value = data.id;
+                document.getElementById('nama_turun').value = data.nama_abk;
+                document.getElementById('jabatan_turun').value = data.jabatan_id;
                 
                 // Update display
                 updateSelectedAbkDisplay('turun', data);
@@ -1612,20 +1595,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (validationTriggered) {
                     validateCurrentStep();
                 }
-            }
-        });
-
-        $('#abk_turun_search').on('select2:clear', function () {
-            // Clear hidden fields
-            document.getElementById('nrp_turun').value = '';
-            document.getElementById('nama_turun').value = '';
-            document.getElementById('jabatan_turun').value = '';
-            
-            // Hide display
-            document.getElementById('selectedAbkTurunInfo').classList.add('d-none');
-            
-            if (validationTriggered) {
-                validateCurrentStep();
             }
         });
     }
@@ -1718,11 +1687,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Kapal info functions - PERBAIKAN
+    // Perbaikan fungsi updateKapalInfo untuk menampilkan info kapal
     function updateKapalInfo(namaKapal, kodeKapal) {
-        // Hide existing info first
-        hideKapalInfo();
-        
         const kapalInfoElement = document.getElementById('kapalInfo');
         if (kapalInfoElement) {
             const selectedKapalName = document.getElementById('selectedKapalName');
@@ -1736,7 +1702,8 @@ document.addEventListener('DOMContentLoaded', function() {
             kapalInfoElement.style.display = 'flex';
         }
     }
-    
+
+    // Fungsi untuk menyembunyikan info kapal
     function hideKapalInfo() {
         const kapalInfoElement = document.getElementById('kapalInfo');
         if (kapalInfoElement) {
@@ -1790,12 +1757,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Next button handlers
     nextButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default behavior
             validationTriggered = true;
             
-            if (validateCurrentStep()) {
-                if (currentStep < totalSteps) {
-                    currentStep++;
+            // Get current step directly from the parent container
+            const stepContent = this.closest('.step-content');
+            if (!stepContent) return;
+            
+            const stepNumber = parseInt(stepContent.getAttribute('data-step'));
+            console.log(`Next button clicked for step ${stepNumber}`); // Debug log
+            
+            // Validasi step saat ini
+            if (validateStep(stepNumber)) {
+                // Lanjutkan ke step berikutnya jika valid
+                if (stepNumber < totalSteps) {
+                    currentStep = stepNumber + 1;
                     updateStepDisplay();
                     if (currentStep === 4) {
                         updateReviewData();
@@ -1828,6 +1805,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // PERBAIKAN FUNGSI validateCurrentStep() UNTUK STEP 1
     function validateCurrentStep() {
         const currentStepContent = document.querySelector(`.step-content[data-step="${currentStep}"]`);
         if (!currentStepContent) {
@@ -1843,14 +1821,28 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentStep === 1) {
             // Validate kapal selection
             const kapalValue = document.getElementById('id_kapal').value;
-            console.log('Kapal value:', kapalValue); // Debug log
+            const nextBtn = document.querySelector('.step-content[data-step="1"] .btn-next');
             
             if (!kapalValue || kapalValue === "") {
                 isValid = false;
                 if (validationTriggered) {
                     showValidationError(document.getElementById('id_kapal'), 'Silakan pilih kapal tujuan');
                 }
+                
+                // Disable next button
+                if (nextBtn) {
+                    nextBtn.disabled = true;
+                    nextBtn.classList.add('disabled');
+                }
+            } else {
+                // Enable next button explicitly
+                if (nextBtn) {
+                    nextBtn.disabled = false;
+                    nextBtn.classList.remove('disabled');
+                }
             }
+            
+            return isValid;
         } else if (currentStep === 2) {
             // Validate ABK naik
             const nrpNaik = document.getElementById('nrp_naik').value;
@@ -2084,9 +2076,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Get jabatan mutasi turun name
             const jabatanMutasiTurunSelect = document.getElementById('id_jabatan_mutasi_turun');
-            const jabatanMutasiTurunText = jabatanMutasiTurunSelect.options[jabatanMutasiTurunSelect.selectedIndex]?.text || '-';
-            setReviewValue('reviewJabatanTurun', jabatanMutasiTurunText);
-            
             // Nama mutasi turun
             const namaMutasiTurunSelect = document.getElementById('nama_mutasi_turun');
             const namaMutasiTurun = namaMutasiTurunSelect.options[namaMutasiTurunSelect.selectedIndex]?.text || '-';
@@ -2101,10 +2090,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const tatTurun = document.getElementById('TAT_turun').value || '-';
             setReviewValue('reviewTMTTurun', tmtTurun ? new Intl.DateTimeFormat('id-ID').format(new Date(tmtTurun)) : '-');
             setReviewValue('reviewTATTurun', tatTurun ? new Intl.DateTimeFormat('id-ID').format(new Date(tatTurun)) : '-');
-            
-            // Count uploaded documents
-            const dokumenCount = getDokumenCount();
-            setReviewValue('reviewDokumen', dokumenCount + ' file');
         } else if (reviewAbkTurun) {
             reviewAbkTurun.classList.add('d-none');
         }
@@ -2112,21 +2097,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Helper functions
     function enableNextButton(step) {
-        const nextBtn = document.querySelector(`[data-step="${step}"] .btn-next`);
+        const nextBtn = document.querySelector(`.step-content[data-step="${step}"] .btn-next`);
         if (nextBtn) {
             nextBtn.disabled = false;
             nextBtn.classList.remove('disabled');
+            console.log(`Next button for step ${step} enabled`); // Debug log
         }
     }
     
     function disableNextButton(step) {
-        const nextBtn = document.querySelector(`[data-step="${step}"] .btn-next`);
+        const nextBtn = document.querySelector(`.step-content[data-step="${step}"] .btn-next`);
         if (nextBtn) {
             nextBtn.disabled = true;
             nextBtn.classList.add('disabled');
+            console.log(`Next button for step ${step} disabled`); // Debug log
         }
     }
 
+    // Fungsi untuk memeriksa status kapal di step 1
+    function checkKapalSelection() {
+        const kapalValue = document.getElementById('id_kapal').value;
+        if (kapalValue && kapalValue !== "") {
+            enableNextButton(1);
+            return true;
+        } else {
+            disableNextButton(1);
+            return false;
+        }
+    }
+    
     function submitForm() {
         submitButton.classList.add('loading');
         submitButton.disabled = true;
@@ -2208,20 +2207,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (element) {
             element.textContent = value || '-';
         }
- }
-
-    function getDokumenCount() {
-        let count = 0;
-        const dokumenInputs = ['dokumen_sertijab', 'dokumen_familisasi', 'dokumen_lampiran'];
-        
-        dokumenInputs.forEach(inputId => {
-            const input = document.getElementById(inputId);
-            if (input && input.files && input.files.length > 0) {
-                count++;
-            }
-        });
-        
-        return count;
     }
 
     // Tambahkan event listeners untuk real-time validation
@@ -2384,9 +2369,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById(`nama_${type}`).value = '';
         document.getElementById(`jabatan_${type}`).value = '';
         
-        // Clear specific fields untuk ABK turun
         if (type === 'turun') {
-            $('#id_jabatan_mutasi_turun').val('').trigger('change');
+            document.getElementById('id_jabatan_mutasi_turun').value = '';
             document.getElementById('nama_mutasi_turun').value = '';
             document.getElementById('jenis_mutasi_turun').value = '';
             document.getElementById('TMT_turun').value = '';
@@ -2411,6 +2395,51 @@ document.addEventListener('DOMContentLoaded', function() {
             validateCurrentStep();
         }
     }
+
+    // Tambahkan ke create.blade.php - event handler untuk checkbox ABK turun
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tambahkan event handler untuk checkbox ABK turun
+        const adaAbkTurunCheckbox = document.getElementById('adaAbkTurun');
+        const adaAbkTurunValue = document.getElementById('ada_abk_turun_value');
+        
+        if (adaAbkTurunCheckbox && adaAbkTurunValue) {
+            adaAbkTurunCheckbox.addEventListener('change', function() {
+                // Set nilai hidden field ke "1" jika checked, "0" jika tidak
+                adaAbkTurunValue.value = this.checked ? "1" : "0";
+                console.log("ada_abk_turun value set to:", adaAbkTurunValue.value);
+                
+                // Existing functionality untuk show/hide form
+                const formAbkTurun = document.getElementById('formAbkTurun');
+                
+                if (this.checked) {
+                    formAbkTurun.classList.remove('d-none');
+                    formAbkTurun.classList.add('show');
+                    
+                    // Set required attributes
+                    document.getElementById('abk_turun_search').setAttribute('required', 'required');
+                    document.getElementById('id_jabatan_mutasi_turun').setAttribute('required', 'required');
+                    document.getElementById('nama_mutasi_turun').setAttribute('required', 'required');
+                    document.getElementById('jenis_mutasi_turun').setAttribute('required', 'required');
+                    document.getElementById('TMT_turun').setAttribute('required', 'required');
+                    document.getElementById('TAT_turun').setAttribute('required', 'required');
+                } else {
+                    formAbkTurun.classList.add('d-none');
+                    formAbkTurun.classList.remove('show');
+                    
+                    // Remove required attributes
+                    document.getElementById('abk_turun_search').removeAttribute('required');
+                    document.getElementById('id_jabatan_mutasi_turun').removeAttribute('required');
+                    document.getElementById('nama_mutasi_turun').removeAttribute('required');
+                    document.getElementById('jenis_mutasi_turun').removeAttribute('required');
+                    document.getElementById('TMT_turun').removeAttribute('required');
+                    document.getElementById('TAT_turun').removeAttribute('required');
+                    
+                    // Clear all ABK turun fields
+                    clearAbkSelection('turun');
+                }
+            });
+        }
+    });
 });
 </script>
 @endpush

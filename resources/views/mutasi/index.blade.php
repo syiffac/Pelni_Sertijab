@@ -1,3 +1,4 @@
+{{-- Ganti konten file resources/views/mutasi/index.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -27,19 +28,15 @@
                     </div>
                     <div class="header-actions">
                         <div class="action-buttons">
-                            <button class="btn btn-outline-primary btn-disabled" disabled>
+                            <a href="{{ route('mutasi.create') }}" class="btn btn-primary">
                                 <i class="bi bi-plus-circle me-2"></i>
                                 Tambah Mutasi
-                            </button>
-                            <button class="btn btn-outline-secondary btn-disabled" disabled>
+                            </a>
+                            <button class="btn btn-outline-secondary" onclick="exportData()">
                                 <i class="bi bi-download me-2"></i>
                                 Export Data
                             </button>
                         </div>
-                        <span class="status-badge coming-soon">
-                            <i class="bi bi-clock me-1"></i>
-                            Coming Soon
-                        </span>
                     </div>
                 </div>
             </div>
@@ -52,7 +49,7 @@
                             <i class="bi bi-arrow-left-right"></i>
                         </div>
                         <div class="stats-content">
-                            <div class="stats-number">248</div>
+                            <div class="stats-number">{{ $statistics['total_mutasi'] ?? 0 }}</div>
                             <div class="stats-label">Total Mutasi</div>
                         </div>
                     </div>
@@ -63,7 +60,7 @@
                             <i class="bi bi-check-circle"></i>
                         </div>
                         <div class="stats-content">
-                            <div class="stats-number">186</div>
+                            <div class="stats-number">{{ $statistics['mutasi_selesai'] ?? 0 }}</div>
                             <div class="stats-label">Mutasi Selesai</div>
                         </div>
                     </div>
@@ -74,7 +71,7 @@
                             <i class="bi bi-clock-history"></i>
                         </div>
                         <div class="stats-content">
-                            <div class="stats-number">45</div>
+                            <div class="stats-number">{{ $statistics['mutasi_proses'] ?? 0 }}</div>
                             <div class="stats-label">Dalam Proses</div>
                         </div>
                     </div>
@@ -85,219 +82,218 @@
                             <i class="bi bi-calendar-event"></i>
                         </div>
                         <div class="stats-content">
-                            <div class="stats-number">17</div>
+                            <div class="stats-number">{{ $statistics['mutasi_bulan_ini'] ?? 0 }}</div>
                             <div class="stats-label">Mutasi Bulan Ini</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Coming Soon Card -->
-            <div class="coming-soon-section">
-                <div class="coming-soon-card">
-                    <div class="coming-soon-content">
-                        <div class="coming-soon-icon">
-                            <i class="bi bi-table"></i>
-                        </div>
-                        
-                        <h3 class="coming-soon-title">Data Table Mutasi</h3>
-                        <p class="coming-soon-subtitle">Fitur manajemen data mutasi sedang dalam pengembangan</p>
-                        
-                        <div class="feature-preview">
-                            <h5 class="preview-title">
-                                <i class="bi bi-eye me-2"></i>
-                                Fitur yang Akan Tersedia
-                            </h5>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <ul class="feature-list">
-                                        <li>
-                                            <i class="bi bi-table text-primary me-2"></i>
-                                            Data table dengan pagination
-                                        </li>
-                                        <li>
-                                            <i class="bi bi-search text-success me-2"></i>
-                                            Pencarian dan filter mutasi
-                                        </li>
-                                        <li>
-                                            <i class="bi bi-funnel text-info me-2"></i>
-                                            Filter berdasarkan kapal & status
-                                        </li>
-                                        <li>
-                                            <i class="bi bi-sort-alpha-down text-warning me-2"></i>
-                                            Sorting kolom data
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <ul class="feature-list">
-                                        <li>
-                                            <i class="bi bi-pencil-square text-secondary me-2"></i>
-                                            Edit & update mutasi
-                                        </li>
-                                        <li>
-                                            <i class="bi bi-eye text-dark me-2"></i>
-                                            Detail view mutasi
-                                        </li>
-                                        <li>
-                                            <i class="bi bi-download text-primary me-2"></i>
-                                            Export ke Excel/PDF
-                                        </li>
-                                        <li>
-                                            <i class="bi bi-graph-up text-success me-2"></i>
-                                            Laporan mutasi
-                                        </li>
-                                    </ul>
-                                </div>
+            <!-- Search and Filter Section -->
+            <div class="filter-section mb-4">
+                <div class="filter-card">
+                    <form method="GET" action="{{ route('mutasi.index') }}" class="filter-form">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Cari Mutasi</label>
+                                <input type="text" name="search" class="form-control" 
+                                       placeholder="ID, Nama ABK, atau Kapal..." 
+                                       value="{{ request('search') }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Status</label>
+                                <select name="status" class="form-select">
+                                    <option value="">Semua Status</option>
+                                    <option value="Draft" {{ request('status') == 'Draft' ? 'selected' : '' }}>Draft</option>
+                                    <option value="Disetujui" {{ request('status') == 'Disetujui' ? 'selected' : '' }}>Disetujui</option>
+                                    <option value="Ditolak" {{ request('status') == 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
+                                    <option value="Selesai" {{ request('status') == 'Selesai' ? 'selected' : '' }}>Selesai</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Jenis</label>
+                                <select name="jenis" class="form-select">
+                                    <option value="">Semua Jenis</option>
+                                    <option value="Sementara" {{ request('jenis') == 'Sementara' ? 'selected' : '' }}>Sementara</option>
+                                    <option value="Definitif" {{ request('jenis') == 'Definitif' ? 'selected' : '' }}>Definitif</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Periode TMT</label>
+                                <input type="month" name="periode" class="form-control" 
+                                       value="{{ request('periode') }}">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="bi bi-search"></i> Filter
+                                </button>
+                                <a href="{{ route('mutasi.index') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </a>
                             </div>
                         </div>
+                    </form>
+                </div>
+            </div>
 
-                        <!-- Table Preview -->
-                        <div class="table-preview">
-                            <h5 class="preview-title">
-                                <i class="bi bi-table me-2"></i>
-                                Preview Struktur Data Table
-                            </h5>
-                            
-                            <div class="table-responsive">
-                                <table class="table table-preview-style">
-                                    <thead>
-                                        <tr>
-                                            <th width="10%">ID Mutasi</th>
-                                            <th width="15%">ABK</th>
-                                            <th width="12%">Jabatan</th>
-                                            <th width="15%">Kapal Asal</th>
-                                            <th width="15%">Kapal Tujuan</th>
-                                            <th width="12%">Tanggal Mutasi</th>
-                                            <th width="10%">Status</th>
-                                            <th width="11%">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><span class="code-badge">MUT-2025-001</span></td>
-                                            <td>
-                                                <div class="abk-info">
-                                                    <strong>Ahmad Wahyu</strong>
-                                                    <small class="d-block text-muted">NRP: 24680</small>
-                                                </div>
-                                            </td>
-                                            <td>Mualim I</td>
-                                            <td>
-                                                <span class="kapal-badge kapal-asal">KM BINAIYA</span>
-                                            </td>
-                                            <td>
-                                                <span class="kapal-badge kapal-tujuan">KM BUKIT RAYA</span>
-                                            </td>
-                                            <td>15 Mar 2025</td>
-                                            <td><span class="status-badge status-completed">Selesai</span></td>
-                                            <td>
-                                                <div class="action-buttons-mini">
-                                                    <button class="btn-action btn-view" disabled><i class="bi bi-eye"></i></button>
-                                                    <button class="btn-action btn-edit" disabled><i class="bi bi-pencil"></i></button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><span class="code-badge">MUT-2025-002</span></td>
-                                            <td>
-                                                <div class="abk-info">
-                                                    <strong>Siti Nurhaliza</strong>
-                                                    <small class="d-block text-muted">NRP: 13579</small>
-                                                </div>
-                                            </td>
-                                            <td>KKM</td>
-                                            <td>
-                                                <span class="kapal-badge kapal-asal">KM CIREMAI</span>
-                                            </td>
-                                            <td>
-                                                <span class="kapal-badge kapal-tujuan">KM DOROLONDA</span>
-                                            </td>
-                                            <td>20 Mar 2025</td>
-                                            <td><span class="status-badge status-process">Proses</span></td>
-                                            <td>
-                                                <div class="action-buttons-mini">
-                                                    <button class="btn-action btn-view" disabled><i class="bi bi-eye"></i></button>
-                                                    <button class="btn-action btn-edit" disabled><i class="bi bi-pencil"></i></button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><span class="code-badge">MUT-2025-003</span></td>
-                                            <td>
-                                                <div class="abk-info">
-                                                    <strong>Budi Santoso</strong>
-                                                    <small class="d-block text-muted">NRP: 97531</small>
-                                                </div>
-                                            </td>
-                                            <td>Nakhoda</td>
-                                            <td>
-                                                <span class="kapal-badge kapal-asal">KM EGON</span>
-                                            </td>
-                                            <td>
-                                                <span class="kapal-badge kapal-tujuan">KM FLORES</span>
-                                            </td>
-                                            <td>25 Mar 2025</td>
-                                            <td><span class="status-badge status-pending">Pending</span></td>
-                                            <td>
-                                                <div class="action-buttons-mini">
-                                                    <button class="btn-action btn-view" disabled><i class="bi bi-eye"></i></button>
-                                                    <button class="btn-action btn-edit" disabled><i class="bi bi-pencil"></i></button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            
-                            <div class="table-footer-preview">
-                                <div class="pagination-preview">
-                                    <span class="pagination-info">Menampilkan 1-3 dari 248 data mutasi</span>
-                                    <div class="pagination-controls">
-                                        <button class="btn-pagination" disabled>‹</button>
-                                        <button class="btn-pagination active" disabled>1</button>
-                                        <button class="btn-pagination" disabled>2</button>
-                                        <button class="btn-pagination" disabled>3</button>
-                                        <button class="btn-pagination" disabled>›</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="coming-soon-actions">
-                            <a href="{{ route('mutasi.create') }}" class="btn btn-primary">
-                                <i class="bi bi-plus-circle me-2"></i>
-                                Preview Tambah Mutasi
-                            </a>
-                            <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-house-door me-2"></i>
-                                Kembali ke Dashboard
-                            </a>
-                        </div>
-                        
-                        <div class="coming-soon-meta">
-                            <div class="meta-grid">
-                                <div class="meta-item">
-                                    <i class="bi bi-clock me-1"></i>
-                                    <small>Estimasi: Q2 2025</small>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="bi bi-code-slash me-1"></i>
-                                    <small>Status: Under Development</small>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="bi bi-database me-1"></i>
-                                    <small>Database: Ready</small>
-                                </div>
-                                <div class="meta-item">
-                                    <i class="bi bi-ui-checks me-1"></i>
-                                    <small>UI/UX: In Progress</small>
-                                </div>
-                            </div>
+            <!-- Data Table Section -->
+            <div class="table-section">
+                <div class="table-card">
+                    <div class="table-header">
+                        <h5 class="table-title">
+                            <i class="bi bi-table me-2"></i>
+                            Data Mutasi ABK
+                        </h5>
+                        <div class="table-info">
+                            Menampilkan {{ $mutasiList->firstItem() ?? 0 }}-{{ $mutasiList->lastItem() ?? 0 }} 
+                            dari {{ $mutasiList->total() ?? 0 }} data mutasi
                         </div>
                     </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-data">
+                            <thead>
+                                <tr>
+                                    <th width="10%">ID Mutasi</th>
+                                    <th width="15%">ABK Naik</th>
+                                    <th width="12%">Jabatan</th>
+                                    <th width="15%">Kapal Tujuan</th>
+                                    <th width="12%">TMT</th>
+                                    <th width="10%">Jenis</th>
+                                    <th width="10%">Status</th>
+                                    <th width="11%">ABK Turun</th>
+                                    <th width="5%">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($mutasiList as $mutasi)
+                                <tr class="table-row">
+                                    <td>
+                                        <span class="code-badge">
+                                            MUT-{{ str_pad($mutasi->id, 4, '0', STR_PAD_LEFT) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="abk-info">
+                                            <strong>{{ $mutasi->nama_lengkap_naik }}</strong>
+                                            <small class="d-block text-muted">
+                                                NRP: {{ $mutasi->id_abk_naik }}
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="jabatan-info">
+                                            <span class="jabatan-from">
+                                                {{ $mutasi->jabatanTetapNaik->nama_jabatan ?? '-' }}
+                                            </span>
+                                            <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                                            <span class="jabatan-to">
+                                                {{ $mutasi->jabatanMutasi->nama_jabatan ?? '-' }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="kapal-badge kapal-tujuan">
+                                            {{ $mutasi->kapal->nama_kapal ?? 'Kapal tidak ditemukan' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="date-info">
+                                            <strong>{{ $mutasi->TMT ? $mutasi->TMT->format('d/m/Y') : '-' }}</strong>
+                                            <small class="d-block text-muted">
+                                                s/d {{ $mutasi->TAT ? $mutasi->TAT->format('d/m/Y') : '-' }}
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="jenis-badge jenis-{{ strtolower($mutasi->jenis_mutasi) }}">
+                                            {{ $mutasi->jenis_mutasi }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-{{ strtolower($mutasi->status_mutasi) }}">
+                                            {{ $mutasi->status_mutasi }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if($mutasi->ada_abk_turun && $mutasi->nama_lengkap_turun)
+                                            <div class="abk-turun-info">
+                                                <strong>{{ $mutasi->nama_lengkap_turun }}</strong>
+                                                <small class="d-block text-muted">
+                                                    {{ $mutasi->id_abk_turun }}
+                                                </small>
+                                            </div>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons-mini">
+                                            <button class="btn-action btn-view" 
+                                                    onclick="viewMutasi({{ $mutasi->id }})"
+                                                    title="Lihat Detail">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn-action btn-edit" 
+                                                    onclick="editMutasi({{ $mutasi->id }})"
+                                                    title="Edit Mutasi">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            @if($mutasi->status_mutasi == 'Draft')
+                                            <button class="btn-action btn-delete" 
+                                                    onclick="deleteMutasi({{ $mutasi->id }})"
+                                                    title="Hapus Mutasi">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="9" class="text-center py-4">
+                                        <div class="empty-state">
+                                            <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                                            <h5 class="text-muted">Belum Ada Data Mutasi</h5>
+                                            <p class="text-muted mb-3">
+                                                Mulai dengan menambah data mutasi ABK pertama Anda.
+                                            </p>
+                                            <a href="{{ route('mutasi.create') }}" class="btn btn-primary">
+                                                <i class="bi bi-plus-circle me-2"></i>
+                                                Tambah Mutasi Pertama
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    @if($mutasiList->hasPages())
+                    <div class="table-footer">
+                        <div class="pagination-wrapper">
+                            {{ $mutasiList->appends(request()->query())->links('custom.pagination') }}
+                        </div>
+                    </div>
+                    @endif
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detail Mutasi -->
+<div class="modal fade" id="detailMutasiModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detail Mutasi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailMutasiContent">
+                <!-- Content will be loaded dynamically -->
             </div>
         </div>
     </div>
@@ -306,6 +302,7 @@
 
 @push('styles')
 <style>
+/* Gunakan semua styling dari placeholder page yang sudah ada */
 /* Variables */
 :root {
     --primary-blue: #2563eb;
@@ -390,36 +387,6 @@
     color: var(--text-muted);
     margin: 4px 0 0 0;
     font-size: 14px;
-}
-
-/* Status Badge */
-.status-badge {
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-}
-
-.status-badge.coming-soon {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.status-badge.status-completed {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-.status-badge.status-process {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.status-badge.status-pending {
-    background: #fef3c7;
-    color: #92400e;
 }
 
 /* Stats Cards */
@@ -512,161 +479,124 @@
     font-weight: 500;
 }
 
-/* Coming Soon Section */
-.coming-soon-section {
-    margin-top: 20px;
+/* Filter Section */
+.filter-section {
+    margin-bottom: 24px;
 }
 
-.coming-soon-card {
+.filter-card {
     background: white;
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow-medium);
+    padding: 20px;
+    box-shadow: var(--shadow-light);
     border: 1px solid var(--border-color);
-    padding: 40px;
-    text-align: center;
 }
 
-.coming-soon-content {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.coming-soon-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 24px;
-    background: linear-gradient(135deg, var(--primary-blue), #3b82f6);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 32px;
-    animation: tableIconPulse 2s infinite;
-}
-
-@keyframes tableIconPulse {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7);
-    }
-    70% {
-        transform: scale(1.05);
-        box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
-    }
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
-    }
-}
-
-.coming-soon-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text-dark);
-    margin-bottom: 8px;
-}
-
-.coming-soon-subtitle {
-    font-size: 16px;
-    color: var(--text-muted);
-    margin-bottom: 32px;
-}
-
-/* Feature Preview */
-.feature-preview {
-    text-align: left;
-    margin: 32px 0;
-    background: var(--background-light);
-    border-radius: 8px;
-    padding: 24px;
-}
-
-.preview-title {
-    font-size: 16px;
+.filter-form .form-label {
     font-weight: 600;
     color: var(--text-dark);
-    margin-bottom: 16px;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    margin-bottom: 6px;
 }
 
-.feature-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.feature-list li {
-    display: flex;
-    align-items: center;
-    padding: 6px 0;
-    font-size: 14px;
-    color: var(--text-dark);
-}
-
-/* Table Preview */
-.table-preview {
-    margin: 32px 0;
-    text-align: left;
-}
-
-.table-preview-style {
+/* Table Section */
+.table-section {
     background: white;
-    border-radius: 8px;
-    overflow: hidden;
+    border-radius: var(--border-radius);
     box-shadow: var(--shadow-light);
-    margin-bottom: 0;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
 }
 
-.table-preview-style th {
+.table-header {
+    background: var(--background-light);
+    padding: 20px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+}
+
+.table-info {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* Table Styling */
+.table-data {
+    margin: 0;
+    background: white;
+}
+
+.table-data th {
     background: var(--background-light);
     color: var(--text-dark);
     font-weight: 600;
     font-size: 13px;
-    padding: 12px 8px;
+    padding: 16px 12px;
     border-bottom: 2px solid var(--border-color);
+    vertical-align: middle;
 }
 
-.table-preview-style td {
-    padding: 12px 8px;
+.table-data td {
+    padding: 16px 12px;
     border-bottom: 1px solid var(--border-color);
     font-size: 13px;
     vertical-align: middle;
 }
 
+.table-row:hover {
+    background-color: #f8fafc;
+    transition: var(--transition);
+}
+
 .code-badge {
     background: #f3f4f6;
     color: var(--text-dark);
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: 6px 10px;
+    border-radius: 6px;
     font-family: 'Courier New', monospace;
     font-size: 11px;
     font-weight: 600;
 }
 
-.abk-info strong {
+.abk-info strong, .abk-turun-info strong {
     color: var(--text-dark);
     font-size: 13px;
+    display: block;
 }
 
-.abk-info small {
+.abk-info small, .abk-turun-info small {
     font-size: 11px;
+}
+
+.jabatan-info {
+    font-size: 12px;
+}
+
+.jabatan-from {
+    color: var(--text-muted);
+}
+
+.jabatan-to {
+    color: var(--text-dark);
+    font-weight: 600;
 }
 
 .kapal-badge {
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: 6px 10px;
+    border-radius: 6px;
     font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
-}
-
-.kapal-asal {
-    background: #fef3c7;
-    color: #92400e;
 }
 
 .kapal-tujuan {
@@ -674,22 +604,80 @@
     color: #065f46;
 }
 
+.date-info strong {
+    color: var(--text-dark);
+    font-size: 13px;
+}
+
+.date-info small {
+    font-size: 11px;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+}
+
+.status-draft {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.status-disetujui {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-ditolak {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-selesai {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Jenis Badges */
+.jenis-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.jenis-sementara {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.jenis-definitif {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* Action Buttons */
 .action-buttons-mini {
     display: flex;
     gap: 4px;
 }
 
 .btn-action {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border: none;
-    border-radius: 4px;
-    cursor: not-allowed;
-    opacity: 0.5;
+    border-radius: 6px;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 12px;
+    transition: var(--transition);
 }
 
 .btn-view {
@@ -697,80 +685,42 @@
     color: #1e40af;
 }
 
+.btn-view:hover {
+    background: #bfdbfe;
+    transform: scale(1.05);
+}
+
 .btn-edit {
     background: #fef3c7;
     color: #92400e;
 }
 
-.table-footer-preview {
+.btn-edit:hover {
+    background: #fde68a;
+    transform: scale(1.05);
+}
+
+.btn-delete {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.btn-delete:hover {
+    background: #fecaca;
+    transform: scale(1.05);
+}
+
+/* Empty State */
+.empty-state {
+    padding: 40px 20px;
+    text-align: center;
+}
+
+/* Table Footer */
+.table-footer {
     background: var(--background-light);
-    padding: 12px 16px;
+    padding: 16px 24px;
     border-top: 1px solid var(--border-color);
-    border-radius: 0 0 8px 8px;
-}
-
-.pagination-preview {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.pagination-info {
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
-.pagination-controls {
-    display: flex;
-    gap: 4px;
-}
-
-.btn-pagination {
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--border-color);
-    background: white;
-    color: var(--text-muted);
-    border-radius: 4px;
-    cursor: not-allowed;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-pagination.active {
-    background: var(--primary-blue);
-    color: white;
-    border-color: var(--primary-blue);
-}
-
-.coming-soon-actions {
-    margin: 32px 0 24px;
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.coming-soon-meta {
-    padding-top: 24px;
-    border-top: 1px solid var(--border-color);
-}
-
-.meta-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    justify-content: center;
-}
-
-.meta-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    color: var(--text-muted);
 }
 
 /* Buttons */
@@ -802,18 +752,6 @@
     text-decoration: none;
 }
 
-.btn-outline-primary {
-    background: transparent;
-    color: var(--primary-blue);
-    border: 2px solid var(--primary-blue);
-}
-
-.btn-outline-primary:hover:not(.btn-disabled) {
-    background: var(--primary-blue);
-    color: white;
-    text-decoration: none;
-}
-
 .btn-outline-secondary {
     background: transparent;
     color: var(--text-muted);
@@ -825,12 +763,6 @@
     color: white;
     border-color: var(--text-muted);
     text-decoration: none;
-}
-
-.btn-disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
 }
 
 /* Responsive adjustments */
@@ -849,39 +781,8 @@
         justify-content: center;
     }
     
-    .coming-soon-card {
-        padding: 24px 16px;
-        margin: 0 8px;
-    }
-    
-    .coming-soon-icon {
-        width: 70px;
-        height: 70px;
-        font-size: 28px;
-        margin-bottom: 20px;
-    }
-    
-    .coming-soon-title {
-        font-size: 20px;
-    }
-    
-    .feature-preview {
-        padding: 16px;
-    }
-    
-    .coming-soon-actions {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .btn {
-        width: 100%;
-        max-width: 250px;
-    }
-    
-    .meta-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
+    .table-responsive {
+        font-size: 12px;
     }
     
     .stats-card {
@@ -890,14 +791,8 @@
         gap: 12px;
     }
     
-    .table-responsive {
-        font-size: 12px;
-    }
-    
-    .pagination-preview {
-        flex-direction: column;
+    .filter-form .row {
         gap: 12px;
-        text-align: center;
     }
 }
 
@@ -906,16 +801,18 @@
         font-size: 24px;
     }
     
-    .table-preview-style th,
-    .table-preview-style td {
-        padding: 8px 4px;
+    .table-data th,
+    .table-data td {
+        padding: 12px 8px;
         font-size: 11px;
     }
     
     .kapal-badge,
-    .code-badge {
+    .code-badge,
+    .status-badge,
+    .jenis-badge {
         font-size: 10px;
-        padding: 2px 6px;
+        padding: 4px 6px;
     }
 }
 </style>
@@ -924,9 +821,8 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Add interactive effects
+    // Add interactive effects sama seperti placeholder
     const statsCards = document.querySelectorAll('.stats-card');
-    const comingSoonCard = document.querySelector('.coming-soon-card');
     
     // Stats cards hover effect
     statsCards.forEach(card => {
@@ -941,39 +837,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Coming soon card hover effect
-    if (comingSoonCard) {
-        comingSoonCard.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-3px)';
-            this.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.15)';
-        });
-        
-        comingSoonCard.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-        });
-    }
-    
-    // Table preview interactive effect
-    const tableRows = document.querySelectorAll('.table-preview-style tbody tr');
-    tableRows.forEach(row => {
-        row.addEventListener('mouseenter', function() {
-            this.style.backgroundColor = '#f8fafc';
-            this.style.cursor = 'not-allowed';
-        });
-        
-        row.addEventListener('mouseleave', function() {
-            this.style.backgroundColor = '';
-        });
-    });
-    
     // Animate stats numbers
     function animateNumbers() {
         const numbers = document.querySelectorAll('.stats-number');
         numbers.forEach(number => {
             const target = parseInt(number.textContent);
             let current = 0;
-            const increment = target / 50;
+            const increment = target / 30;
             const timer = setInterval(() => {
                 current += increment;
                 if (current >= target) {
@@ -981,34 +851,61 @@ document.addEventListener('DOMContentLoaded', function() {
                     clearInterval(timer);
                 }
                 number.textContent = Math.floor(current);
-            }, 30);
+            }, 50);
         });
     }
     
-    // Intersection Observer for animations
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-                
-                if (entry.target.classList.contains('stats-card')) {
-                    animateNumbers();
-                }
-            }
-        });
-    });
-    
-    // Observe stats cards
-    statsCards.forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        card.style.transition = 'all 0.6s ease';
-        observer.observe(card);
-    });
-    
-    // Log page visit for analytics
-    console.log('Mutasi Index Page - Coming Soon with Preview Data');
+    // Call animate numbers on load
+    animateNumbers();
 });
+
+// Action functions
+function viewMutasi(id) {
+    // Load detail mutasi in modal
+    fetch(`/mutasi/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('detailMutasiContent').innerHTML = data.html;
+            new bootstrap.Modal(document.getElementById('detailMutasiModal')).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Gagal memuat detail mutasi');
+        });
+}
+
+function editMutasi(id) {
+    window.location.href = `/mutasi/${id}/edit`;
+}
+
+function deleteMutasi(id) {
+    if (confirm('Apakah Anda yakin ingin menghapus mutasi ini?')) {
+        fetch(`/mutasi/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Mutasi berhasil dihapus');
+                location.reload();
+            } else {
+                alert('Gagal menghapus mutasi: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat menghapus mutasi');
+        });
+    }
+}
+
+function exportData() {
+    const params = new URLSearchParams(window.location.search);
+    window.open(`/mutasi/export?${params.toString()}`, '_blank');
+}
 </script>
 @endpush
