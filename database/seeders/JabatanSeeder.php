@@ -6,7 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Jabatan;
 
-class JabatanSeederEloquent extends Seeder
+class JabatanSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -77,6 +77,6 @@ class JabatanSeederEloquent extends Seeder
             );
         }
 
-        $this->command->info('Jabatan seeder (Eloquent) completed. ' . count($jabatanData) . ' jabatan records processed.');
+        $this->command->info('Jabatan seeder completed. ' . count($jabatanData) . ' jabatan records processed.');
     }
 }
