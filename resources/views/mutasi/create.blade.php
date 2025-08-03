@@ -1359,68 +1359,25 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Variables
     let currentStep = 1;
     const totalSteps = 4;
     let validationTriggered = false;
     
-    // Elements
-    const stepItems = document.querySelectorAll('.step-item');
-    const stepContents = document.querySelectorAll('.step-content[data-step]');
-    const nextButtons = document.querySelectorAll('.btn-next');
-    const prevButtons = document.querySelectorAll('.btn-prev');
-    const form = document.getElementById('tambahMutasiForm');
-    const submitButton = document.querySelector('.btn-submit');
-    
-    // Form elements
-    const kapalSelect = document.getElementById('id_kapal');
-    const adaAbkTurunCheckbox = document.getElementById('adaAbkTurun');
-    const formAbkTurun = document.getElementById('formAbkTurun');
-    
-    // Initialize
+    // Initialize components
+    initializeComponents();
+    initializeEventHandlers();
     updateStepDisplay();
-    initializeSelect2();
-    initializeAbkSelect2();
-    initializeValidationListeners();
-    initializeStepButtons();
-    
-    // Pastikan bahwa tombol Next step 1 dinonaktifkan saat halaman dimuat
-    // kecuali jika kapal sudah dipilih
-    const kapalValue = document.getElementById('id_kapal').value;
-    const step1NextBtn = document.querySelector('.step-content[data-step="1"] .btn-next');
-    
-    if (step1NextBtn) {
-        if (kapalValue && kapalValue !== "") {
-            step1NextBtn.disabled = false;
-            step1NextBtn.classList.remove('disabled');
-        } else {
-            step1NextBtn.disabled = true;
-            step1NextBtn.classList.add('disabled');
-        }
+
+    // Main initialization
+    function initializeComponents() {
+        initializeSelect2();
+        initializeAbkSearch();
+        initializeStepButtons();
+        initializeAbkTurunToggle();
     }
-    
-    // Inisialisasi tombol next pada step 1 berdasarkan nilai kapal
-    setTimeout(function() {
-        const kapalValue = document.getElementById('id_kapal').value;
-        const nextBtn = document.querySelector('.step-content[data-step="1"] .btn-next');
-        
-        console.log('Initial kapal value:', kapalValue); // Debug log
-        
-        if (kapalValue && kapalValue !== "") {
-            if (nextBtn) {
-                nextBtn.disabled = false;
-                nextBtn.classList.remove('disabled');
-                console.log('Next button enabled on page load');
-            }
-        } else {
-            if (nextBtn) {
-                nextBtn.disabled = true;
-                nextBtn.classList.add('disabled');
-                console.log('Next button disabled on page load');
-            }
-        }
-    }, 100);
-    
-    // Initialize Select2 untuk dropdown kapal dan jabatan
+
+    // Select2 initialization
     function initializeSelect2() {
         // Kapal dropdown
         $('#id_kapal').select2({
@@ -1428,711 +1385,362 @@ document.addEventListener('DOMContentLoaded', function() {
             placeholder: '-- Pilih Kapal --',
             allowClear: true,
             width: '100%'
-        }).on('select2:open', function() {
-            // Focus select2 dropdown when opened
-            document.querySelector('.select2-search__field').focus();
-        });
-        
-        // Event handler untuk kapal selection - PERBAIKAN DISINI
-        $('#id_kapal').on('change', function() {
-            const selectedValue = $(this).val();
-            
-            if (selectedValue && selectedValue !== "") {
-                const selectedOption = $(this).find('option:selected');
-                const kodeKapal = selectedOption.data('code') || '-';
-                const namaKapal = selectedOption.data('nama') || selectedOption.text();
-                
-                // Update kapal info badge
-                const kapalInfoElement = document.getElementById('kapalInfo');
-                if (kapalInfoElement) {
-                    const selectedKapalName = document.getElementById('selectedKapalName');
-                    const selectedKapalCode = document.getElementById('selectedKapalCode');
-                    
-                    if (selectedKapalName) selectedKapalName.textContent = namaKapal;
-                    if (selectedKapalCode) selectedKapalCode.textContent = kodeKapal;
-                    
-                    // Show the info badges
-                    kapalInfoElement.style.display = 'flex';
-                }
-                
-                // Remove validation error if exists
-                $(this).removeClass('is-invalid');
-                const existingError = $(this).closest('.form-group').find('.invalid-feedback');
-                if (existingError) existingError.remove();
-                
-                // PERBAIKAN PENTING: Enable next button untuk step 1 dengan cara yang lebih sederhana
-                const nextBtn = document.querySelector('.step-content[data-step="1"] .btn-next');
-                if (nextBtn) {
-                    nextBtn.disabled = false;
-                    nextBtn.classList.remove('disabled');
-                }
-            } else {
-                // Hide kapal info if nothing selected
-                const kapalInfoElement = document.getElementById('kapalInfo');
-                if (kapalInfoElement) {
-                    kapalInfoElement.style.display = 'none';
-                }
-                
-                // PERBAIKAN: Disable next button untuk step 1
-                const nextBtn = document.querySelector('.step-content[data-step="1"] .btn-next');
-                if (nextBtn) {
-                    nextBtn.disabled = true;
-                    nextBtn.classList.add('disabled');
-                }
-            }
-            
-            // Jalankan validasi jika sudah pernah dipicu sebelumnya
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-        
+        }).on('change', handleKapalChange);
+
         // Jabatan dropdown
         $('.jabatan-select').select2({
             theme: 'bootstrap-5',
-            placeholder: function() {
-                return $(this).data('placeholder') || '-- Pilih Jabatan --';
-            },
+            placeholder: '-- Pilih Jabatan --',
             allowClear: true,
             width: '100%'
         });
     }
-    
-    // Initialize Select2 untuk search ABK
-    function initializeAbkSelect2() {
-        // ABK Naik Search
+
+    // ABK search initialization
+    function initializeAbkSearch() {
+        const searchConfig = {
+            theme: 'bootstrap-5',
+            allowClear: true,
+            width: '100%',
+            minimumInputLength: 2,
+            ajax: {
+                url: '{{ route("mutasi.search-abk") }}',
+                dataType: 'json',
+                delay: 300,
+                cache: true
+            },
+            templateResult: formatAbkResult,
+            templateSelection: formatAbkSelection,
+            escapeMarkup: markup => markup
+        };
+
+        // ABK Naik
         $('#abk_naik_search').select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Ketik NRP atau nama ABK...',
-            allowClear: true,
-            width: '100%',
-            minimumInputLength: 2,
+            ...searchConfig,
+            placeholder: 'Ketik NRP atau nama ABK naik...',
             ajax: {
-                url: '{{ route("mutasi.search-abk") }}',
-                dataType: 'json',
-                delay: 300,
-                data: function (params) {
-                    return {
-                        q: params.term,
-                        type: 'naik'
-                    };
-                },
-                processResults: function (data) {
-                    return {
-                        results: data.results || []
-                    };
-                },
-                cache: true
-            },
-            templateResult: formatAbkResult,
-            templateSelection: formatAbkSelection,
-            escapeMarkup: function (markup) { return markup; }
-        });
+                ...searchConfig.ajax,
+                data: params => ({ q: params.term, type: 'naik' })
+            }
+        }).on('select2:select', e => handleAbkSelection('naik', e.params.data));
 
-        // ABK Turun Search  
+        // ABK Turun  
         $('#abk_turun_search').select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Ketik NRP atau nama ABK...',
-            allowClear: true,
-            width: '100%',
-            minimumInputLength: 2,
+            ...searchConfig,
+            placeholder: 'Ketik NRP atau nama ABK turun...',
             ajax: {
-                url: '{{ route("mutasi.search-abk") }}',
-                dataType: 'json',
-                delay: 300,
-                data: function (params) {
-                    return {
-                        q: params.term,
-                        type: 'turun'
-                    };
-                },
-                processResults: function (data) {
-                    return {
-                        results: data.results || []
-                    };
-                },
-                cache: true
-            },
-            templateResult: formatAbkResult,
-            templateSelection: formatAbkSelection,
-            escapeMarkup: function (markup) { return markup; }
+                ...searchConfig.ajax,
+                data: params => ({ q: params.term, type: 'turun' })
+            }
+        }).on('select2:select', e => handleAbkSelection('turun', e.params.data));
+    }
+
+    // Step buttons initialization
+    function initializeStepButtons() {
+        // Next buttons
+        document.querySelectorAll('.btn-next').forEach(btn => {
+            btn.addEventListener('click', handleNextStep);
         });
 
-        // Event handlers untuk ABK selection
-        $('#abk_naik_search').on('select2:select', function (e) {
-            const data = e.params.data;
-            console.log('ABK Naik selected:', data);
-            
-            if (data.id) {
-                // Set hidden fields dengan data dari database
-                document.getElementById('nrp_naik').value = data.id; // ID adalah NRP
-                document.getElementById('nama_naik').value = data.nama_abk;
-                document.getElementById('jabatan_naik').value = data.jabatan_id;
-                
-                // Update display
-                updateSelectedAbkDisplay('naik', data);
-                
-                if (validationTriggered) {
-                    validateCurrentStep();
-                }
+        // Previous buttons
+        document.querySelectorAll('.btn-prev').forEach(btn => {
+            btn.addEventListener('click', handlePrevStep);
+        });
+
+        // Submit button
+        document.getElementById('tambahMutasiForm').addEventListener('submit', handleFormSubmit);
+    }
+
+    // ABK Turun toggle
+    function initializeAbkTurunToggle() {
+        const checkbox = document.getElementById('adaAbkTurun');
+        const hiddenInput = document.getElementById('ada_abk_turun_value');
+        const form = document.getElementById('formAbkTurun');
+
+        if (checkbox) {
+            checkbox.addEventListener('change', function() {
+                hiddenInput.value = this.checked ? "1" : "0";
+                toggleAbkTurunForm(this.checked, form);
+            });
+        }
+    }
+
+    // Event handlers
+    function initializeEventHandlers() {
+        // Real-time validation
+        const validationFields = [
+            '#id_kapal', '#id_jabatan_mutasi', '#nama_mutasi', '#jenis_mutasi',
+            '#TMT', '#TAT', '#id_jabatan_mutasi_turun', '#nama_mutasi_turun',
+            '#jenis_mutasi_turun', '#TMT_turun', '#TAT_turun'
+        ];
+
+        validationFields.forEach(selector => {
+            $(selector).on('change', () => {
+                if (validationTriggered) validateCurrentStep();
+            });
+        });
+    }
+
+    // Kapal change handler
+    function handleKapalChange() {
+        const selectedValue = $(this).val();
+        const nextBtn = document.querySelector('.step-content[data-step="1"] .btn-next');
+
+        if (selectedValue) {
+            const selectedOption = $(this).find('option:selected');
+            updateKapalInfo(selectedOption.data('nama'), selectedOption.data('code'));
+            enableButton(nextBtn);
+        } else {
+            hideKapalInfo();
+            disableButton(nextBtn);
+        }
+
+        if (validationTriggered) validateCurrentStep();
+    }
+
+    // ABK selection handler
+    function handleAbkSelection(type, data) {
+        if (!data.id) return;
+
+        // Set hidden fields
+        document.getElementById(`nrp_${type}`).value = data.id;
+        document.getElementById(`nama_${type}`).value = data.nama_abk;
+        document.getElementById(`jabatan_${type}`).value = data.jabatan_id;
+
+        // Update display
+        updateAbkDisplay(type, data);
+
+        if (validationTriggered) validateCurrentStep();
+    }
+
+    // Step navigation handlers
+    function handleNextStep(e) {
+        e.preventDefault();
+        validationTriggered = true;
+
+        const stepNumber = parseInt(this.closest('.step-content').getAttribute('data-step'));
+        
+        if (validateStep(stepNumber)) {
+            if (stepNumber < totalSteps) {
+                currentStep = stepNumber + 1;
+                updateStepDisplay();
+                if (currentStep === 4) updateReviewData();
+            }
+        }
+    }
+
+    function handlePrevStep() {
+        if (currentStep > 1) {
+            currentStep--;
+            updateStepDisplay();
+        }
+    }
+
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        validationTriggered = true;
+        
+        if (validateCurrentStep()) submitForm();
+    }
+
+    // Validation functions
+    function validateStep(stepNumber) {
+        switch(stepNumber) {
+            case 1: return validateKapalStep();
+            case 2: return validateAbkNaikStep();
+            case 3: return validateAbkTurunStep();
+            default: return true;
+        }
+    }
+
+    function validateKapalStep() {
+        const kapalValue = document.getElementById('id_kapal').value;
+        if (!kapalValue) {
+            showError('id_kapal', 'Silakan pilih kapal tujuan');
+            return false;
+        }
+        return true;
+    }
+
+    function validateAbkNaikStep() {
+        const fields = [
+            { id: 'nrp_naik', message: 'Silakan pilih ABK yang akan naik' },
+            { id: 'id_jabatan_mutasi', message: 'Silakan pilih jabatan mutasi' },
+            { id: 'nama_mutasi', message: 'Silakan pilih nama mutasi' },
+            { id: 'jenis_mutasi', message: 'Silakan pilih jenis mutasi' },
+            { id: 'TMT', message: 'Silakan isi tanggal TMT' },
+            { id: 'TAT', message: 'Silakan isi tanggal TAT' }
+        ];
+
+        return validateFields(fields) && validateDateRange('TMT', 'TAT');
+    }
+
+    function validateAbkTurunStep() {
+        const adaAbkTurun = document.getElementById('adaAbkTurun').checked;
+        if (!adaAbkTurun) return true;
+
+        const fields = [
+            { id: 'nrp_turun', message: 'Silakan pilih ABK yang akan turun' },
+            { id: 'id_jabatan_mutasi_turun', message: 'Silakan pilih jabatan mutasi turun' },
+            { id: 'nama_mutasi_turun', message: 'Silakan pilih nama mutasi turun' },
+            { id: 'jenis_mutasi_turun', message: 'Silakan pilih jenis mutasi turun' },
+            { id: 'TMT_turun', message: 'Silakan isi tanggal TMT turun' },
+            { id: 'TAT_turun', message: 'Silakan isi tanggal TAT turun' }
+        ];
+
+        return validateFields(fields) && validateDateRange('TMT_turun', 'TAT_turun');
+    }
+
+    function validateCurrentStep() {
+        clearValidationErrors();
+        const isValid = validateStep(currentStep);
+        updateButtonState(currentStep, isValid);
+        return isValid;
+    }
+
+    // Helper functions
+    function validateFields(fields) {
+        let isValid = true;
+        fields.forEach(field => {
+            const element = document.getElementById(field.id);
+            if (!element || !element.value) {
+                showError(field.id, field.message);
+                isValid = false;
             }
         });
-
-        // Event handler untuk ABK turun
-        $('#abk_turun_search').on('select2:select', function (e) {
-            const data = e.params.data;
-            console.log('ABK Turun selected:', data);
-            
-            if (data.id) {
-                // Set hidden fields dengan data dari database
-                document.getElementById('nrp_turun').value = data.id;
-                document.getElementById('nama_turun').value = data.nama_abk;
-                document.getElementById('jabatan_turun').value = data.jabatan_id;
-                
-                // Update display
-                updateSelectedAbkDisplay('turun', data);
-                
-                if (validationTriggered) {
-                    validateCurrentStep();
-                }
-            }
-        });
+        return isValid;
     }
 
-    // Format ABK result untuk dropdown
-    function formatAbkResult(abk) {
-        if (abk.loading) {
-            return `
-                <div class="abk-search-loading">
-                    <div class="d-flex align-items-center">
-                        <div class="spinner-border spinner-border-sm me-2" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <span>Mencari ABK...</span>
-                    </div>
-                </div>
-            `;
+    function validateDateRange(startId, endId) {
+        const startDate = document.getElementById(startId).value;
+        const endDate = document.getElementById(endId).value;
+        
+        if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
+            showError(endId, 'Tanggal akhir harus setelah tanggal mulai');
+            return false;
         }
-
-        if (!abk.nrp) {
-            return abk.text;
-        }
-
-        const statusClass = (abk.status_abk || '').toLowerCase() === 'organik' ? 'success' : 
-                           (abk.status_abk || '').toLowerCase() === 'non organik' ? 'info' : 'secondary';
-
-        return `
-            <div class="abk-search-result-card">
-                <div class="abk-search-header">
-                    <div class="abk-identity">
-                        <span class="abk-nrp">${abk.nrp}</span>
-                        <span class="abk-separator">•</span>
-                        <span class="abk-name">${abk.nama_abk}</span>
-                    </div>
-                    <span class="badge bg-${statusClass} abk-status-mini">${abk.status_abk}</span>
-                </div>
-                <div class="abk-search-details">
-                    <div class="abk-detail-item">
-                        <i class="bi bi-briefcase"></i>
-                        <span>${abk.jabatan_nama}</span>
-                    </div>
-                </div>
-            </div>
-        `;
+        return true;
     }
 
-    // Format ABK selection untuk display
-    function formatAbkSelection(abk) {
-        if (!abk.nrp) {
-            return abk.text;
+    function updateKapalInfo(nama, kode) {
+        const infoElement = document.getElementById('kapalInfo');
+        if (infoElement) {
+            document.getElementById('selectedKapalName').textContent = nama || '-';
+            document.getElementById('selectedKapalCode').textContent = kode || '-';
+            infoElement.style.display = 'flex';
         }
-        return `${abk.nrp} - ${abk.nama_abk}`;
     }
 
-    // Update display selected ABK
-    function updateSelectedAbkDisplay(type, data) {
+    function hideKapalInfo() {
+        const infoElement = document.getElementById('kapalInfo');
+        if (infoElement) infoElement.style.display = 'none';
+    }
+
+    function updateAbkDisplay(type, data) {
         const prefix = type === 'naik' ? 'Naik' : 'Turun';
         const infoElement = document.getElementById(`selectedAbk${prefix}Info`);
         
         if (infoElement) {
-            // Update display elements
             document.getElementById(`displayNrp${prefix}`).textContent = data.nrp || data.id;
             document.getElementById(`displayNama${prefix}`).textContent = data.nama_abk || '-';
             document.getElementById(`displayJabatan${prefix}`).textContent = data.jabatan_nama || '-';
             
-            // Update status badge dengan styling compact
             const statusElement = document.getElementById(`displayStatus${prefix}`);
-            if (statusElement) {
-                statusElement.className = 'abk-status-compact';
-                
-                // Add appropriate status class
-                const statusLower = (data.status_abk || '').toLowerCase();
-                if (statusLower === 'organik') {
-                    statusElement.classList.add('status-organik');
-                    statusElement.innerHTML = '<i class="bi bi-check-circle"></i> Organik';
-                } else if (statusLower === 'non organik') {
-                    statusElement.classList.add('status-non-organik');
-                    statusElement.innerHTML = '<i class="bi bi-info-circle"></i> Non Organik';
-                } else if (statusLower === 'pensiun') {
-                    statusElement.classList.add('status-pensiun');
-                    statusElement.innerHTML = '<i class="bi bi-clock"></i> Pensiun';
-                } else {
-                    statusElement.classList.add('status-organik');
-                    statusElement.innerHTML = '<i class="bi bi-question-circle"></i> ' + (data.status_abk || 'N/A');
-                }
-            }
+            updateStatusBadge(statusElement, data.status_abk);
             
-            // Show the info card
             infoElement.classList.remove('d-none');
         }
     }
 
-    // Perbaikan fungsi updateKapalInfo untuk menampilkan info kapal
-    function updateKapalInfo(namaKapal, kodeKapal) {
-        const kapalInfoElement = document.getElementById('kapalInfo');
-        if (kapalInfoElement) {
-            const selectedKapalName = document.getElementById('selectedKapalName');
-            const selectedKapalCode = document.getElementById('selectedKapalCode');
-            
-            // Update content
-            if (selectedKapalName) selectedKapalName.textContent = namaKapal || '-';
-            if (selectedKapalCode) selectedKapalCode.textContent = kodeKapal || '-';
-            
-            // Show the info badges
-            kapalInfoElement.style.display = 'flex';
-        }
+    function updateStatusBadge(element, status) {
+        if (!element) return;
+        
+        element.className = 'abk-status-compact';
+        const statusLower = (status || '').toLowerCase();
+        
+        const statusConfig = {
+            'organik': { class: 'status-organik', icon: 'check-circle', text: 'Organik' },
+            'non organik': { class: 'status-non-organik', icon: 'info-circle', text: 'Non Organik' },
+            'pensiun': { class: 'status-pensiun', icon: 'clock', text: 'Pensiun' }
+        };
+        
+        const config = statusConfig[statusLower] || { class: 'status-organik', icon: 'question-circle', text: status || 'N/A' };
+        element.classList.add(config.class);
+        element.innerHTML = `<i class="bi bi-${config.icon}"></i> ${config.text}`;
     }
 
-    // Fungsi untuk menyembunyikan info kapal
-    function hideKapalInfo() {
-        const kapalInfoElement = document.getElementById('kapalInfo');
-        if (kapalInfoElement) {
-            kapalInfoElement.style.display = 'none';
+    function toggleAbkTurunForm(show, form) {
+        const requiredFields = [
+            'abk_turun_search', 'id_jabatan_mutasi_turun', 'nama_mutasi_turun',
+            'jenis_mutasi_turun', 'TMT_turun', 'TAT_turun'
+        ];
+
+        if (show) {
+            form.classList.remove('d-none');
+            form.classList.add('show');
+            requiredFields.forEach(id => document.getElementById(id).setAttribute('required', 'required'));
+        } else {
+            form.classList.add('d-none');
+            form.classList.remove('show');
+            requiredFields.forEach(id => document.getElementById(id).removeAttribute('required'));
+            clearAbkSelection('turun');
         }
-    }
-
-    // ABK Turun checkbox handler
-    if (adaAbkTurunCheckbox) {
-        adaAbkTurunCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                formAbkTurun.classList.remove('d-none');
-                formAbkTurun.classList.add('show');
-                
-                // Set required attributes untuk fields wajib (sama seperti ABK naik)
-                document.getElementById('abk_turun_search').setAttribute('required', 'required');
-                document.getElementById('id_jabatan_mutasi_turun').setAttribute('required', 'required');
-                document.getElementById('nama_mutasi_turun').setAttribute('required', 'required');
-                document.getElementById('jenis_mutasi_turun').setAttribute('required', 'required');
-                document.getElementById('TMT_turun').setAttribute('required', 'required');
-                document.getElementById('TAT_turun').setAttribute('required', 'required');
-            } else {
-                formAbkTurun.classList.add('d-none');
-                formAbkTurun.classList.remove('show');
-                
-                // Remove required attributes
-                document.getElementById('abk_turun_search').removeAttribute('required');
-                document.getElementById('id_jabatan_mutasi_turun').removeAttribute('required');
-                document.getElementById('nama_mutasi_turun').removeAttribute('required');
-                document.getElementById('jenis_mutasi_turun').removeAttribute('required');
-                document.getElementById('TMT_turun').removeAttribute('required');
-                document.getElementById('TAT_turun').removeAttribute('required');
-                
-                // Clear all ABK turun fields
-                clearAbkSelection('turun');
-                
-                // Clear other turun-specific fields
-                const abkTurunFields = formAbkTurun.querySelectorAll('select:not(#abk_turun_search), textarea, input[type="file"], input[type="date"]');
-                abkTurunFields.forEach(field => {
-                    field.value = '';
-                    field.classList.remove('is-invalid');
-                    removeValidationError(field);
-                });
-            }
-            
-            if (validationTriggered) {
-                validateCurrentStep();
-            }
-        });
-    }
-
-    // Next button handlers
-    nextButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault(); // Prevent default behavior
-            validationTriggered = true;
-            
-            // Get current step directly from the parent container
-            const stepContent = this.closest('.step-content');
-            if (!stepContent) return;
-            
-            const stepNumber = parseInt(stepContent.getAttribute('data-step'));
-            console.log(`Next button clicked for step ${stepNumber}`); // Debug log
-            
-            // Validasi step saat ini
-            if (validateStep(stepNumber)) {
-                // Lanjutkan ke step berikutnya jika valid
-                if (stepNumber < totalSteps) {
-                    currentStep = stepNumber + 1;
-                    updateStepDisplay();
-                    if (currentStep === 4) {
-                        updateReviewData();
-                    }
-                }
-            }
-        });
-    });
-
-    // Previous button handlers
-    prevButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            if (currentStep > 1) {
-                currentStep--;
-                updateStepDisplay();
-            }
-        });
-    });
-
-    // Form submission
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            validationTriggered = true;
-            
-            if (validateCurrentStep()) {
-                submitForm();
-            }
-        });
-    }
-
-    // PERBAIKAN FUNGSI validateCurrentStep() UNTUK STEP 1
-    function validateCurrentStep() {
-        const currentStepContent = document.querySelector(`.step-content[data-step="${currentStep}"]`);
-        if (!currentStepContent) {
-            return false;
-        }
-        
-        let isValid = true;
-        
-        // Clear previous validation errors
-        clearValidationErrors(currentStepContent);
-        
-        // Step-specific validation
-        if (currentStep === 1) {
-            // Validate kapal selection
-            const kapalValue = document.getElementById('id_kapal').value;
-            const nextBtn = document.querySelector('.step-content[data-step="1"] .btn-next');
-            
-            if (!kapalValue || kapalValue === "") {
-                isValid = false;
-                if (validationTriggered) {
-                    showValidationError(document.getElementById('id_kapal'), 'Silakan pilih kapal tujuan');
-                }
-                
-                // Disable next button
-                if (nextBtn) {
-                    nextBtn.disabled = true;
-                    nextBtn.classList.add('disabled');
-                }
-            } else {
-                // Enable next button explicitly
-                if (nextBtn) {
-                    nextBtn.disabled = false;
-                    nextBtn.classList.remove('disabled');
-                }
-            }
-            
-            return isValid;
-        } else if (currentStep === 2) {
-            // Validate ABK naik
-            const nrpNaik = document.getElementById('nrp_naik').value;
-            const namaNaik = document.getElementById('nama_naik').value;
-            const jabatanNaik = document.getElementById('jabatan_naik').value;
-            const jabatanMutasi = document.getElementById('id_jabatan_mutasi').value;
-            const namaMutasi = document.getElementById('nama_mutasi').value;
-            const jenisMutasi = document.getElementById('jenis_mutasi').value;
-            const tmt = document.getElementById('TMT').value;
-            const tat = document.getElementById('TAT').value;
-            
-            console.log('Step 2 validation:', { // Debug log
-                nrpNaik, namaNaik, jabatanNaik, jabatanMutasi, 
-                namaMutasi, jenisMutasi, tmt, tat
-            });
-            
-            // Validate ABK selection
-            if (!nrpNaik || !namaNaik || !jabatanNaik) {
-                isValid = false;
-                if (validationTriggered) {
-                    showAlert('Silakan pilih ABK yang akan naik', 'warning');
-                }
-            }
-            
-            // Validate jabatan mutasi
-            if (!jabatanMutasi || jabatanMutasi === "") {
-                isValid = false;
-                if (validationTriggered) {
-                    showValidationError(document.getElementById('id_jabatan_mutasi'), 'Silakan pilih jabatan mutasi');
-                }
-            }
-            
-            // Validate nama mutasi
-            if (!namaMutasi || namaMutasi === "") {
-                isValid = false;
-                if (validationTriggered) {
-                    showValidationError(document.getElementById('nama_mutasi'), 'Silakan pilih nama mutasi');
-                }
-            }
-            
-            // Validate jenis mutasi
-            if (!jenisMutasi || jenisMutasi === "") {
-                isValid = false;
-                if (validationTriggered) {
-                    showValidationError(document.getElementById('jenis_mutasi'), 'Silakan pilih jenis mutasi');
-                }
-            }
-            
-            // Validate TMT
-            if (!tmt || tmt === "") {
-                isValid = false;
-                if (validationTriggered) {
-                    showValidationError(document.getElementById('TMT'), 'Silakan isi tanggal TMT');
-                }
-            }
-            
-            // Validate TAT
-            if (!tat || tat === "") {
-                isValid = false;
-                if (validationTriggered) {
-                    showValidationError(document.getElementById('TAT'), 'Silakan isi tanggal TAT');
-                }
-            }
-            
-            // Validate date range
-            if (tmt && tat && new Date(tmt) >= new Date(tat)) {
-                isValid = false;
-                if (validationTriggered) {
-                    showValidationError(document.getElementById('TAT'), 'TAT harus setelah TMT');
-                }
-            }
-        } else if (currentStep === 3) {
-            // Step 3 validation - enhanced untuk form yang lengkap seperti ABK naik
-            const adaAbkTurun = document.getElementById('adaAbkTurun').checked;
-            
-            if (adaAbkTurun) {
-                // Validate ABK turun selection
-                const nrpTurun = document.getElementById('nrp_turun').value;
-                const namaTurun = document.getElementById('nama_turun').value;
-                const jabatanTurun = document.getElementById('jabatan_turun').value;
-                const jabatanMutasiTurun = document.getElementById('id_jabatan_mutasi_turun').value;
-                const namaMutasiTurun = document.getElementById('nama_mutasi_turun').value;
-                const jenisMutasiTurun = document.getElementById('jenis_mutasi_turun').value;
-                const tmtTurun = document.getElementById('TMT_turun').value;
-                const tatTurun = document.getElementById('TAT_turun').value;
-                
-                console.log('Step 3 validation:', { // Debug log
-                    nrpTurun, namaTurun, jabatanTurun, jabatanMutasiTurun, 
-                    namaMutasiTurun, jenisMutasiTurun, tmtTurun, tatTurun
-                });
-                
-                // Validate ABK selection
-                if (!nrpTurun || !namaTurun || !jabatanTurun) {
-                    isValid = false;
-                    if (validationTriggered) {
-                        showAlert('Silakan pilih ABK yang akan turun', 'warning');
-                    }
-                }
-                
-                // Validate jabatan mutasi turun
-                if (!jabatanMutasiTurun || jabatanMutasiTurun === "") {
-                    isValid = false;
-                    if (validationTriggered) {
-                        showValidationError(document.getElementById('id_jabatan_mutasi_turun'), 'Silakan pilih jabatan mutasi turun');
-                    }
-                }
-                
-                // Validate nama mutasi turun
-                if (!namaMutasiTurun || namaMutasiTurun === "") {
-                    isValid = false;
-                    if (validationTriggered) {
-                        showValidationError(document.getElementById('nama_mutasi_turun'), 'Silakan pilih nama mutasi turun');
-                    }
-                }
-                
-                // Validate jenis mutasi turun
-                if (!jenisMutasiTurun || jenisMutasiTurun === "") {
-                    isValid = false;
-                    if (validationTriggered) {
-                        showValidationError(document.getElementById('jenis_mutasi_turun'), 'Silakan pilih jenis mutasi turun');
-                    }
-                }
-                
-                // Validate TMT turun
-                if (!tmtTurun || tmtTurun === "") {
-                    isValid = false;
-                    if (validationTriggered) {
-                        showValidationError(document.getElementById('TMT_turun'), 'Silakan isi tanggal TMT turun');
-                    }
-                }
-                
-                // Validate TAT turun
-                if (!tatTurun || tatTurun === "") {
-                    isValid = false;
-                    if (validationTriggered) {
-                        showValidationError(document.getElementById('TAT_turun'), 'Silakan isi tanggal TAT turun');
-                    }
-                }
-                
-                // Validate date range turun
-                if (tmtTurun && tatTurun && new Date(tmtTurun) >= new Date(tatTurun)) {
-                    isValid = false;
-                    if (validationTriggered) {
-                        showValidationError(document.getElementById('TAT_turun'), 'TAT turun harus setelah TMT turun');
-                    }
-                }
-            }
-            // If checkbox not checked, step is valid regardless
-        }
-        
-        // Update button state
-        updateButtonState(currentStep, isValid);
-        
-        console.log('Step', currentStep, 'validation result:', isValid); // Debug log
-        return isValid;
     }
 
     function updateStepDisplay() {
-        // Update step indicators
-        stepItems.forEach((item, index) => {
+        // Update indicators
+        document.querySelectorAll('.step-item').forEach((item, index) => {
             const stepNumber = index + 1;
-            
             item.classList.remove('active', 'completed');
             
-            if (stepNumber < currentStep) {
-                item.classList.add('completed');
-                const icon = item.querySelector('.step-circle i');
-                if (icon) icon.className = 'bi bi-check';
-            } else if (stepNumber === currentStep) {
-                item.classList.add('active');
-                const icons = ['bi-ship', 'bi-person-up', 'bi-person-down', 'bi-check-circle'];
-                const icon = item.querySelector('.step-circle i');
-                if (icon) icon.className = `bi ${icons[index]}`;
-            } else {
-                const icons = ['bi-ship', 'bi-person-up', 'bi-person-down', 'bi-check-circle'];
-                const icon = item.querySelector('.step-circle i');
-                if (icon) icon.className = `bi ${icons[index]}`;
-            }
+            if (stepNumber < currentStep) item.classList.add('completed');
+            else if (stepNumber === currentStep) item.classList.add('active');
         });
-        
-        // Update step content
-        stepContents.forEach((content, index) => {
-            const stepNumber = index + 1;
-            content.classList.toggle('active', stepNumber === currentStep);
+
+        // Update content
+        document.querySelectorAll('.step-content[data-step]').forEach((content, index) => {
+            content.classList.toggle('active', index + 1 === currentStep);
         });
-        
-        // Scroll to top
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function updateReviewData() {
-        // Kapal info
-        const kapalSelect = document.getElementById('id_kapal');
-        const kapalText = kapalSelect.options[kapalSelect.selectedIndex]?.text || '-';
-        setReviewValue('reviewKapal', kapalText);
-        
-        // ABK Naik info
-        setReviewValue('reviewNrpNaik', document.getElementById('nrp_naik').value || '-');
-        setReviewValue('reviewNamaNaik', document.getElementById('nama_naik').value || '-');
-        
-        const jabatanNaikId = document.getElementById('jabatan_naik').value;
-        const jabatanNaikSelect = document.querySelector('#id_jabatan_mutasi option[value="' + jabatanNaikId + '"]');
-        setReviewValue('reviewJabatanNaik', jabatanNaikSelect ? jabatanNaikSelect.text : '-');
-        
-        const jabatanMutasi = document.getElementById('id_jabatan_mutasi');
-        const jabatanMutasiText = jabatanMutasi.options[jabatanMutasi.selectedIndex]?.text || '-';
-        setReviewValue('reviewJabatanMutasi', jabatanMutasiText);
-        
-        // Mutasi info
-        const namaMutasi = document.getElementById('nama_mutasi');
-        const namaMutasiText = namaMutasi.options[namaMutasi.selectedIndex]?.text || '-';
-        setReviewValue('reviewNamaMutasi', namaMutasiText);
-        
-        const jenisMutasi = document.getElementById('jenis_mutasi').value || '-';
-        setReviewValue('reviewJenisMutasi', jenisMutasi);
-        
-        const TMT = document.getElementById('TMT').value || '-';
-        const TAT = document.getElementById('TAT').value || '-';
-        setReviewValue('reviewTMT', TMT ? new Intl.DateTimeFormat('id-ID').format(new Date(TMT)) : '-');
-        setReviewValue('reviewTAT', TAT ? new Intl.DateTimeFormat('id-ID').format(new Date(TAT)) : '-');
-        
-        // ABK Turun info (enhanced)
+        const reviewData = {
+            'reviewKapal': getSelectText('id_kapal'),
+            'reviewNrpNaik': getValue('nrp_naik'),
+            'reviewNamaNaik': getValue('nama_naik'),
+            'reviewJabatanMutasi': getSelectText('id_jabatan_mutasi'),
+            'reviewNamaMutasi': getSelectText('nama_mutasi'),
+            'reviewJenisMutasi': getValue('jenis_mutasi'),
+            'reviewTMT': formatDate(getValue('TMT')),
+            'reviewTAT': formatDate(getValue('TAT'))
+        };
+
+        Object.entries(reviewData).forEach(([id, value]) => {
+            setReviewValue(id, value);
+        });
+
+        // ABK Turun
         const adaAbkTurun = document.getElementById('adaAbkTurun').checked;
         const reviewAbkTurun = document.getElementById('reviewAbkTurun');
-
+        
         if (adaAbkTurun && reviewAbkTurun) {
             reviewAbkTurun.classList.remove('d-none');
-            
-            setReviewValue('reviewNrpTurun', document.getElementById('nrp_turun').value || '-');
-            setReviewValue('reviewNamaTurun', document.getElementById('nama_turun').value || '-');
-            
-            // Get jabatan mutasi turun name
-            const jabatanMutasiTurunSelect = document.getElementById('id_jabatan_mutasi_turun');
-            // Nama mutasi turun
-            const namaMutasiTurunSelect = document.getElementById('nama_mutasi_turun');
-            const namaMutasiTurun = namaMutasiTurunSelect.options[namaMutasiTurunSelect.selectedIndex]?.text || '-';
-            setReviewValue('reviewNamaMutasiTurun', namaMutasiTurun);
-            
-            // Jenis mutasi turun
-            const jenisMutasiTurun = document.getElementById('jenis_mutasi_turun').value || '-';
-            setReviewValue('reviewJenisMutasiTurun', jenisMutasiTurun);
-            
-            // TMT/TAT turun
-            const tmtTurun = document.getElementById('TMT_turun').value || '-';
-            const tatTurun = document.getElementById('TAT_turun').value || '-';
-            setReviewValue('reviewTMTTurun', tmtTurun ? new Intl.DateTimeFormat('id-ID').format(new Date(tmtTurun)) : '-');
-            setReviewValue('reviewTATTurun', tatTurun ? new Intl.DateTimeFormat('id-ID').format(new Date(tatTurun)) : '-');
+            setReviewValue('reviewNrpTurun', getValue('nrp_turun'));
+            setReviewValue('reviewNamaTurun', getValue('nama_turun'));
         } else if (reviewAbkTurun) {
             reviewAbkTurun.classList.add('d-none');
         }
     }
 
-    // Helper functions
-    function enableNextButton(step) {
-        const nextBtn = document.querySelector(`.step-content[data-step="${step}"] .btn-next`);
-        if (nextBtn) {
-            nextBtn.disabled = false;
-            nextBtn.classList.remove('disabled');
-            console.log(`Next button for step ${step} enabled`); // Debug log
-        }
-    }
-    
-    function disableNextButton(step) {
-        const nextBtn = document.querySelector(`.step-content[data-step="${step}"] .btn-next`);
-        if (nextBtn) {
-            nextBtn.disabled = true;
-            nextBtn.classList.add('disabled');
-            console.log(`Next button for step ${step} disabled`); // Debug log
-        }
-    }
-
-    // Fungsi untuk memeriksa status kapal di step 1
-    function checkKapalSelection() {
-        const kapalValue = document.getElementById('id_kapal').value;
-        if (kapalValue && kapalValue !== "") {
-            enableNextButton(1);
-            return true;
-        } else {
-            disableNextButton(1);
-            return false;
-        }
-    }
-    
     function submitForm() {
-        submitButton.classList.add('loading');
-        submitButton.disabled = true;
+        const submitBtn = document.querySelector('.btn-submit');
+        submitBtn.disabled = true;
         
-        const formData = new FormData(form);
+        const formData = new FormData(document.getElementById('tambahMutasiForm'));
         
-        fetch(form.action, {
+        fetch('{{ route("mutasi.store") }}', {
             method: 'POST',
             body: formData,
             headers: {
@@ -2149,37 +1757,87 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
             showAlert(error.message || 'Terjadi kesalahan saat menyimpan data', 'danger');
         })
         .finally(() => {
-            submitButton.classList.remove('loading');
-            submitButton.disabled = false;
+            submitBtn.disabled = false;
         });
     }
-    
-    function showSuccessModal() {
-        const modal = new bootstrap.Modal(document.getElementById('successModal'));
-        modal.show();
+
+    // Utility functions
+    function enableButton(btn) {
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('disabled');
+        }
     }
 
-    function showValidationError(field, message) {
-        removeValidationError(field);
-        field.classList.add('is-invalid');
+    function disableButton(btn) {
+        if (btn) {
+            btn.disabled = true;
+            btn.classList.add('disabled');
+        }
+    }
+
+    function showError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
         
+        field.classList.add('is-invalid');
         const errorDiv = document.createElement('div');
         errorDiv.className = 'invalid-feedback';
         errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
         field.parentNode.appendChild(errorDiv);
     }
 
-    function removeValidationError(field) {
-        field.classList.remove('is-invalid');
-        const existingError = field.parentNode.querySelector('.invalid-feedback');
-        if (existingError) {
-            existingError.remove();
-        }
+    function clearValidationErrors() {
+        document.querySelectorAll('.is-invalid').forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        document.querySelectorAll('.invalid-feedback').forEach(error => {
+            error.remove();
+        });
+    }
+
+    function updateButtonState(step, isValid) {
+        const nextBtn = document.querySelector(`[data-step="${step}"] .btn-next`);
+        const submitBtn = document.querySelector(`[data-step="${step}"] .btn-submit`);
+        
+        if (nextBtn) isValid ? enableButton(nextBtn) : disableButton(nextBtn);
+        if (submitBtn) isValid ? enableButton(submitBtn) : disableButton(submitBtn);
+    }
+
+    function clearAbkSelection(type) {
+        $(`#abk_${type}_search`).val(null).trigger('change');
+        document.getElementById(`nrp_${type}`).value = '';
+        document.getElementById(`nama_${type}`).value = '';
+        document.getElementById(`jabatan_${type}`).value = '';
+        
+        const infoElement = document.getElementById(`selectedAbk${type === 'naik' ? 'Naik' : 'Turun'}Info`);
+        if (infoElement) infoElement.classList.add('d-none');
+    }
+
+    function getSelectText(id) {
+        const select = document.getElementById(id);
+        return select?.options[select.selectedIndex]?.text || '-';
+    }
+
+    function getValue(id) {
+        return document.getElementById(id)?.value || '-';
+    }
+
+    function formatDate(dateString) {
+        return dateString && dateString !== '-' ? 
+            new Intl.DateTimeFormat('id-ID').format(new Date(dateString)) : '-';
+    }
+
+    function setReviewValue(elementId, value) {
+        const element = document.getElementById(elementId);
+        if (element) element.textContent = value || '-';
+    }
+
+    function showSuccessModal() {
+        new bootstrap.Modal(document.getElementById('successModal')).show();
     }
 
     function showAlert(message, type = 'info') {
@@ -2193,253 +1851,39 @@ document.addEventListener('DOMContentLoaded', function() {
         const formContainer = document.querySelector('.form-container');
         if (formContainer) {
             formContainer.insertBefore(alertDiv, formContainer.firstChild);
-            
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.remove();
-                }
-            }, 5000);
+            setTimeout(() => alertDiv.remove(), 5000);
         }
     }
 
-    function setReviewValue(elementId, value) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.textContent = value || '-';
+    // Format functions for Select2
+    function formatAbkResult(abk) {
+        if (abk.loading) {
+            return '<div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm me-2"></div>Mencari ABK...</div>';
         }
+
+        if (!abk.nrp) return abk.text;
+
+        const statusClass = (abk.status_abk || '').toLowerCase() === 'organik' ? 'success' : 'info';
+
+        return `
+            <div class="abk-search-result-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${abk.nrp} - ${abk.nama_abk}</strong>
+                        <br><small class="text-muted">${abk.jabatan_nama}</small>
+                    </div>
+                    <span class="badge bg-${statusClass}">${abk.status_abk}</span>
+                </div>
+            </div>
+        `;
     }
 
-    // Tambahkan event listeners untuk real-time validation
-    function initializeValidationListeners() {
-        // Step 1 - Kapal selection
-        $('#id_kapal').on('change', function() {
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-        
-        // Step 2 - ABK dan form fields
-        $('#abk_naik_search').on('select2:select select2:clear', function() {
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-        
-        $('#id_jabatan_mutasi').on('change', function() {
-            removeValidationError(this);
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-        
-        $('#nama_mutasi').on('change', function() {
-            removeValidationError(this);
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-        
-        $('#jenis_mutasi').on('change', function() {
-            removeValidationError(this);
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-        
-        $('#TMT').on('change', function() {
-            removeValidationError(this);
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-        
-        $('#TAT').on('change', function() {
-            removeValidationError(this);
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-        
-        // Step 3 - ABK turun
-        $('#adaAbkTurun').on('change', function() {
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-        
-        $('#abk_turun_search').on('select2:select select2:clear', function() {
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-
-        $('#id_jabatan_mutasi_turun').on('change', function() {
-            removeValidationError(this);
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-
-        $('#nama_mutasi_turun').on('change', function() {
-            removeValidationError(this);
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-
-        $('#jenis_mutasi_turun').on('change', function() {
-            removeValidationError(this);
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-
-        $('#TMT_turun').on('change', function() {
-            removeValidationError(this);
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
-
-        $('#TAT_turun').on('change', function() {
-            removeValidationError(this);
-            if (validationTriggered) {
-                setTimeout(() => validateCurrentStep(), 100);
-            }
-        });
+    function formatAbkSelection(abk) {
+        return abk.nrp ? `${abk.nrp} - ${abk.nama_abk}` : abk.text;
     }
 
-    // Initial validation
-    setTimeout(() => {
-        validateCurrentStep();
-    }, 500);
-
-    // Tambahkan helper functions ini setelah validateCurrentStep()
-
-    function clearValidationErrors(container) {
-        // Remove all validation error messages and classes
-        const invalidFields = container.querySelectorAll('.is-invalid');
-        invalidFields.forEach(field => {
-            field.classList.remove('is-invalid');
-        });
-        
-        const errorMessages = container.querySelectorAll('.invalid-feedback');
-        errorMessages.forEach(error => {
-            error.remove();
-        });
-    }
-
-    function updateButtonState(step, isValid) {
-        const nextBtn = document.querySelector(`[data-step="${step}"] .btn-next`);
-        const submitBtn = document.querySelector(`[data-step="${step}"] .btn-submit`);
-        
-        if (nextBtn) {
-            if (isValid) {
-                nextBtn.disabled = false;
-                nextBtn.classList.remove('disabled');
-            } else {
-                nextBtn.disabled = true;
-                nextBtn.classList.add('disabled');
-            }
-        }
-        
-        if (submitBtn) {
-            if (isValid) {
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('disabled');
-            } else {
-                submitBtn.disabled = true;
-                submitBtn.classList.add('disabled');
-            }
-        }
-    }
-
-    // Update fungsi clearAbkSelection untuk handle form turun yang lengkap
-    function clearAbkSelection(type) {
-        const searchElement = document.getElementById(`abk_${type}_search`);
-        const infoElement = document.getElementById(`selectedAbk${type === 'naik' ? 'Naik' : 'Turun'}Info`);
-        
-        // Clear Select2
-        if (searchElement) {
-            $(searchElement).val(null).trigger('change');
-        }
-        
-        // Clear hidden fields
-        document.getElementById(`nrp_${type}`).value = '';
-        document.getElementById(`nama_${type}`).value = '';
-        document.getElementById(`jabatan_${type}`).value = '';
-        
-        if (type === 'turun') {
-            document.getElementById('id_jabatan_mutasi_turun').value = '';
-            document.getElementById('nama_mutasi_turun').value = '';
-            document.getElementById('jenis_mutasi_turun').value = '';
-            document.getElementById('TMT_turun').value = '';
-            document.getElementById('TAT_turun').value = '';
-            document.getElementById('keterangan_turun').value = '';
-            
-            // Clear validation errors
-            removeValidationError(document.getElementById('id_jabatan_mutasi_turun'));
-            removeValidationError(document.getElementById('nama_mutasi_turun'));
-            removeValidationError(document.getElementById('jenis_mutasi_turun'));
-            removeValidationError(document.getElementById('TMT_turun'));
-            removeValidationError(document.getElementById('TAT_turun'));
-        }
-        
-        // Hide display
-        if (infoElement) {
-            infoElement.classList.add('d-none');
-        }
-        
-        // Re-validate if needed
-        if (validationTriggered) {
-            validateCurrentStep();
-        }
-    }
-
-    // Tambahkan ke create.blade.php - event handler untuk checkbox ABK turun
-    document.addEventListener('DOMContentLoaded', function() {
-        // Tambahkan event handler untuk checkbox ABK turun
-        const adaAbkTurunCheckbox = document.getElementById('adaAbkTurun');
-        const adaAbkTurunValue = document.getElementById('ada_abk_turun_value');
-        
-        if (adaAbkTurunCheckbox && adaAbkTurunValue) {
-            adaAbkTurunCheckbox.addEventListener('change', function() {
-                // Set nilai hidden field ke "1" jika checked, "0" jika tidak
-                adaAbkTurunValue.value = this.checked ? "1" : "0";
-                console.log("ada_abk_turun value set to:", adaAbkTurunValue.value);
-                
-                // Existing functionality untuk show/hide form
-                const formAbkTurun = document.getElementById('formAbkTurun');
-                
-                if (this.checked) {
-                    formAbkTurun.classList.remove('d-none');
-                    formAbkTurun.classList.add('show');
-                    
-                    // Set required attributes
-                    document.getElementById('abk_turun_search').setAttribute('required', 'required');
-                    document.getElementById('id_jabatan_mutasi_turun').setAttribute('required', 'required');
-                    document.getElementById('nama_mutasi_turun').setAttribute('required', 'required');
-                    document.getElementById('jenis_mutasi_turun').setAttribute('required', 'required');
-                    document.getElementById('TMT_turun').setAttribute('required', 'required');
-                    document.getElementById('TAT_turun').setAttribute('required', 'required');
-                } else {
-                    formAbkTurun.classList.add('d-none');
-                    formAbkTurun.classList.remove('show');
-                    
-                    // Remove required attributes
-                    document.getElementById('abk_turun_search').removeAttribute('required');
-                    document.getElementById('id_jabatan_mutasi_turun').removeAttribute('required');
-                    document.getElementById('nama_mutasi_turun').removeAttribute('required');
-                    document.getElementById('jenis_mutasi_turun').removeAttribute('required');
-                    document.getElementById('TMT_turun').removeAttribute('required');
-                    document.getElementById('TAT_turun').removeAttribute('required');
-                    
-                    // Clear all ABK turun fields
-                    clearAbkSelection('turun');
-                }
-            });
-        }
-    });
+    // Global functions for onclick handlers
+    window.clearAbkSelection = clearAbkSelection;
 });
 </script>
 @endpush
