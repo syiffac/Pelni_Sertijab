@@ -121,6 +121,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/edit', [MutasiController::class, 'edit'])->name('edit');
         Route::put('/{id}', [MutasiController::class, 'update'])->name('update');
         Route::delete('/{id}', [MutasiController::class, 'destroy'])->name('destroy');
+        Route::get('/export', [MutasiController::class, 'export'])->name('export');
     });
     
     // Monitoring routes

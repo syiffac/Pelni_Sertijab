@@ -298,6 +298,66 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Konfirmasi Hapus -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-body text-center p-4">
+                <div class="mb-4">
+                    <div class="warning-icon mx-auto mb-3">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <h4 class="text-danger fw-bold mb-2">Konfirmasi Penghapusan</h4>
+                    <p class="text-muted mb-0">
+                        Apakah Anda yakin ingin menghapus mutasi ini?<br>
+                        <small class="text-warning">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Data yang sudah dihapus tidak dapat dikembalikan!
+                        </small>
+                    </p>
+                </div>
+                
+                <div class="mutasi-info-preview mb-4 p-3 bg-light rounded">
+                    <div class="row text-start">
+                        <div class="col-6">
+                            <small class="text-muted">ID Mutasi:</small>
+                            <div class="fw-bold" id="deletePreviewId">-</div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">ABK:</small>
+                            <div class="fw-bold" id="deletePreviewAbk">-</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-3 justify-content-center">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Batal
+                    </button>
+                    <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">
+                        <i class="bi bi-trash me-2"></i>
+                        <span class="btn-text">Ya, Hapus</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999">
+    <div id="notificationToast" class="toast align-items-center border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center">
+                <i class="notification-icon me-2"></i>
+                <span class="notification-message"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -765,55 +825,124 @@
     text-decoration: none;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .header-content {
-        flex-direction: column;
-        gap: 16px;
+/* Modal Konfirmasi Hapus */
+#deleteConfirmModal .modal-content {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.warning-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(45deg, #fee2e2, #fecaca);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    animation: pulse-warning 2s infinite;
+}
+
+.warning-icon i {
+    font-size: 2.5rem;
+    color: #dc2626;
+    animation: shake 0.5s ease-in-out infinite alternate;
+}
+
+.mutasi-info-preview {
+    border: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+}
+
+/* Animasi */
+@keyframes pulse-warning {
+    0% { 
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
     }
-    
-    .header-actions {
-        align-items: stretch;
-        width: 100%;
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
     }
-    
-    .action-buttons {
-        justify-content: center;
-    }
-    
-    .table-responsive {
-        font-size: 12px;
-    }
-    
-    .stats-card {
-        text-align: center;
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .filter-form .row {
-        gap: 12px;
+    100% { 
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
     }
 }
 
-@media (max-width: 576px) {
-    .page-title {
-        font-size: 24px;
+@keyframes shake {
+    0% { transform: rotate(-2deg); }
+    100% { transform: rotate(2deg); }
+}
+
+/* Loading state untuk tombol */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
     }
-    
-    .table-data th,
-    .table-data td {
-        padding: 12px 8px;
-        font-size: 11px;
-    }
-    
-    .kapal-badge,
-    .code-badge,
-    .status-badge,
-    .jenis-badge {
-        font-size: 10px;
-        padding: 4px 6px;
-    }
+}
+
+/* Toast Notification */
+.toast {
+    min-width: 300px;
+    backdrop-filter: blur(10px);
+    border-radius: 10px !important;
+}
+
+.toast.toast-success {
+    background: linear-gradient(45deg, #10b981, #34d399);
+    color: white;
+}
+
+.toast.toast-error {
+    background: linear-gradient(45deg, #ef4444, #f87171);
+    color: white;
+}
+
+.toast.toast-warning {
+    background: linear-gradient(45deg, #f59e0b, #fbbf24);
+    color: white;
+}
+
+.toast.toast-info {
+    background: linear-gradient(45deg, #06b6d4, #22d3ee);
+    color: white;
+}
+
+.notification-icon {
+    font-size: 1.2rem;
+}
+
+/* Efek hover untuk tombol konfirmasi */
+#confirmDeleteBtn:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Modal backdrop blur */
+.modal-backdrop {
+    backdrop-filter: blur(3px);
 }
 </style>
 @endpush
@@ -859,53 +988,326 @@ document.addEventListener('DOMContentLoaded', function() {
     animateNumbers();
 });
 
-// Action functions
+// Global variable untuk menyimpan ID mutasi yang akan dihapus dan data row
+let mutasiToDelete = null;
+let mutasiRowData = null;
+
 function viewMutasi(id) {
-    // Load detail mutasi in modal
-    fetch(`/mutasi/${id}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('detailMutasiContent').innerHTML = data.html;
-            new bootstrap.Modal(document.getElementById('detailMutasiModal')).show();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Gagal memuat detail mutasi');
-        });
+    // Show loading in modal
+    const modalContent = document.getElementById('detailMutasiContent');
+    modalContent.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Memuat detail mutasi...</p>
+        </div>
+    `;
+    
+    // Show modal first
+    const modal = new bootstrap.Modal(document.getElementById('detailMutasiModal'));
+    modal.show();
+    
+    // Load detail mutasi dengan URL yang benar
+    fetch(`{{ route('mutasi.index') }}/${id}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            modalContent.innerHTML = data.html;
+        } else {
+            throw new Error(data.message || 'Gagal memuat detail mutasi');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        modalContent.innerHTML = `
+            <div class="alert alert-danger text-center">
+                <i class="bi bi-exclamation-triangle fs-1 text-danger mb-3"></i>
+                <h5>Gagal Memuat Detail</h5>
+                <p class="mb-0">${error.message}</p>
+            </div>
+        `;
+        showNotification('Gagal memuat detail mutasi', 'error');
+    });
 }
 
 function editMutasi(id) {
-    window.location.href = `/mutasi/${id}/edit`;
+     window.location.href = `{{ route('mutasi.index') }}/${id}/edit`;
 }
 
-function deleteMutasi(id) {
-    if (confirm('Apakah Anda yakin ingin menghapus mutasi ini?')) {
-        fetch(`/mutasi/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Mutasi berhasil dihapus');
-                location.reload();
-            } else {
-                alert('Gagal menghapus mutasi: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan saat menghapus mutasi');
-        });
+function deleteMutasi(id, event) {
+    // Simpan ID mutasi
+    mutasiToDelete = id;
+    
+    // PERBAIKAN: Ambil data dari button yang diklik, bukan dari event global
+    let clickedButton;
+    let row;
+    
+    if (event && event.target) {
+        clickedButton = event.target.closest('button');
+        row = clickedButton.closest('tr');
+    } else {
+        // Fallback: cari button berdasarkan onclick attribute
+        clickedButton = document.querySelector(`button[onclick*="deleteMutasi(${id})"]`);
+        if (clickedButton) {
+            row = clickedButton.closest('tr');
+        }
+    }
+    
+    // Ambil data mutasi dari row table untuk preview
+    const mutasiId = `MUT-${String(id).padStart(4, '0')}`;
+    let abkName = '-';
+    
+    if (row) {
+        const abkElement = row.querySelector('.abk-info strong');
+        if (abkElement) {
+            abkName = abkElement.textContent.trim();
+        }
+        // Simpan referensi row untuk digunakan nanti
+        mutasiRowData = { row: row, button: clickedButton };
+    }
+    
+    // Update preview di modal
+    const deletePreviewId = document.getElementById('deletePreviewId');
+    const deletePreviewAbk = document.getElementById('deletePreviewAbk');
+    
+    if (deletePreviewId) deletePreviewId.textContent = mutasiId;
+    if (deletePreviewAbk) deletePreviewAbk.textContent = abkName;
+    
+    // Reset button state
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmBtn) {
+        confirmBtn.classList.remove('btn-loading');
+        const btnText = confirmBtn.querySelector('.btn-text');
+        if (btnText) btnText.textContent = 'Ya, Hapus';
+    }
+    
+    // Show modal
+    const modalElement = document.getElementById('deleteConfirmModal');
+    if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
     }
 }
 
+// Event listener untuk tombol konfirmasi hapus
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (!mutasiToDelete) return;
+            
+            const btn = this;
+            const btnText = btn.querySelector('.btn-text');
+            
+            // Set loading state
+            btn.classList.add('btn-loading');
+            btn.disabled = true;
+            if (btnText) btnText.textContent = 'Menghapus...';
+            
+            // PERBAIKAN: Gunakan route yang benar
+            const deleteUrl = `{{ route('mutasi.index') }}/${mutasiToDelete}`;
+            
+            // Send delete request
+            fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    if (response.status === 405) {
+                        throw new Error('Method tidak diizinkan. Route delete mungkin belum ada.');
+                    } else if (response.status === 404) {
+                        throw new Error('Data mutasi tidak ditemukan.');
+                    } else if (response.status === 500) {
+                        throw new Error('Terjadi kesalahan server.');
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    // Hide modal
+                    const modalElement = document.getElementById('deleteConfirmModal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    }
+                    
+                    // Show success notification
+                    showNotification('Mutasi berhasil dihapus!', 'success');
+                    
+                    // Remove row from table with animation
+                    if (mutasiRowData && mutasiRowData.row) {
+                        const row = mutasiRowData.row;
+                        row.style.transition = 'all 0.3s ease';
+                        row.style.opacity = '0';
+                        row.style.transform = 'scale(0.95)';
+                        
+                        setTimeout(() => {
+                            row.remove();
+                            
+                            // Update stats
+                            updateStatsAfterDelete();
+                            
+                            // Check if table is empty
+                            checkEmptyTable();
+                        }, 300);
+                    } else {
+                        // Fallback: reload page jika tidak bisa remove row
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    }
+                    
+                } else {
+                    throw new Error(data.message || 'Gagal menghapus mutasi');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Gagal menghapus mutasi: ' + error.message, 'error');
+            })
+            .finally(() => {
+                // Reset button state
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
+                if (btnText) btnText.textContent = 'Ya, Hapus';
+                mutasiToDelete = null;
+                mutasiRowData = null;
+            });
+        });
+    }
+});
+
+// Function untuk menampilkan notifikasi toast
+function showNotification(message, type = 'info') {
+    const toast = document.getElementById('notificationToast');
+    if (!toast) return;
+    
+    const toastIcon = toast.querySelector('.notification-icon');
+    const toastMessage = toast.querySelector('.notification-message');
+    
+    // Remove existing classes
+    toast.classList.remove('toast-success', 'toast-error', 'toast-warning', 'toast-info');
+    
+    // Set icon dan class berdasarkan type
+    const config = {
+        success: { icon: 'bi-check-circle-fill', class: 'toast-success' },
+        error: { icon: 'bi-exclamation-triangle-fill', class: 'toast-error' },
+        warning: { icon: 'bi-exclamation-triangle-fill', class: 'toast-warning' },
+        info: { icon: 'bi-info-circle-fill', class: 'toast-info' }
+    };
+    
+    const currentConfig = config[type] || config.info;
+    
+    // Update content
+    if (toastIcon) {
+        toastIcon.className = `notification-icon me-2 bi ${currentConfig.icon}`;
+    }
+    if (toastMessage) {
+        toastMessage.textContent = message;
+    }
+    toast.classList.add(currentConfig.class);
+    
+    // Show toast
+    const bsToast = new bootstrap.Toast(toast, {
+        autohide: true,
+        delay: 4000
+    });
+    bsToast.show();
+}
+
+// Function untuk update statistik setelah hapus
+function updateStatsAfterDelete() {
+    const totalElement = document.querySelector('.stats-card-primary .stats-number');
+    if (totalElement) {
+        const currentTotal = parseInt(totalElement.textContent);
+        totalElement.textContent = Math.max(0, currentTotal - 1);
+        
+        // Animate number change
+        totalElement.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+            totalElement.style.transform = 'scale(1)';
+        }, 200);
+    }
+    
+    // Update proses count jika statusnya draft
+    const prosesElement = document.querySelector('.stats-card-warning .stats-number');
+    if (prosesElement) {
+        const currentProses = parseInt(prosesElement.textContent);
+        prosesElement.textContent = Math.max(0, currentProses - 1);
+    }
+}
+
+// Function untuk cek tabel kosong
+function checkEmptyTable() {
+    const tbody = document.querySelector('.table-data tbody');
+    if (!tbody) return;
+    
+    const rows = tbody.querySelectorAll('tr:not(.empty-row)');
+    
+    if (rows.length === 0) {
+        tbody.innerHTML = `
+            <tr class="empty-row">
+                <td colspan="9" class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="bi bi-inbox display-4 text-muted mb-3 d-block"></i>
+                        <h5 class="text-muted">Belum Ada Data Mutasi</h5>
+                        <p class="text-muted mb-3">
+                            Mulai dengan menambah data mutasi ABK pertama Anda.
+                        </p>
+                        <a href="{{ route('mutasi.create') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Tambah Mutasi Pertama
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Tambahkan event listener untuk menutup modal saat backdrop diklik
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteModal = document.getElementById('deleteConfirmModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('hide.bs.modal', function() {
+            mutasiToDelete = null;
+            mutasiRowData = null;
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            if (confirmBtn) {
+                confirmBtn.classList.remove('btn-loading');
+                confirmBtn.disabled = false;
+                const btnText = confirmBtn.querySelector('.btn-text');
+                if (btnText) btnText.textContent = 'Ya, Hapus';
+            }
+        });
+    }
+});
+
 function exportData() {
     const params = new URLSearchParams(window.location.search);
-    window.open(`/mutasi/export?${params.toString()}`, '_blank');
+    window.open(`{{ route('mutasi.export') }}?${params.toString()}`, '_blank');
 }
 </script>
 @endpush

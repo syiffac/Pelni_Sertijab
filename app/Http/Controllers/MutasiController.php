@@ -260,6 +260,353 @@ class MutasiController extends Controller
         }
     }
 
+    /**
+     * Remove the specified mutation from storage
+     */
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $mutasi = Mutasi::findOrFail($id);
+
+            // Cek apakah mutasi bisa dihapus (hanya draft yang bisa dihapus)
+            if ($mutasi->status_mutasi !== 'Draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hanya mutasi dengan status Draft yang dapat dihapus'
+                ], 400);
+            }
+
+            // Hapus file terkait jika ada
+            if ($mutasi->file_surat_mutasi && Storage::exists($mutasi->file_surat_mutasi)) {
+                Storage::delete($mutasi->file_surat_mutasi);
+            }
+
+            if ($mutasi->file_lampiran && Storage::exists($mutasi->file_lampiran)) {
+                Storage::delete($mutasi->file_lampiran);
+            }
+
+            // Hapus mutasi
+            $mutasi->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mutasi berhasil dihapus'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            \Log::error('Error deleting mutation: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus mutasi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Show the specified mutation (for modal detail)
+     */
+    public function show($id)
+    {
+        try {
+            $mutasi = Mutasi::with([
+                'kapal',
+                'abkNaik',
+                'abkTurun',
+                'jabatanTetapNaik',
+                'jabatanTetapTurun',
+                'jabatanMutasi',
+                'jabatanMutasiTurun'
+            ])->findOrFail($id);
+
+            $html = view('mutasi.partials.detail-modal', compact('mutasi'))->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat detail mutasi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Export mutasi data
+     */
+    public function export(Request $request)
+    {
+        try {
+            // Build query dengan filter yang sama seperti index
+            $query = Mutasi::with([
+                'kapal',
+                'abkNaik',
+                'abkTurun',
+                'jabatanTetapNaik',
+                'jabatanTetapTurun',
+                'jabatanMutasi',
+                'jabatanMutasiTurun'
+            ]);
+
+            // Apply filters
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('nama_lengkap_naik', 'like', "%{$search}%")
+                      ->orWhere('nama_lengkap_turun', 'like', "%{$search}%")
+                      ->orWhere('id_abk_naik', 'like', "%{$search}%")
+                      ->orWhere('id_abk_turun', 'like', "%{$search}%")
+                      ->orWhereHas('kapal', function($kapal) use ($search) {
+                          $kapal->where('nama_kapal', 'like', "%{$search}%");
+                      });
+                });
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status_mutasi', $request->status);
+            }
+
+            if ($request->filled('jenis')) {
+                $query->where('jenis_mutasi', $request->jenis);
+            }
+
+            if ($request->filled('periode')) {
+                $periode = $request->periode;
+                $query->whereYear('TMT', substr($periode, 0, 4))
+                      ->whereMonth('TMT', substr($periode, 5, 2));
+            }
+
+            $mutasiList = $query->orderBy('created_at', 'desc')->get();
+
+            // Return Excel download atau PDF
+            return view('mutasi.export', compact('mutasiList'));
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal mengexport data: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show the form for editing the specified mutation
+     */
+    public function edit($id)
+    {
+        try {
+            $mutasi = Mutasi::with([
+                'kapal',
+                'abkNaik',
+                'abkTurun',
+                'jabatanTetapNaik',
+                'jabatanTetapTurun',
+                'jabatanMutasi',
+                'jabatanMutasiTurun'
+            ])->findOrFail($id);
+
+            // Cek apakah mutasi masih bisa diedit
+            if (!in_array($mutasi->status_mutasi, ['Draft', 'Ditolak'])) {
+                return redirect()->route('mutasi.index')
+                    ->with('error', 'Mutasi dengan status "' . $mutasi->status_mutasi . '" tidak dapat diedit.');
+            }
+
+            $daftarKapal = Kapal::select('id', 'nama_kapal', 'tipe_pax', 'home_base')
+                ->orderBy('nama_kapal')
+                ->get()
+                ->map(function($kapal) {
+                    return [
+                        'id_kapal' => $kapal->id,
+                        'nama_kapal' => $kapal->nama_kapal,
+                        'id' => $kapal->id,
+                        'tipe_pax' => $kapal->tipe_pax ?? 0,
+                        'home_base' => $kapal->home_base ?? '-'
+                    ];
+                });
+
+            $daftarJabatan = Jabatan::select('id', 'nama_jabatan')
+                ->orderBy('nama_jabatan')
+                ->get();
+
+            return view('mutasi.edit', compact('mutasi', 'daftarKapal', 'daftarJabatan'));
+
+        } catch (\Exception $e) {
+            return redirect()->route('mutasi.index')
+                ->with('error', 'Mutasi tidak ditemukan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update the specified mutation in storage
+     */
+/**
+ * Update the specified mutation in storage
+ */
+public function update(Request $request, $id)
+{
+    $request->validate([
+        'id_kapal' => 'required|integer|exists:kapal,id',
+        'nrp_naik' => 'required|string|max:255',
+        'nama_naik' => 'required|string|max:255',
+        'jabatan_naik' => 'required|exists:jabatan,id',
+        'id_jabatan_mutasi' => 'required|exists:jabatan,id',
+        'nama_mutasi' => 'required|string|max:255',
+        'jenis_mutasi' => 'required|in:Sementara,Definitif',
+        'TMT' => 'required|date',
+        'TAT' => 'required|date|after:TMT',
+        'ada_abk_turun' => 'nullable|in:0,1',
+        'nrp_turun' => 'nullable|string|max:255|required_if:ada_abk_turun,1',
+        'nama_turun' => 'nullable|string|max:255|required_if:ada_abk_turun,1',
+        'jabatan_turun' => 'nullable|exists:jabatan,id|required_if:ada_abk_turun,1',
+        'id_jabatan_mutasi_turun' => 'nullable|exists:jabatan,id|required_if:ada_abk_turun,1',
+        'nama_mutasi_turun' => 'nullable|string|max:255|required_if:ada_abk_turun,1',
+        'jenis_mutasi_turun' => 'nullable|in:Sementara,Definitif|required_if:ada_abk_turun,1',
+        'TMT_turun' => 'nullable|date|required_if:ada_abk_turun,1',
+        'TAT_turun' => 'nullable|date|after:TMT_turun|required_if:ada_abk_turun,1',
+        'keterangan_turun' => 'nullable|string|max:1000',
+        'catatan' => 'nullable|string',
+        'perlu_sertijab' => 'boolean',
+        'status_mutasi' => 'required|in:Draft,Disetujui,Ditolak,Selesai'
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        $mutasi = Mutasi::findOrFail($id);
+
+        // Cek apakah mutasi masih bisa diedit
+        if (!in_array($mutasi->status_mutasi, ['Draft', 'Ditolak'])) {
+            // PERBAIKAN: Cek jenis request
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Mutasi dengan status "' . $mutasi->status_mutasi . '" tidak dapat diedit.'
+                ], 400);
+            }
+            
+            return redirect()->back()->with('error', 'Mutasi dengan status "' . $mutasi->status_mutasi . '" tidak dapat diedit.');
+        }
+
+        $kapal = Kapal::findOrFail($request->id_kapal);
+
+        $abkNaik = ABKNew::where('id', $request->nrp_naik)->first();
+        if (!$abkNaik) {
+            $errorMessage = 'ABK naik dengan NRP ' . $request->nrp_naik . ' tidak ditemukan';
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 404);
+            }
+            
+            return redirect()->back()->with('error', $errorMessage)->withInput();
+        }
+
+        $adaAbkTurun = filter_var($request->input('ada_abk_turun'), FILTER_VALIDATE_BOOLEAN);
+        $abkTurun = null;
+        
+        if ($adaAbkTurun && $request->filled('nrp_turun')) {
+            $abkTurun = ABKNew::where('id', $request->nrp_turun)->first();
+            if (!$abkTurun) {
+                $errorMessage = 'ABK turun dengan NRP ' . $request->nrp_turun . ' tidak ditemukan';
+                
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $errorMessage
+                    ], 404);
+                }
+                
+                return redirect()->back()->with('error', $errorMessage)->withInput();
+            }
+        }
+
+        $updateData = [
+            'id_kapal' => (int) $kapal->id,
+            'nama_kapal' => $kapal->nama_kapal,
+            'id_abk_naik' => $abkNaik->id,
+            'nama_lengkap_naik' => $abkNaik->nama_abk,
+            'jabatan_tetap_naik' => (int) $abkNaik->id_jabatan_tetap,
+            'id_jabatan_mutasi' => (int) $request->id_jabatan_mutasi,
+            'nama_mutasi' => $request->nama_mutasi,
+            'jenis_mutasi' => $request->jenis_mutasi,
+            'TMT' => $request->TMT,
+            'TAT' => $request->TAT,
+            'ada_abk_turun' => $adaAbkTurun,
+            'status_mutasi' => $request->status_mutasi,
+            'catatan' => $request->catatan,
+            'perlu_sertijab' => $request->boolean('perlu_sertijab', true)
+        ];
+
+        // Reset data ABK turun jika ada_abk_turun = false
+        if (!$adaAbkTurun) {
+            $updateData = array_merge($updateData, [
+                'id_abk_turun' => null,
+                'nama_lengkap_turun' => null,
+                'jabatan_tetap_turun' => null,
+                'id_jabatan_mutasi_turun' => null,
+                'nama_mutasi_turun' => null,
+                'jenis_mutasi_turun' => null,
+                'TMT_turun' => null,
+                'TAT_turun' => null,
+                'keterangan_turun' => null
+            ]);
+        } else {
+            // Update data ABK turun
+            if ($abkTurun) {
+                $updateData['id_abk_turun'] = $abkTurun->id;
+                $updateData['nama_lengkap_turun'] = $abkTurun->nama_abk;
+                $updateData['jabatan_tetap_turun'] = (int) $abkTurun->id_jabatan_tetap;
+            }
+            
+            $updateData['id_jabatan_mutasi_turun'] = (int) $request->id_jabatan_mutasi_turun;
+            $updateData['nama_mutasi_turun'] = $request->nama_mutasi_turun;
+            $updateData['jenis_mutasi_turun'] = $request->jenis_mutasi_turun;
+            $updateData['TMT_turun'] = $request->TMT_turun;
+            $updateData['TAT_turun'] = $request->TAT_turun;
+            $updateData['keterangan_turun'] = $request->keterangan_turun;
+        }
+
+        $mutasi->update($updateData);
+
+        DB::commit();
+
+        // PERBAIKAN: Response berdasarkan jenis request
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data mutasi berhasil diupdate',
+                'mutasi_id' => $mutasi->id,
+                'redirect_url' => route('mutasi.index')
+            ]);
+        }
+
+        // Redirect biasa untuk form submission
+        return redirect()->route('mutasi.index')->with('success', 'Data mutasi berhasil diupdate!');
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        \Log::error('Error updating mutation: ' . $e->getMessage());
+        
+        $errorMessage = 'Gagal mengupdate mutasi: ' . $e->getMessage();
+        
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage
+            ], 500);
+        }
+        
+        return redirect()->back()->with('error', $errorMessage)->withInput();
+    }
+}
+
     // Helper methods for charts
     private function getMutasiPerBulan()
     {

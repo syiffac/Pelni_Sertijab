@@ -1,3 +1,4 @@
+{{-- Ganti seluruh konten edit.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -26,125 +27,345 @@
                             <i class="bi bi-pencil-square"></i>
                             Edit Data Mutasi
                         </h1>
-                        <p class="page-subtitle">Formulir untuk mengedit data mutasi ABK yang sudah ada</p>
+                        <p class="page-subtitle">Formulir untuk mengedit data mutasi ABK #{{ $mutasi->id }}</p>
                     </div>
                     <div class="header-actions">
-                        <span class="status-badge pending">
-                            <i class="bi bi-clock me-1"></i>
-                            Coming Soon
+                        <span class="status-badge {{ $mutasi->status_mutasi == 'Draft' ? 'draft' : ($mutasi->status_mutasi == 'Ditolak' ? 'rejected' : 'approved') }}">
+                            <i class="bi bi-{{ $mutasi->status_mutasi == 'Draft' ? 'pencil' : ($mutasi->status_mutasi == 'Ditolak' ? 'x-circle' : 'check-circle') }} me-1"></i>
+                            {{ $mutasi->status_mutasi }}
                         </span>
                     </div>
                 </div>
             </div>
 
-            <!-- Coming Soon Card -->
-            <div class="coming-soon-container">
-                <div class="coming-soon-card">
-                    <div class="coming-soon-content">
-                        <div class="coming-soon-icon">
-                            <i class="bi bi-pencil-square"></i>
+            <!-- Form Edit -->
+            <form id="editMutasiForm" method="POST" action="{{ route('mutasi.update', $mutasi->id) }}">
+                @csrf
+                @method('PUT')
+                
+                <!-- Step 1: Data Kapal -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <h3><i class="bi bi-ship me-2"></i>Informasi Kapal Tujuan</h3>
+                        <p>Pilih kapal untuk penempatan mutasi ABK</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_kapal" class="form-label required">Kapal Tujuan</label>
+                                <select class="form-select" id="id_kapal" name="id_kapal" required>
+                                    <option value="">Pilih Kapal...</option>
+                                    @foreach($daftarKapal as $kapal)
+                                        <option value="{{ $kapal['id'] }}" 
+                                                data-pax="{{ $kapal['tipe_pax'] }}" 
+                                                data-base="{{ $kapal['home_base'] }}"
+                                                {{ $mutasi->id_kapal == $kapal['id'] ? 'selected' : '' }}>
+                                            {{ $kapal['nama_kapal'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="invalid-feedback"></div>
+                            </div>
                         </div>
-                        
-                        <h2 class="coming-soon-title">Halaman Edit Mutasi</h2>
-                        <p class="coming-soon-subtitle">Fitur sedang dalam tahap pengembangan</p>
-                        
-                        <div class="coming-soon-description">
-                            <p>Fitur edit mutasi akan memungkinkan Anda untuk:</p>
-                            <ul class="feature-list">
-                                <li>
-                                    <i class="bi bi-pencil text-warning me-2"></i>
-                                    Mengedit data mutasi yang sudah ada
-                                </li>
-                                <li>
-                                    <i class="bi bi-person-check text-info me-2"></i>
-                                    Mengubah data ABK yang terlibat
-                                </li>
-                                <li>
-                                    <i class="bi bi-ship text-primary me-2"></i>
-                                    Memperbarui kapal asal dan tujuan
-                                </li>
-                                <li>
-                                    <i class="bi bi-calendar-event text-success me-2"></i>
-                                    Mengatur ulang tanggal mutasi
-                                </li>
-                                <li>
-                                    <i class="bi bi-file-earmark-text text-secondary me-2"></i>
-                                    Memperbarui dokumen pendukung
-                                </li>
-                                <li>
-                                    <i class="bi bi-check-circle text-success me-2"></i>
-                                    Validasi data yang diubah
-                                </li>
-                            </ul>
-                        </div>
-                        
-                        <div class="current-data-preview">
-                            <h5 class="preview-title">
-                                <i class="bi bi-eye me-2"></i>
-                                Preview Data Mutasi
-                            </h5>
-                            <div class="preview-card">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="preview-item">
-                                            <span class="preview-label">ID Mutasi:</span>
-                                            <span class="preview-value">MUT-2025-001</span>
-                                        </div>
-                                        <div class="preview-item">
-                                            <span class="preview-label">ABK:</span>
-                                            <span class="preview-value">John Doe (NRP: 12345)</span>
-                                        </div>
-                                        <div class="preview-item">
-                                            <span class="preview-label">Jabatan:</span>
-                                            <span class="preview-value">Mualim I</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="preview-item">
-                                            <span class="preview-label">Kapal Asal:</span>
-                                            <span class="preview-value">KM BINAIYA</span>
-                                        </div>
-                                        <div class="preview-item">
-                                            <span class="preview-label">Kapal Tujuan:</span>
-                                            <span class="preview-value">KM BUKIT RAYA</span>
-                                        </div>
-                                        <div class="preview-item">
-                                            <span class="preview-label">Tanggal Mutasi:</span>
-                                            <span class="preview-value">15 Maret 2025</span>
-                                        </div>
-                                    </div>
+                        <div class="col-md-6">
+                            <div class="kapal-info-card" id="kapalInfoCard" style="{{ $mutasi->kapal ? 'display: block;' : 'display: none;' }}">
+                                <h6><i class="bi bi-info-circle me-2"></i>Info Kapal</h6>
+                                <div class="info-item">
+                                    <span class="label">Nama Kapal:</span>
+                                    <span class="value" id="kapalNama">{{ $mutasi->kapal->nama_kapal ?? '-' }}</span>
                                 </div>
-                            </div>
-                        </div>
-                        
-                        <div class="coming-soon-actions">
-                            <a href="{{ route('mutasi.index') }}" class="btn btn-primary">
-                                <i class="bi bi-arrow-left me-2"></i>
-                                Kembali ke Daftar Mutasi
-                            </a>
-                            <a href="{{ route('mutasi.show', 1) }}" class="btn btn-outline-info">
-                                <i class="bi bi-eye me-2"></i>
-                                Lihat Detail
-                            </a>
-                            <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-house-door me-2"></i>
-                                Dashboard
-                            </a>
-                        </div>
-                        
-                        <div class="coming-soon-meta">
-                            <div class="meta-item">
-                                <i class="bi bi-clock me-1"></i>
-                                <small class="text-muted">Estimasi selesai: Q2 2025</small>
-                            </div>
-                            <div class="meta-item">
-                                <i class="bi bi-code-slash me-1"></i>
-                                <small class="text-muted">Status: Under Development</small>
+                                <div class="info-item">
+                                    <span class="label">Kapasitas PAX:</span>
+                                    <span class="value" id="kapalPax">{{ $mutasi->kapal->tipe_pax ?? 0 }} orang</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Home Base:</span>
+                                    <span class="value" id="kapalBase">{{ $mutasi->kapal->home_base ?? '-' }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Step 2: Data ABK Naik -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <h3><i class="bi bi-person-plus me-2"></i>Data ABK Naik</h3>
+                        <p>Informasi ABK yang akan naik ke kapal</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nrp_naik" class="form-label required">Cari ABK</label>
+                                <select class="form-control" id="nrp_naik" name="nrp_naik" required>
+                                    @if($mutasi->abkNaik)
+                                        <option value="{{ $mutasi->abkNaik->id }}" selected>
+                                            {{ $mutasi->abkNaik->id }} - {{ $mutasi->abkNaik->nama_abk }}
+                                        </option>
+                                    @endif
+                                </select>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="nama_naik" class="form-label required">Nama Lengkap</label>
+                                <input type="text" class="form-control" id="nama_naik" name="nama_naik" 
+                                       value="{{ $mutasi->nama_lengkap_naik }}" readonly required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="jabatan_naik" class="form-label required">Jabatan Tetap</label>
+                                <input type="text" class="form-control" id="jabatan_naik_display" 
+                                       value="{{ $mutasi->jabatanTetapNaik->nama_jabatan ?? '-' }}" readonly>
+                                <input type="hidden" id="jabatan_naik" name="jabatan_naik" 
+                                       value="{{ $mutasi->jabatan_tetap_naik }}">
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_jabatan_mutasi" class="form-label required">Jabatan Mutasi</label>
+                                <select class="form-select" id="id_jabatan_mutasi" name="id_jabatan_mutasi" required>
+                                    <option value="">Pilih Jabatan Mutasi...</option>
+                                    @foreach($daftarJabatan as $jabatan)
+                                        <option value="{{ $jabatan->id }}" 
+                                                {{ $mutasi->id_jabatan_mutasi == $jabatan->id ? 'selected' : '' }}>
+                                            {{ $jabatan->nama_jabatan }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="nama_mutasi" class="form-label required">Nama Mutasi</label>
+                                <input type="text" class="form-control" id="nama_mutasi" name="nama_mutasi" 
+                                       value="{{ $mutasi->nama_mutasi }}" readonly required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="jenis_mutasi" class="form-label required">Jenis Mutasi</label>
+                                <select class="form-select" id="jenis_mutasi" name="jenis_mutasi" required>
+                                    <option value="">Pilih Jenis...</option>
+                                    <option value="Sementara" {{ $mutasi->jenis_mutasi == 'Sementara' ? 'selected' : '' }}>Sementara</option>
+                                    <option value="Definitif" {{ $mutasi->jenis_mutasi == 'Definitif' ? 'selected' : '' }}>Definitif</option>
+                                </select>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="TMT" class="form-label required">TMT (Terhitung Mulai Tanggal)</label>
+                                <input type="date" class="form-control" id="TMT" name="TMT" 
+                                       value="{{ $mutasi->TMT ? $mutasi->TMT->format('Y-m-d') : '' }}" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="TAT" class="form-label required">TAT (Terhitung Akhir Tanggal)</label>
+                                <input type="date" class="form-control" id="TAT" name="TAT" 
+                                       value="{{ $mutasi->TAT ? $mutasi->TAT->format('Y-m-d') : '' }}" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Data ABK Turun (Optional) -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <h3><i class="bi bi-person-dash me-2"></i>Data ABK Turun (Opsional)</h3>
+                        <p>Informasi ABK yang akan turun dari kapal (jika ada)</p>
+                        
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="ada_abk_turun" name="ada_abk_turun" 
+                                   value="1" {{ $mutasi->ada_abk_turun ? 'checked' : '' }}>
+                            <label class="form-check-label" for="ada_abk_turun">
+                                Ada ABK yang turun dari kapal ini
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="abkTurunSection" style="{{ $mutasi->ada_abk_turun ? 'display: block;' : 'display: none;' }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="nrp_turun" class="form-label">Cari ABK Turun</label>
+                                    <select class="form-control" id="nrp_turun" name="nrp_turun">
+                                        @if($mutasi->abkTurun)
+                                            <option value="{{ $mutasi->abkTurun->id }}" selected>
+                                                {{ $mutasi->abkTurun->id }} - {{ $mutasi->abkTurun->nama_abk }}
+                                            </option>
+                                        @endif
+                                    </select>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="nama_turun" class="form-label">Nama Lengkap</label>
+                                    <input type="text" class="form-control" id="nama_turun" name="nama_turun" 
+                                           value="{{ $mutasi->nama_lengkap_turun }}" readonly>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="jabatan_turun" class="form-label">Jabatan Tetap</label>
+                                    <input type="text" class="form-control" id="jabatan_turun_display" 
+                                           value="{{ $mutasi->jabatanTetapTurun->nama_jabatan ?? '-' }}" readonly>
+                                    <input type="hidden" id="jabatan_turun" name="jabatan_turun" 
+                                           value="{{ $mutasi->jabatan_tetap_turun }}">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_jabatan_mutasi_turun" class="form-label">Jabatan Mutasi</label>
+                                    <select class="form-select" id="id_jabatan_mutasi_turun" name="id_jabatan_mutasi_turun">
+                                        <option value="">Pilih Jabatan Mutasi...</option>
+                                        @foreach($daftarJabatan as $jabatan)
+                                            <option value="{{ $jabatan->id }}" 
+                                                    {{ $mutasi->id_jabatan_mutasi_turun == $jabatan->id ? 'selected' : '' }}>
+                                                {{ $jabatan->nama_jabatan }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="nama_mutasi_turun" class="form-label">Nama Mutasi</label>
+                                    <input type="text" class="form-control" id="nama_mutasi_turun" name="nama_mutasi_turun" 
+                                           value="{{ $mutasi->nama_mutasi_turun }}" readonly>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="jenis_mutasi_turun" class="form-label">Jenis Mutasi</label>
+                                    <select class="form-select" id="jenis_mutasi_turun" name="jenis_mutasi_turun">
+                                        <option value="">Pilih Jenis...</option>
+                                        <option value="Sementara" {{ $mutasi->jenis_mutasi_turun == 'Sementara' ? 'selected' : '' }}>Sementara</option>
+                                        <option value="Definitif" {{ $mutasi->jenis_mutasi_turun == 'Definitif' ? 'selected' : '' }}>Definitif</option>
+                                    </select>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="TMT_turun" class="form-label">TMT Turun</label>
+                                    <input type="date" class="form-control" id="TMT_turun" name="TMT_turun" 
+                                           value="{{ $mutasi->TMT_turun ? $mutasi->TMT_turun->format('Y-m-d') : '' }}">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="TAT_turun" class="form-label">TAT Turun</label>
+                                    <input type="date" class="form-control" id="TAT_turun" name="TAT_turun" 
+                                           value="{{ $mutasi->TAT_turun ? $mutasi->TAT_turun->format('Y-m-d') : '' }}">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="keterangan_turun" class="form-label">Keterangan Turun</label>
+                            <textarea class="form-control" id="keterangan_turun" name="keterangan_turun" 
+                                      rows="3" placeholder="Masukkan keterangan untuk ABK turun...">{{ $mutasi->keterangan_turun }}</textarea>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Informasi Tambahan -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <h3><i class="bi bi-gear me-2"></i>Pengaturan Mutasi</h3>
+                        <p>Konfigurasi tambahan untuk mutasi</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="status_mutasi" class="form-label required">Status Mutasi</label>
+                                <select class="form-select" id="status_mutasi" name="status_mutasi" required>
+                                    <option value="Draft" {{ $mutasi->status_mutasi == 'Draft' ? 'selected' : '' }}>Draft</option>
+                                    <option value="Disetujui" {{ $mutasi->status_mutasi == 'Disetujui' ? 'selected' : '' }}>Disetujui</option>
+                                    <option value="Ditolak" {{ $mutasi->status_mutasi == 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
+                                    <option value="Selesai" {{ $mutasi->status_mutasi == 'Selesai' ? 'selected' : '' }}>Selesai</option>
+                                </select>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="perlu_sertijab" name="perlu_sertijab" 
+                                       value="1" {{ $mutasi->perlu_sertijab ? 'checked' : '' }}>
+                                <label class="form-check-label" for="perlu_sertijab">
+                                    Memerlukan Serah Terima Jabatan
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="catatan" class="form-label">Catatan</label>
+                                <textarea class="form-control" id="catatan" name="catatan" rows="4" 
+                                          placeholder="Masukkan catatan tambahan untuk mutasi ini...">{{ $mutasi->catatan }}</textarea>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a href="{{ route('mutasi.index') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Batal
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="bi bi-save me-2"></i>
+                            <span class="btn-text">Update Mutasi</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Memproses data mutasi...</p>
+    </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999">
+    <div id="notificationToast" class="toast align-items-center border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center">
+                <i class="notification-icon me-2"></i>
+                <span class="notification-message"></span>
             </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
     </div>
 </div>
@@ -184,12 +405,6 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 20px;
-}
-
-.header-actions {
-    display: flex;
-    gap: 12px;
-    align-items: center;
 }
 
 .breadcrumb {
@@ -234,187 +449,167 @@
 
 /* Status Badge */
 .status-badge {
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
 }
 
-.status-badge.pending {
-    background: #fef3c7;
-    color: #92400e;
+.status-badge.draft {
+    background: #f3f4f6;
+    color: #374151;
 }
 
-/* Coming Soon Container */
-.coming-soon-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 600px;
+.status-badge.approved {
+    background: #d1fae5;
+    color: #065f46;
 }
 
-.coming-soon-card {
+.status-badge.rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Form Sections */
+.form-section {
     background: white;
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow-medium);
     border: 1px solid var(--border-color);
-    padding: 50px 40px;
-    text-align: center;
-    max-width: 700px;
-    width: 100%;
+    margin-bottom: 24px;
+    overflow: hidden;
 }
 
-.coming-soon-content {
-    max-width: 600px;
-    margin: 0 auto;
+.section-header {
+    background: var(--background-light);
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.coming-soon-icon {
-    width: 100px;
-    height: 100px;
-    margin: 0 auto 28px;
-    background: linear-gradient(135deg, var(--warning-color), #fbbf24);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 40px;
-    animation: editPulse 2s infinite;
-}
-
-@keyframes editPulse {
-    0% {
-        transform: scale(1) rotate(0deg);
-        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
-    }
-    50% {
-        transform: scale(1.05) rotate(5deg);
-        box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
-    }
-    100% {
-        transform: scale(1) rotate(0deg);
-        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
-    }
-}
-
-.coming-soon-title {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text-dark);
-    margin-bottom: 10px;
-}
-
-.coming-soon-subtitle {
-    font-size: 16px;
-    color: var(--text-muted);
-    margin-bottom: 28px;
-}
-
-.coming-soon-description {
-    text-align: left;
-    margin-bottom: 32px;
-}
-
-.coming-soon-description p {
-    font-size: 15px;
-    color: var(--text-dark);
-    margin-bottom: 16px;
-    font-weight: 600;
-}
-
-.feature-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 8px;
-}
-
-.feature-list li {
-    display: flex;
-    align-items: center;
-    padding: 6px 0;
-    font-size: 14px;
-    color: var(--text-dark);
-}
-
-/* Current Data Preview */
-.current-data-preview {
-    margin: 32px 0;
-    text-align: left;
-}
-
-.preview-title {
+.section-header h3 {
     font-size: 18px;
     font-weight: 600;
     color: var(--text-dark);
-    margin-bottom: 16px;
+    margin: 0 0 4px 0;
     display: flex;
     align-items: center;
-    justify-content: center;
 }
 
-.preview-card {
+.section-header p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 14px;
+}
+
+.form-section .row {
+    padding: 24px;
+}
+
+.form-section .form-check {
+    margin-top: 16px;
+}
+
+/* Form Controls */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.form-label.required::after {
+    content: ' *';
+    color: var(--danger-color);
+}
+
+.form-control, 
+.form-select {
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    padding: 10px 12px;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.form-control:focus, 
+.form-select:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-control:invalid,
+.form-select:invalid {
+    border-color: var(--danger-color);
+}
+
+.invalid-feedback {
+    font-size: 12px;
+    color: var(--danger-color);
+    margin-top: 4px;
+}
+
+/* Kapal Info Card */
+.kapal-info-card {
     background: var(--background-light);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 20px;
+    padding: 16px;
+    margin-top: 8px;
 }
 
-.preview-item {
+.kapal-info-card h6 {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.info-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 4px 0;
+    font-size: 13px;
 }
 
-.preview-item:last-child {
-    border-bottom: none;
-}
-
-.preview-label {
-    font-weight: 600;
+.info-item .label {
     color: var(--text-muted);
-    font-size: 14px;
+    font-weight: 500;
 }
 
-.preview-value {
+.info-item .value {
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+/* Form Check Switch */
+.form-check-input:checked {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+
+.form-check-label {
     font-weight: 500;
     color: var(--text-dark);
-    font-size: 14px;
 }
 
-.coming-soon-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-bottom: 28px;
-}
-
-.coming-soon-meta {
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    flex-wrap: wrap;
-}
-
-.meta-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+/* Form Actions */
+.form-actions {
+    background: white;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-bottom: 24px;
 }
 
 /* Buttons */
 .btn {
-    padding: 10px 20px;
+    padding: 12px 24px;
     border-radius: 8px;
     font-weight: 600;
     font-size: 14px;
@@ -433,113 +628,140 @@
     color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
     background: #1d4ed8;
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: var(--shadow-medium);
     color: white;
     text-decoration: none;
 }
 
-.btn-outline-info {
-    background: transparent;
-    color: var(--info-color);
-    border: 2px solid var(--info-color);
+.btn-secondary {
+    background: #6b7280;
+    color: white;
 }
 
-.btn-outline-info:hover {
-    background: var(--info-color);
+.btn-secondary:hover {
+    background: #4b5563;
     color: white;
     text-decoration: none;
 }
 
-.btn-outline-secondary {
-    background: transparent;
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Loading states */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+    backdrop-filter: blur(4px);
+}
+
+.loading-content {
+    background: white;
+    padding: 32px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.loading-content p {
     color: var(--text-muted);
-    border: 2px solid var(--border-color);
+    margin: 0;
+    font-weight: 500;
 }
 
-.btn-outline-secondary:hover {
-    background: var(--text-muted);
+/* Toast Notification */
+.toast {
+    min-width: 300px;
+    backdrop-filter: blur(10px);
+    border-radius: 10px !important;
+}
+
+.toast.toast-success {
+    background: linear-gradient(45deg, #10b981, #34d399);
     color: white;
-    border-color: var(--text-muted);
-    text-decoration: none;
 }
 
-/* Responsive adjustments */
+.toast.toast-error {
+    background: linear-gradient(45deg, #ef4444, #f87171);
+    color: white;
+}
+
+.notification-icon {
+    font-size: 1.2rem;
+}
+
+/* Animations */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive */
 @media (max-width: 768px) {
     .header-content {
         flex-direction: column;
         gap: 16px;
     }
     
-    .coming-soon-card {
-        padding: 32px 20px;
-        margin: 0 16px;
+    .form-section .row {
+        padding: 16px;
     }
     
-    .coming-soon-icon {
-        width: 80px;
-        height: 80px;
-        font-size: 32px;
-        margin-bottom: 20px;
+    .section-header {
+        padding: 16px;
     }
     
-    .coming-soon-title {
-        font-size: 24px;
-    }
-    
-    .coming-soon-subtitle {
-        font-size: 14px;
-    }
-    
-    .feature-list {
-        grid-template-columns: 1fr;
-    }
-    
-    .coming-soon-actions {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .btn {
-        width: 100%;
-        max-width: 280px;
-    }
-    
-    .preview-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-    
-    .coming-soon-meta {
-        flex-direction: column;
-        gap: 12px;
-    }
-}
-
-@media (max-width: 576px) {
     .page-title {
         font-size: 24px;
     }
     
-    .coming-soon-icon {
-        width: 70px;
-        height: 70px;
-        font-size: 28px;
-    }
-    
-    .coming-soon-title {
-        font-size: 22px;
-    }
-    
-    .feature-list li {
-        font-size: 13px;
-    }
-    
-    .preview-card {
+    .form-actions {
         padding: 16px;
+    }
+    
+    .form-actions .d-flex {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
     }
 }
 </style>
@@ -548,36 +770,311 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Add interactive effects
-    const comingSoonCard = document.querySelector('.coming-soon-card');
+    // Initialize Select2 for ABK search
+    initializeSelect2();
     
-    // Add hover effect
-    comingSoonCard.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(-5px)';
-        this.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.15)';
-    });
+    // Initialize form event listeners
+    initializeFormEvents();
     
-    comingSoonCard.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0)';
-        this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-    });
-    
-    // Preview card hover effect
-    const previewCard = document.querySelector('.preview-card');
-    if (previewCard) {
-        previewCard.addEventListener('mouseenter', function() {
-            this.style.transform = 'scale(1.02)';
-            this.style.boxShadow = '0 8px 15px rgba(0, 0, 0, 0.1)';
-        });
+    // Initialize form validation
+    initializeFormValidation();
+});
+
+// Initialize Select2 for ABK search
+function initializeSelect2() {
+    // ABK Naik Select2
+    $('#nrp_naik').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Ketik NRP atau nama ABK...',
+        allowClear: true,
+        ajax: {
+            url: '{{ route("mutasi.search-abk") }}',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term,
+                    type: 'naik'
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results || []
+                };
+            },
+            cache: true
+        },
+        templateResult: function(abk) {
+            if (abk.loading) return abk.text;
+            
+            return $(`
+                <div class="abk-option">
+                    <div class="abk-name">${abk.nama_abk}</div>
+                    <div class="abk-details">
+                        <small class="text-muted">NRP: ${abk.nrp} | Jabatan: ${abk.jabatan_nama}</small>
+                    </div>
+                </div>
+            `);
+        },
+        templateSelection: function(abk) {
+            return abk.nrp ? `${abk.nrp} - ${abk.nama_abk}` : abk.text;
+        }
+    }).on('select2:select', function(e) {
+        const data = e.params.data;
         
-        previewCard.addEventListener('mouseleave', function() {
-            this.style.transform = 'scale(1)';
-            this.style.boxShadow = 'none';
-        });
+        // Update form fields untuk ABK naik
+        $('#nama_naik').val(data.nama_abk || '');
+        $('#jabatan_naik_display').val(data.jabatan_nama || '');
+        $('#jabatan_naik').val(data.jabatan_id || '');
+    }).on('select2:clear', function() {
+        // Clear form fields untuk ABK naik
+        $('#nama_naik').val('');
+        $('#jabatan_naik_display').val('');
+        $('#jabatan_naik').val('');
+    });
+
+    // ABK Turun Select2
+    $('#nrp_turun').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Ketik NRP atau nama ABK...',
+        allowClear: true,
+        ajax: {
+            url: '{{ route("mutasi.search-abk") }}',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term,
+                    type: 'turun'
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results || []
+                };
+            },
+            cache: true
+        },
+        templateResult: function(abk) {
+            if (abk.loading) return abk.text;
+            
+            return $(`
+                <div class="abk-option">
+                    <div class="abk-name">${abk.nama_abk}</div>
+                    <div class="abk-details">
+                        <small class="text-muted">NRP: ${abk.nrp} | Jabatan: ${abk.jabatan_nama}</small>
+                    </div>
+                </div>
+            `);
+        },
+        templateSelection: function(abk) {
+            return abk.nrp ? `${abk.nrp} - ${abk.nama_abk}` : abk.text;
+        }
+    }).on('select2:select', function(e) {
+        const data = e.params.data;
+        
+        // Update form fields untuk ABK turun
+        $('#nama_turun').val(data.nama_abk || '');
+        $('#jabatan_turun_display').val(data.jabatan_nama || '');
+        $('#jabatan_turun').val(data.jabatan_id || '');
+    }).on('select2:clear', function() {
+        // Clear form fields untuk ABK turun
+        $('#nama_turun').val('');
+        $('#jabatan_turun_display').val('');
+        $('#jabatan_turun').val('');
+    });
+}
+
+// Initialize form events
+function initializeFormEvents() {
+    // Kapal selection change
+    document.getElementById('id_kapal').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const kapalInfoCard = document.getElementById('kapalInfoCard');
+        
+        if (this.value) {
+            const namaKapal = selectedOption.text;
+            const pax = selectedOption.dataset.pax || '0';
+            const base = selectedOption.dataset.base || '-';
+            
+            document.getElementById('kapalNama').textContent = namaKapal;
+            document.getElementById('kapalPax').textContent = pax + ' orang';
+            document.getElementById('kapalBase').textContent = base;
+            
+            kapalInfoCard.style.display = 'block';
+        } else {
+            kapalInfoCard.style.display = 'none';
+        }
+    });
+
+    // Toggle ABK Turun section
+    document.getElementById('ada_abk_turun').addEventListener('change', function() {
+        const abkTurunSection = document.getElementById('abkTurunSection');
+        const isChecked = this.checked;
+        
+        if (isChecked) {
+            abkTurunSection.style.display = 'block';
+            // Make fields required
+            document.getElementById('nrp_turun').required = true;
+            document.getElementById('id_jabatan_mutasi_turun').required = true;
+            document.getElementById('jenis_mutasi_turun').required = true;
+            document.getElementById('TMT_turun').required = true;
+            document.getElementById('TAT_turun').required = true;
+        } else {
+            abkTurunSection.style.display = 'none';
+            // Remove required
+            document.getElementById('nrp_turun').required = false;
+            document.getElementById('id_jabatan_mutasi_turun').required = false;
+            document.getElementById('jenis_mutasi_turun').required = false;
+            document.getElementById('TMT_turun').required = false;
+            document.getElementById('TAT_turun').required = false;
+            
+            // Clear values
+            $('#nrp_turun').val(null).trigger('change');
+            document.getElementById('nama_turun').value = '';
+            document.getElementById('jabatan_turun_display').value = '';
+            document.getElementById('jabatan_turun').value = '';
+            document.getElementById('id_jabatan_mutasi_turun').value = '';
+            document.getElementById('nama_mutasi_turun').value = '';
+            document.getElementById('jenis_mutasi_turun').value = '';
+            document.getElementById('TMT_turun').value = '';
+            document.getElementById('TAT_turun').value = '';
+            document.getElementById('keterangan_turun').value = '';
+        }
+    });
+
+    // Auto-fill nama_mutasi when jabatan_mutasi changes
+    document.getElementById('id_jabatan_mutasi').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const namaMutasi = selectedOption.text;
+        
+        if (this.value) {
+            document.getElementById('nama_mutasi').value = namaMutasi;
+        } else {
+            document.getElementById('nama_mutasi').value = '';
+        }
+    });
+
+    // Auto-fill nama_mutasi_turun when jabatan_mutasi_turun changes
+    document.getElementById('id_jabatan_mutasi_turun').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const namaMutasiTurun = selectedOption.text;
+        
+        if (this.value) {
+            document.getElementById('nama_mutasi_turun').value = namaMutasiTurun;
+        } else {
+            document.getElementById('nama_mutasi_turun').value = '';
+        }
+    });
+
+    // Date validation
+    document.getElementById('TMT').addEventListener('change', function() {
+        const tatField = document.getElementById('TAT');
+        tatField.min = this.value;
+        
+        if (tatField.value && tatField.value <= this.value) {
+            tatField.value = '';
+        }
+    });
+
+    document.getElementById('TMT_turun').addEventListener('change', function() {
+        const tatTurunField = document.getElementById('TAT_turun');
+        tatTurunField.min = this.value;
+        
+        if (tatTurunField.value && tatTurunField.value <= this.value) {
+            tatTurunField.value = '';
+        }
+    });
+}
+
+// Initialize form validation - Sederhana
+function initializeFormValidation() {
+    const form = document.getElementById('editMutasiForm');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitForm();
+    });
+}
+
+// Submit form - Disederhanakan
+function submitForm() {
+    const form = document.getElementById('editMutasiForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    
+    // Set loading state
+    submitBtn.disabled = true;
+    submitBtn.classList.add('btn-loading');
+    btnText.textContent = 'Memproses...';
+    loadingOverlay.style.display = 'flex';
+    
+    const formData = new FormData(form);
+    
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Data mutasi berhasil diupdate!', 'success');
+            
+            // Redirect after success
+            setTimeout(() => {
+                window.location.href = data.redirect_url || '{{ route("mutasi.index") }}';
+            }, 1500);
+        } else {
+            throw new Error(data.message || 'Gagal update mutasi');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Gagal update mutasi: ' + error.message, 'error');
+    })
+    .finally(() => {
+        // Reset button state
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-loading');
+        btnText.textContent = 'Update Mutasi';
+        loadingOverlay.style.display = 'none';
+    });
+}
+
+// Show notification - Sederhana
+function showNotification(message, type = 'info') {
+    const toast = document.getElementById('notificationToast');
+    if (!toast) return;
+    
+    const toastIcon = toast.querySelector('.notification-icon');
+    const toastMessage = toast.querySelector('.notification-message');
+    
+    // Remove existing classes
+    toast.classList.remove('toast-success', 'toast-error');
+    
+    // Set icon and class
+    if (type === 'success') {
+        toastIcon.className = 'notification-icon me-2 bi bi-check-circle-fill';
+        toast.classList.add('toast-success');
+    } else {
+        toastIcon.className = 'notification-icon me-2 bi bi-exclamation-triangle-fill';
+        toast.classList.add('toast-error');
     }
     
-    // Log page visit for analytics
-    console.log('Mutasi Edit Page - Coming Soon');
-});
+    toastMessage.textContent = message;
+    
+    // Show toast
+    const bsToast = new bootstrap.Toast(toast, {
+        autohide: true,
+        delay: 4000
+    });
+    bsToast.show();
+}
 </script>
 @endpush

@@ -86,7 +86,6 @@
                 <ul class="submenu" id="submenu-mutasi">
                     <li><a href="{{ route('mutasi.index') }}" class="submenu-link {{ request()->routeIs('mutasi.index') ? 'active' : '' }}">Data Mutasi</a></li>
                     <li><a href="{{ route('mutasi.create') }}" class="submenu-link {{ request()->routeIs('mutasi.create') ? 'active' : '' }}">Tambah Mutasi</a></li>
-                    <li><a href="{{ route('mutasi.edit', 1) }}" class="submenu-link {{ request()->routeIs('mutasi.edit') ? 'active' : '' }}">Edit Mutasi</a></li>
                 </ul>
             </li>
 
