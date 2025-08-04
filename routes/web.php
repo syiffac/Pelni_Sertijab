@@ -124,16 +124,25 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [MutasiController::class, 'destroy'])->name('destroy');
     });
     
-    // Monitoring routes
+    // Monitoring routes - UPDATED dengan routes yang missing
     Route::prefix('monitoring')->name('monitoring.')->group(function () {
+        // Dashboard monitoring
         Route::get('/', [MonitoringController::class, 'index'])->name('index');
+        
+        // Document verification - TAMBAHAN ROUTES YANG MISSING
+        Route::get('/documents', [MonitoringController::class, 'documents'])->name('documents');
+        Route::get('/documents/{id}', [MonitoringController::class, 'show'])->name('documents.show');
+        Route::put('/documents/{id}/verify', [MonitoringController::class, 'updateVerification'])->name('documents.verify');
+        Route::post('/documents/{id}/quick-verify', [MonitoringController::class, 'quickVerifyAll'])->name('documents.quick-verify');
+        
+        // Legacy routes (untuk backward compatibility)
         Route::get('/sertijab', [MonitoringController::class, 'sertijab'])->name('sertijab');
         Route::get('/sertijab/detail/{id}', [MonitoringController::class, 'sertijabDetail'])->name('sertijab.detail');
         Route::put('/sertijab/verify/{id}', [MonitoringController::class, 'verifySertijab'])->name('verify');
         Route::get('/sertijab/export', [MonitoringController::class, 'exportSertijab'])->name('sertijab.export');
     });
     
-    // Arsip routes
+    // Arsip routes - UPDATE dengan routes yang missing
     Route::prefix('arsip')->name('arsip.')->group(function () {
         Route::get('/', [ArsipController::class, 'index'])->name('index');
         Route::get('/search', [ArsipController::class, 'search'])->name('search');
@@ -143,6 +152,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/edit', [ArsipController::class, 'edit'])->name('edit');
         Route::put('/{id}', [ArsipController::class, 'update'])->name('update');
         Route::delete('/{id}', [ArsipController::class, 'destroy'])->name('destroy');
+        
+        // TAMBAHAN routes yang missing
+        Route::get('/kapal/{kapalId}', [ArsipController::class, 'byKapal'])->name('by-kapal');
+        Route::get('/export/excel', [ArsipController::class, 'exportExcel'])->name('export.excel');
+        Route::get('/export/pdf', [ArsipController::class, 'exportPdf'])->name('export.pdf');
+        
+        // Laporan routes
         Route::get('/laporan/index', [ArsipController::class, 'laporanIndex'])->name('laporan');
         Route::get('/laporan/generate', [ArsipController::class, 'generateLaporan'])->name('laporan.generate');
         Route::post('/bulk-update-status', [ArsipController::class, 'bulkUpdateStatus'])->name('bulk-update-status');

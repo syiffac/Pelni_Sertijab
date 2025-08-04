@@ -340,6 +340,12 @@ class Mutasi extends Model
         $this->$column = $path;
         $this->save();
         
+        // Update sertijab record jika ada
+        if ($this->sertijabNew) {
+            $pathField = "dokumen_{$type}_path";
+            $this->sertijabNew->update([$pathField => $path]);
+        }
+        
         return $path;
     }
 
@@ -356,6 +362,22 @@ class Mutasi extends Model
         if ($this->$column) {
             Storage::disk('public')->delete($this->$column);
             $this->update([$column => null]);
+            
+            // Update sertijab record jika ada
+            if ($this->sertijabNew) {
+                $pathField = "dokumen_{$type}_path";
+                $statusField = "status_{$type}";
+                $catatanField = "catatan_{$type}";
+                
+                $this->sertijabNew->update([
+                    $pathField => null,
+                    $statusField => 'draft',
+                    $catatanField => null
+                ]);
+                
+                $this->sertijabNew->updateOverallStatus();
+            }
+            
             return true;
         }
         
@@ -447,5 +469,127 @@ class Mutasi extends Model
         static::deleting(function ($mutasi) {
             $mutasi->deleteAllDokumen();
         });
+    }
+
+    /**
+     * Get the sertijab record for this mutasi
+     */
+    public function sertijab()
+    {
+        return $this->hasOne(Sertijab::class, 'id_mutasi', 'id');
+    }
+
+    /**
+     * Check if this mutasi has been submitted by PUK
+     */
+    public function isSubmittedByPuk(): bool
+    {
+        return $this->submitted_by_puk && $this->sertijab !== null;
+    }
+
+    /**
+     * Get document verification status
+     */
+    public function getDocumentStatus(): string
+    {
+        if (!$this->sertijab) {
+            return 'not_uploaded';
+        }
+        
+        return $this->sertijab->status_dokumen;
+    }
+
+    /**
+     * Get document verification progress
+     */
+    public function getDocumentProgress(): int
+    {
+        if (!$this->sertijab) {
+            return 0;
+        }
+        
+        return $this->sertijab->getVerificationProgress();
+    }
+
+    /**
+     * Check if documents are ready for verification
+     */
+    public function isReadyForVerification(): bool
+    {
+        return $this->submitted_by_puk && 
+               $this->sertijab && 
+               $this->sertijab->hasAllRequiredDocuments();
+    }
+
+    /**
+     * Check if documents are fully verified
+     */
+    public function isDocumentVerified(): bool
+    {
+        return $this->sertijab && $this->sertijab->isFullyVerified();
+    }
+
+    /**
+     * Get document status badge class
+     */
+    public function getDocumentStatusBadge(): string
+    {
+        if (!$this->sertijab) {
+            return 'bg-secondary';
+        }
+        
+        return $this->sertijab->status_badge;
+    }
+
+    /**
+     * Get document status text
+     */
+    public function getDocumentStatusText(): string
+    {
+        if (!$this->sertijab) {
+            return 'Belum Upload';
+        }
+        
+        return $this->sertijab->status_text;
+    }
+
+    /**
+     * Create sertijab record from mutasi documents
+     */
+    public function createSertijabRecord(): ?Sertijab
+    {
+        // Only create if mutasi has documents
+        if (!$this->hasDokumen()) {
+            return null;
+        }
+        
+        return Sertijab::create([
+            'id_mutasi' => $this->id,
+            'dokumen_sertijab_path' => $this->dokumen_sertijab,
+            'dokumen_familisasi_path' => $this->dokumen_familisasi,
+            'dokumen_lampiran_path' => $this->dokumen_lampiran,
+            'status_sertijab' => 'draft',
+            'status_familisasi' => 'draft',
+            'status_lampiran' => $this->dokumen_lampiran ? 'draft' : null,
+            'status_dokumen' => 'draft',
+            'submitted_at' => $this->submitted_at ?? now(),
+        ]);
+    }
+
+    /**
+     * Update sertijab record when mutasi documents change
+     */
+    public function updateSertijabRecord(): bool
+    {
+        if (!$this->sertijab) {
+            $this->createSertijabRecord();
+            return true;
+        }
+        
+        return $this->sertijab->update([
+            'dokumen_sertijab_path' => $this->dokumen_sertijab,
+            'dokumen_familisasi_path' => $this->dokumen_familisasi,
+            'dokumen_lampiran_path' => $this->dokumen_lampiran,
+        ]);
     }
 }

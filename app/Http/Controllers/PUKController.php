@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Kapal;
 use App\Models\Mutasi;
+use App\Models\Sertijab; // Gunakan model lama
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -232,13 +233,12 @@ class PUKController extends Controller
     }
 
     /**
-     * Submit dokumen mutasi ke admin
+     * Submit dokumen sertijab ke admin
      */
     public function submitDokumen(Request $request)
     {
         $request->validate([
-            'id_mutasi' => 'required|exists:mutasi_new,id',
-            'keterangan' => 'nullable|string|max:1000'
+            'id_mutasi' => 'required|exists:mutasi_new,id'
         ]);
 
         try {
@@ -246,28 +246,51 @@ class PUKController extends Controller
 
             $mutasi = Mutasi::findOrFail($request->id_mutasi);
 
-            // Validasi dokumen wajib sudah lengkap
-            if (empty($mutasi->dokumen_sertijab) || empty($mutasi->dokumen_familisasi)) {
+            // Cek apakah mutasi sudah pernah disubmit
+            $existingSertijab = Sertijab::where('id_mutasi', $mutasi->id)->first();
+            if ($existingSertijab) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Dokumen Serah Terima Jabatan dan Familisasi harus diunggah terlebih dahulu'
+                    'message' => 'Mutasi ini sudah pernah disubmit ke admin.'
                 ], 400);
             }
 
-            // Update status mutasi
-            $mutasi->update([
-                'status_mutasi' => 'Selesai',
-                'tanggal_selesai' => now(),
-                'keterangan_puk' => $request->keterangan,
-                'submitted_by_puk' => true,
-                'submitted_at' => now()
-            ]);
+            // Cek minimal sertijab dan familisasi harus ada
+            if (empty($mutasi->dokumen_sertijab) || empty($mutasi->dokumen_familisasi)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dokumen Serah Terima Jabatan dan Familisasi wajib diupload sebelum submit.'
+                ], 400);
+            }
 
-            // Log aktivitas
-            Log::info("Mutasi ID {$mutasi->id} telah disubmit oleh PUK", [
-                'mutasi_id' => $mutasi->id,
-                'kapal' => $mutasi->nama_kapal,
-                'abk_naik' => $mutasi->nama_lengkap_naik,
+            // FIXED: Handle status_lampiran dengan benar
+            $statusLampiran = null;
+            if (!empty($mutasi->dokumen_lampiran)) {
+                $statusLampiran = 'draft'; // Set status default jika ada dokumen lampiran
+            }
+
+            // Buat record sertijab baru dengan data yang benar
+            $sertijabData = [
+                'id_mutasi' => $mutasi->id,
+                'dokumen_sertijab_path' => $mutasi->dokumen_sertijab,
+                'dokumen_familisasi_path' => $mutasi->dokumen_familisasi,
+                'dokumen_lampiran_path' => $mutasi->dokumen_lampiran, // Bisa null
+                'status_sertijab' => 'draft',
+                'status_familisasi' => 'draft',
+                'status_lampiran' => $statusLampiran, // FIXED: Set ke null atau 'draft'
+                'status_dokumen' => 'draft',
+                'submitted_at' => now(),
+                'catatan_admin' => null
+            ];
+
+            // Debug log untuk troubleshooting
+            Log::info('Creating sertijab with data:', $sertijabData);
+
+            $sertijab = Sertijab::create($sertijabData);
+
+            // Update flag submitted di mutasi
+            $mutasi->update([
+                'submitted_by_puk' => true,
                 'submitted_at' => now()
             ]);
 
@@ -275,13 +298,15 @@ class PUKController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Dokumen mutasi berhasil disubmit ke admin untuk review final',
-                'redirect_to_dashboard' => true // TAMBAHKAN FLAG INI
+                'message' => 'Dokumen berhasil disubmit ke admin untuk verifikasi.',
+                'sertijab_id' => $sertijab->id
             ]);
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Error submitting mutasi: ' . $e->getMessage());
+            Log::error('Error submitting dokumen: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal submit dokumen: ' . $e->getMessage()
@@ -290,70 +315,132 @@ class PUKController extends Controller
     }
 
     /**
-     * Batch submit multiple mutasi
+     * Batch submit multiple dokumen sertijab
      */
     public function batchSubmitDokumen(Request $request)
     {
         $request->validate([
             'mutasi_ids' => 'required|array|min:1',
-            'mutasi_ids.*' => 'exists:mutasi_new,id',
-            'keterangan' => 'nullable|string|max:1000'
+            'mutasi_ids.*' => 'exists:mutasi_new,id'
         ]);
 
         try {
             DB::beginTransaction();
 
             $successCount = 0;
-            $errorMessages = [];
+            $failedCount = 0;
+            $errors = [];
 
             foreach ($request->mutasi_ids as $mutasiId) {
-                $mutasi = Mutasi::find($mutasiId);
-                
-                if (!$mutasi) {
-                    $errorMessages[] = "Mutasi ID {$mutasiId} tidak ditemukan";
-                    continue;
+                try {
+                    $mutasi = Mutasi::findOrFail($mutasiId);
+
+                    // Cek apakah sudah disubmit
+                    $existingSertijab = Sertijab::where('id_mutasi', $mutasi->id)->first();
+                    if ($existingSertijab) {
+                        $errors[] = "Mutasi ID {$mutasiId} sudah pernah disubmit.";
+                        $failedCount++;
+                        continue;
+                    }
+
+                    // Cek kelengkapan dokumen
+                    if (empty($mutasi->dokumen_sertijab) || empty($mutasi->dokumen_familisasi)) {
+                        $errors[] = "Mutasi ID {$mutasiId}: Dokumen Sertijab dan Familisasi wajib ada.";
+                        $failedCount++;
+                        continue;
+                    }
+
+                    // FIXED: Handle status_lampiran dengan benar
+                    $statusLampiran = null;
+                    if (!empty($mutasi->dokumen_lampiran)) {
+                        $statusLampiran = 'draft';
+                    }
+
+                    // Create sertijab record
+                    $sertijabData = [
+                        'id_mutasi' => $mutasi->id,
+                        'dokumen_sertijab_path' => $mutasi->dokumen_sertijab,
+                        'dokumen_familisasi_path' => $mutasi->dokumen_familisasi,
+                        'dokumen_lampiran_path' => $mutasi->dokumen_lampiran,
+                        'status_sertijab' => 'draft',
+                        'status_familisasi' => 'draft',
+                        'status_lampiran' => $statusLampiran, // FIXED: Null atau 'draft'
+                        'status_dokumen' => 'draft',
+                        'submitted_at' => now(),
+                        'catatan_admin' => null
+                    ];
+
+                    Sertijab::create($sertijabData);
+
+                    // Update mutasi flag
+                    $mutasi->update([
+                        'submitted_by_puk' => true,
+                        'submitted_at' => now()
+                    ]);
+
+                    $successCount++;
+
+                } catch (\Exception $e) {
+                    $errors[] = "Mutasi ID {$mutasiId}: " . $e->getMessage();
+                    $failedCount++;
+                    Log::error("Batch submit error for mutasi {$mutasiId}: " . $e->getMessage());
                 }
-
-                // Validasi dokumen wajib
-                if (empty($mutasi->dokumen_sertijab) || empty($mutasi->dokumen_familisasi)) {
-                    $errorMessages[] = "Mutasi {$mutasi->nama_lengkap_naik} - dokumen belum lengkap";
-                    continue;
-                }
-
-                // Update status
-                $mutasi->update([
-                    'status_mutasi' => 'Selesai',
-                    'tanggal_selesai' => now(),
-                    'keterangan_puk' => $request->keterangan,
-                    'submitted_by_puk' => true,
-                    'submitted_at' => now()
-                ]);
-
-                $successCount++;
             }
 
             DB::commit();
 
-            $message = "Berhasil submit {$successCount} dokumen mutasi";
-            if (!empty($errorMessages)) {
-                $message .= '. Gagal: ' . implode(', ', $errorMessages);
+            $message = "Batch submit selesai. Berhasil: {$successCount}, Gagal: {$failedCount}";
+            
+            if (!empty($errors)) {
+                $message .= "\n\nDetail error:\n" . implode("\n", $errors);
             }
 
             return response()->json([
-                'success' => true,
+                'success' => $successCount > 0,
                 'message' => $message,
-                'submitted_count' => $successCount,
-                'errors' => $errorMessages,
-                'redirect_to_dashboard' => $successCount > 0 // TAMBAHKAN FLAG INI
+                'summary' => [
+                    'success_count' => $successCount,
+                    'failed_count' => $failedCount,
+                    'errors' => $errors
+                ]
             ]);
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Error batch submitting mutasi: ' . $e->getMessage());
+            Log::error('Error in batch submit: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal submit dokumen: ' . $e->getMessage()
+                'message' => 'Gagal batch submit dokumen: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Create or update sertijab record when PUK submits documents
+     */
+    private function createOrUpdateSertijabRecord(Mutasi $mutasi)
+    {
+        $sertijab = Sertijab::updateOrCreate(
+            ['id_mutasi' => $mutasi->id],
+            [
+                'dokumen_sertijab_path' => $mutasi->dokumen_sertijab,
+                'dokumen_familisasi_path' => $mutasi->dokumen_familisasi,
+                'dokumen_lampiran_path' => $mutasi->dokumen_lampiran,
+                'status_sertijab' => 'draft',
+                'status_familisasi' => 'draft',
+                'status_lampiran' => $mutasi->dokumen_lampiran ? 'draft' : null,
+                'status_dokumen' => 'draft',
+                'submitted_at' => now(),
+                'catatan_admin' => null, // Reset admin comment when resubmitted
+            ]
+        );
+
+        Log::info("Sertijab record created/updated for mutasi ID {$mutasi->id}", [
+            'sertijab_id' => $sertijab->id,
+            'mutasi_id' => $mutasi->id,
+            'abk_naik' => $mutasi->nama_lengkap_naik,
+            'abk_turun' => $mutasi->nama_lengkap_turun
+        ]);
     }
 }
