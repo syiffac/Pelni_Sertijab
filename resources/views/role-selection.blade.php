@@ -541,15 +541,13 @@
                                 <div class="role-icon puk">
                                     <i class="bi bi-file-earmark-arrow-up"></i>
                                 </div>
-                                <h4 class="role-title">Penata Usaha Kapal</h4>
+                                <h4 class="role-title">Penata Usaha Kapal (PUK)</h4>
                                 <p class="role-description">
                                     Website resmi PT PELNI untuk submit dan mengelola dokumen serah terima jabatan
                                 </p>
                                 <ul class="role-features">
                                     <li>Submit dokumen sertijab</li>
                                     <li>Upload file dokumen</li>
-                                    <li>Riwayat pengajuan</li>
-                                    <li>Dashboard ringkas PUK</li>
                                 </ul>
                             </div>
                         </div>

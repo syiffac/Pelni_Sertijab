@@ -241,7 +241,7 @@
                                             </button>
                                             @if($mutasi->status_mutasi == 'Draft')
                                             <button class="btn-action btn-delete" 
-                                                    onclick="deleteMutasi({{ $mutasi->id }})"
+                                                    onclick="deleteMutasi({{ $mutasi->id }}, event)"
                                                     title="Hapus Mutasi">
                                                 <i class="bi bi-trash"></i>
                                             </button>
@@ -1043,14 +1043,15 @@ function viewMutasi(id) {
 }
 
 function editMutasi(id) {
-     window.location.href = `{{ route('mutasi.index') }}/${id}/edit`;
+    // PERBAIKAN: Gunakan route helper yang benar
+    window.location.href = `{{ url('mutasi') }}/${id}/edit`;
 }
 
 function deleteMutasi(id, event) {
     // Simpan ID mutasi
     mutasiToDelete = id;
     
-    // PERBAIKAN: Ambil data dari button yang diklik, bukan dari event global
+    // PERBAIKAN: Ambil data dari button yang diklik
     let clickedButton;
     let row;
     
@@ -1101,7 +1102,7 @@ function deleteMutasi(id, event) {
     }
 }
 
-// Event listener untuk tombol konfirmasi hapus
+// PERBAIKAN: Update event listener untuk tombol konfirmasi hapus
 document.addEventListener('DOMContentLoaded', function() {
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     if (confirmDeleteBtn) {
@@ -1116,8 +1117,8 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.disabled = true;
             if (btnText) btnText.textContent = 'Menghapus...';
             
-            // PERBAIKAN: Gunakan route yang benar
-            const deleteUrl = `{{ route('mutasi.index') }}/${mutasiToDelete}`;
+            // PERBAIKAN: Gunakan URL yang benar
+            const deleteUrl = `{{ url('mutasi') }}/${mutasiToDelete}`;
             
             // Send delete request
             fetch(deleteUrl, {

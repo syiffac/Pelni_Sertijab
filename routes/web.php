@@ -95,7 +95,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [KapalController::class, 'destroy'])->name('destroy');
     });
     
-    // MUTASI ROUTES - PERBAIKAN: KELUARKAN DARI GRUP ABK DAN BUAT GRUP SENDIRI
+    // MUTASI ROUTES - Pastikan urutan yang benar
     Route::prefix('mutasi')->name('mutasi.')->group(function () {
         // AJAX Routes untuk search ABK - HARUS DI ATAS ROUTES DENGAN PARAMETER
         Route::get('/search-abk', [MutasiController::class, 'searchAbk'])->name('search-abk');
@@ -103,6 +103,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/ajax/abk-list', [MutasiController::class, 'getAbkList'])->name('ajax.abk-list');
         Route::get('/ajax/jabatan-list', [MutasiController::class, 'getJabatanList'])->name('ajax.jabatan-list');
         Route::get('/ajax/kapal-list', [MutasiController::class, 'getKapalList'])->name('ajax.kapal-list');
+        Route::get('/export', [MutasiController::class, 'export'])->name('export');
         
         // Dokumen Routes
         Route::post('/{id}/upload-dokumen', [MutasiController::class, 'uploadDokumen'])->name('upload-dokumen');
@@ -121,7 +122,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/edit', [MutasiController::class, 'edit'])->name('edit');
         Route::put('/{id}', [MutasiController::class, 'update'])->name('update');
         Route::delete('/{id}', [MutasiController::class, 'destroy'])->name('destroy');
-        Route::get('/export', [MutasiController::class, 'export'])->name('export');
     });
     
     // Monitoring routes
