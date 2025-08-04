@@ -30,15 +30,15 @@ Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 
 // PUK routes
 Route::prefix('puk')->name('puk.')->group(function () {
-    Route::get('/', function () {
-        return view('puk.dashboard');
-    })->name('dashboard');
-    
-    // Upload form routes
-    Route::get('/upload', [PUKController::class, 'uploadForm'])->name('upload.form');
+    Route::get('/', [PUKController::class, 'dashboard'])->name('dashboard');
+    Route::get('/upload-form', [PUKController::class, 'uploadForm'])->name('upload-form');
     Route::post('/get-mutasi-by-kapal', [PUKController::class, 'getMutasiByKapal'])->name('get-mutasi-by-kapal');
-    Route::post('/upload-sertijab', [PUKController::class, 'uploadSertijab'])->name('upload-sertijab');
-    Route::delete('/delete-sertijab', [PUKController::class, 'deleteSertijab'])->name('delete-sertijab');
+    Route::post('/upload-dokumen', [PUKController::class, 'uploadDokumen'])->name('upload-dokumen');
+    Route::delete('/delete-dokumen', [PUKController::class, 'deleteDokumen'])->name('delete-dokumen');
+    
+    // Tambahan routes untuk submit
+    Route::post('/submit-dokumen', [PUKController::class, 'submitDokumen'])->name('submit-dokumen');
+    Route::post('/batch-submit-dokumen', [PUKController::class, 'batchSubmitDokumen'])->name('batch-submit-dokumen');
 });
 
 // Route untuk check NRP (tanpa middleware auth)

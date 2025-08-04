@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>Upload Dokumen Sertijab - PELNI PUK</title>
+    <title>Upload Dokumen Mutasi - PELNI PUK</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/pelni_icon.png') }}">
@@ -15,6 +15,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
@@ -49,7 +55,7 @@
         .header-section {
             background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-blue) 100%);
             color: white;
-            padding: 14px 0;
+            padding: 20px 0;
             box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
         }
 
@@ -63,7 +69,7 @@
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 10px;
-            padding: 5px 15px;
+            padding: 8px 16px;
             color: white;
             text-decoration: none;
             display: flex;
@@ -80,7 +86,7 @@
 
         .header-title {
             font-family: 'Poppins', sans-serif;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 700;
             margin: 0;
         }
@@ -106,7 +112,7 @@
 
         .form-title {
             font-family: 'Poppins', sans-serif;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 600;
             color: var(--text-dark);
             margin-bottom: 10px;
@@ -115,6 +121,7 @@
         .form-subtitle {
             color: var(--text-muted);
             margin: 0;
+            line-height: 1.6;
         }
 
         .form-body {
@@ -135,19 +142,21 @@
         }
 
         .step {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
+            font-size: 1.1rem;
             transition: all 0.3s ease;
         }
 
         .step.active {
             background: var(--primary-blue);
             color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
 
         .step.completed {
@@ -161,10 +170,11 @@
         }
 
         .step-divider {
-            width: 60px;
-            height: 2px;
+            width: 80px;
+            height: 3px;
             background: var(--border-color);
             transition: all 0.3s ease;
+            border-radius: 2px;
         }
 
         .step-divider.completed {
@@ -201,12 +211,13 @@
             color: var(--text-dark);
             margin-bottom: 8px;
             display: block;
+            font-size: 1rem;
         }
 
         .form-control {
             border: 2px solid var(--border-color);
-            border-radius: 10px;
-            padding: 12px 15px;
+            border-radius: 12px;
+            padding: 14px 16px;
             transition: all 0.3s ease;
             font-size: 1rem;
         }
@@ -217,61 +228,119 @@
             outline: none;
         }
 
-        /* Select styling */
-        .form-control:focus {
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-            outline: none;
-        }
-
-        /* Focus effect for select when option is chosen */
         .form-control.has-value {
             border-color: var(--primary-blue);
             background-color: rgba(37, 99, 235, 0.05);
         }
 
-        /* Selected option styling */
-        .form-control option:checked {
-            background-color: var(--primary-blue);
-            color: white;
+        /* Select2 Custom Styling */
+        .select2-container--bootstrap-5 .select2-selection {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            min-height: 52px;
+            padding: 8px 12px;
+            font-size: 1rem;
         }
 
+        .select2-container--bootstrap-5.select2-container--focus .select2-selection,
+        .select2-container--bootstrap-5.select2-container--open .select2-selection {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .select2-container--bootstrap-5 .select2-selection__rendered {
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        .select2-container--bootstrap-5 .select2-selection__placeholder {
+            color: var(--text-muted);
+        }
+
+        .select2-dropdown {
+            border: 2px solid var(--primary-blue);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .select2-results__option {
+            padding: 12px 16px;
+            transition: all 0.2s ease;
+        }
+
+        .select2-results__option--highlighted {
+            background-color: var(--light-blue);
+            color: var(--primary-blue);
+        }
+
+        /* Kapal Info Badge */
+        .kapal-info-container {
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .kapal-badge {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-blue) 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeInScale 0.5s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .kapal-code {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        /* Buttons */
         .btn-primary-custom {
             background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-blue) 100%);
             border: none;
-            padding: 12px 30px;
-            border-radius: 10px;
+            padding: 14px 32px;
+            border-radius: 12px;
             color: white;
             font-weight: 600;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             transition: all 0.3s ease;
             cursor: pointer;
+            font-size: 1rem;
         }
 
-        .btn-primary-custom:hover {
+        .btn-primary-custom:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
             color: white;
         }
 
-        /* Disabled button styling */
         .btn-primary-custom:disabled {
             background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
             cursor: not-allowed;
             opacity: 0.7;
-            box-shadow: none;
-            transform: none;
-            pointer-events: none; /* Tambahkan ini */
-        }
-
-        .btn-primary-custom:not(:disabled) {
-            pointer-events: auto; /* Pastikan tombol aktif bisa diklik */
-        }
-
-        .btn-primary-custom:disabled:hover {
             transform: none;
             box-shadow: none;
         }
@@ -279,189 +348,206 @@
         .btn-secondary-custom {
             background: transparent;
             border: 2px solid var(--text-muted);
-            padding: 10px 30px;
-            border-radius: 10px;
+            padding: 12px 32px;
+            border-radius: 12px;
             color: var(--text-muted);
             font-weight: 600;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             transition: all 0.3s ease;
             cursor: pointer;
+            font-size: 1rem;
         }
 
         .btn-secondary-custom:hover {
             border-color: var(--primary-blue);
             color: var(--primary-blue);
-        }
-
-        /* Mutasi table */
-        .mutasi-table-container {
-            max-height: 600px;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-        }
-
-        .mutasi-table {
-            margin: 0;
-        }
-
-        .mutasi-table th {
-            background: var(--light-blue);
-            border: none;
-            color: var(--text-dark);
-            font-weight: 600;
-            padding: 15px 12px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .mutasi-table td {
-            border: none;
-            border-bottom: 1px solid var(--border-color);
-            padding: 15px 12px;
-            vertical-align: middle;
-        }
-
-        .mutasi-row:hover {
             background: rgba(37, 99, 235, 0.05);
         }
 
-        /* Upload components */
-        .upload-section {
-            background: var(--light-blue);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 10px;
-        }
-
-        .upload-area {
-            border: 2px dashed var(--primary-blue);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
+        /* Table Styles */
+        .table-container {
             background: white;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
         }
 
-        .upload-area:hover {
-            border-color: var(--accent-blue);
-            background: rgba(37, 99, 235, 0.05);
+        .table-header {
+            background: linear-gradient(135deg, var(--light-blue) 0%, rgba(59, 130, 246, 0.1) 100%);
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .upload-area.dragover {
-            border-color: var(--success-green);
-            background: rgba(16, 185, 129, 0.05);
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .upload-icon {
-            font-size: 2rem;
-            color: var(--primary-blue);
-            margin-bottom: 10px;
-        }
-
-        .upload-text {
+        .table-title {
+            font-size: 1.2rem;
+            font-weight: 600;
             color: var(--text-dark);
-            font-weight: 500;
-            margin-bottom: 5px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .upload-subtext {
-            color: var(--text-muted);
+        /* Submit controls */
+        .table-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-controls .btn {
+            font-size: 0.875rem;
+            padding: 6px 12px;
+        }
+
+        /* DataTables Custom Styling */
+        .dataTables_wrapper {
+            padding: 24px;
+        }
+
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            margin-bottom: 20px;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-left: 8px;
+        }
+
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 10px;
+            margin: 0 8px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: 8px;
+            margin: 0 2px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            background: white;
+            color: var(--text-dark);
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: var(--light-blue);
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+        }
+
+        #mutasiTable {
+            width: 100% !important;
+        }
+
+        #mutasiTable thead th {
+            background: var(--light-blue);
+            color: var(--primary-blue);
+            font-weight: 600;
+            padding: 16px 12px;
+            border: none;
             font-size: 0.9rem;
+        }
+
+        #mutasiTable tbody td {
+            padding: 16px 12px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            font-size: 0.9rem;
+        }
+
+        #mutasiTable tbody tr:hover {
+            background-color: rgba(37, 99, 235, 0.02);
         }
 
         /* Status badges */
         .status-badge {
-            padding: 5px 12px;
+            padding: 4px 12px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
+            text-transform: uppercase;
         }
 
-        .status-pending {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning-yellow);
-        }
-
-        .status-uploaded {
+        .status-disetujui {
             background: rgba(16, 185, 129, 0.1);
             color: var(--success-green);
         }
 
-        .status-error {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger-red);
-        }
-
-        /* File preview */
-        .file-preview {
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .file-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--light-blue);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .status-selesai {
+            background: rgba(37, 99, 235, 0.1);
             color: var(--primary-blue);
         }
 
-        .file-info {
-            flex: 1;
-        }
-
-        .file-name {
-            font-weight: 500;
-            color: var(--text-dark);
-            margin-bottom: 2px;
-        }
-
-        .file-size {
-            font-size: 0.85rem;
+        .status-draft {
+            background: rgba(107, 114, 128, 0.1);
             color: var(--text-muted);
         }
 
-        .file-actions {
+        /* Document status indicators */
+        .doc-status {
             display: flex;
-            gap: 5px;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
         }
 
-        .btn-sm-custom {
-            padding: 5px 10px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            border: none;
+        .doc-status.complete {
+            color: var(--success-green);
+        }
+
+        .doc-status.incomplete {
+            color: var(--danger-red);
+        }
+
+        .doc-status.partial {
+            color: var(--warning-yellow);
+        }
+
+        /* Checkbox styling */
+        .form-check-input {
             cursor: pointer;
-            transition: all 0.3s ease;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-check-input:disabled {
+            cursor: not-allowed;
+        }
+
+        /* Submitted row styling */
+        tr.submitted {
+            background-color: rgba(16, 185, 129, 0.05);
+            opacity: 0.8;
+        }
+
+        tr.submitted td {
+            color: var(--text-muted);
+        }
+
+        /* Loading */
+        .loading-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
-            z-index: 100;
+            padding: 40px;
         }
 
         .spinner {
@@ -480,13 +566,13 @@
 
         /* Alert messages */
         .alert-custom {
-            border-radius: 10px;
+            border-radius: 12px;
             border: none;
-            padding: 15px 20px;
+            padding: 16px 20px;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .alert-success {
@@ -501,51 +587,142 @@
             border-left: 4px solid var(--danger-red);
         }
 
+        .alert-info {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-blue);
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .empty-desc {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .form-body {
-                padding: 20px;
-            }
-
-            .step-indicators {
-                overflow-x: auto;
-                padding-bottom: 10px;
-            }
-
-            .mutasi-table-container {
-                font-size: 0.9rem;
-            }
-
-            .mutasi-table th,
-            .mutasi-table td {
-                padding: 10px 8px;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .header-content {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
+                padding: 24px;
             }
 
             .header-title {
-                font-size: 1.4rem;
-            }
-
-            .step-indicator {
-                gap: 10px;
+                font-size: 1.3rem;
             }
 
             .step {
-                width: 35px;
-                height: 35px;
-                font-size: 0.9rem;
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
             }
 
             .step-divider {
-                width: 40px;
+                width: 60px;
             }
+
+            .kapal-badge {
+                font-size: 0.9rem;
+                padding: 10px 20px;
+            }
+
+            .table-controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+        /* Loading state styles */
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .processing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(2px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .processing-content {
+            text-align: center;
+            color: var(--primary-blue);
+        }
+
+        .processing-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        /* Alert transitions */
+        .alert-custom {
+            transition: all 0.3s ease;
+        }
+
+        .alert-custom.removing {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        /* Submit button states */
+        .btn-success:disabled {
+            background: #6c757d;
+            border-color: #6c757d;
+        }
+
+        /* Page transition overlay */
+        .page-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-blue) 100%);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s ease;
+        }
+
+        .page-transition.active {
+            opacity: 1;
+            visibility: visible;
         }
     </style>
 </head>
@@ -558,7 +735,7 @@
                     <i class="bi bi-arrow-left"></i>
                     Kembali
                 </a>
-                <h1 class="header-title">Upload Dokumen Sertijab</h1>
+                <h1 class="header-title">Upload Dokumen Mutasi ABK</h1>
             </div>
         </div>
     </div>
@@ -567,11 +744,14 @@
     <div class="main-container">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-lg-10">
+                <div class="col-lg-12">
                     <div class="form-card">
                         <div class="form-header">
-                            <h2 class="form-title">Upload Dokumen Serah Terima Jabatan</h2>
-                            <p class="form-subtitle">Pilih kapal dan unggah dokumen sertijab untuk setiap mutasi ABK</p>
+                            <h2 class="form-title">Upload Dokumen Mutasi ABK</h2>
+                            <p class="form-subtitle">
+                                Pilih kapal untuk melihat daftar mutasi ABK, kemudian upload dokumen Serah Terima Jabatan, 
+                                Familisasi, dan dokumen lampiran yang diperlukan untuk setiap mutasi.
+                            </p>
                         </div>
 
                         <div class="form-body">
@@ -596,72 +776,118 @@
                                                 <i class="bi bi-ship me-2"></i>Pilih Kapal
                                             </label>
                                             <select class="form-control" id="id_kapal" name="id_kapal">
-                                                <option value="">-- Pilih Kapal --</option>
+                                                <option value="">-- Pilih Kapal untuk Melihat Daftar Mutasi --</option>
                                                 @foreach($kapals as $kapal)
-                                                    <option value="{{ $kapal->id_kapal }}">{{ $kapal->nama_kapal }}</option>
+                                                    <option value="{{ $kapal->id }}" 
+                                                            data-kode="{{ $kapal->kode_kapal ?? 'KPL' . str_pad($kapal->id, 3, '0', STR_PAD_LEFT) }}"
+                                                            data-home-base="{{ $kapal->home_base }}">
+                                                        {{ $kapal->nama_kapal }}
+                                                        @if($kapal->home_base)
+                                                            - {{ $kapal->home_base }}
+                                                        @endif
+                                                    </option>
                                                 @endforeach
                                             </select>
                                         </div>
 
-                                        <div class="text-center">
+                                        <!-- Kapal Info Badge -->
+                                        <div class="kapal-info-container" id="kapalInfoContainer">
+                                            <div class="kapal-badge" id="kapalBadge">
+                                                <i class="bi bi-ship"></i>
+                                                <span id="selectedKapalName">Nama Kapal</span>
+                                                <span class="kapal-code" id="selectedKapalCode">KPL001</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-center mt-4">
                                             <button type="button" class="btn-primary-custom" id="nextStep1">
                                                 <i class="bi bi-arrow-right"></i>
-                                                Lanjutkan
+                                                Tampilkan Daftar Mutasi
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Step 2: Daftar Mutasi -->
+                            <!-- Step 2: Daftar Mutasi dan Upload -->
                             <div class="form-section" id="section2">
+                                <!-- Kapal Info Header -->
                                 <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <h4 class="mb-0">Daftar Mutasi ABK</h4>
-                                    <span class="text-muted" id="kapalName"></span>
+                                    <h4 class="mb-0">
+                                        <i class="bi bi-list-task me-2"></i>
+                                        Daftar Mutasi ABK
+                                    </h4>
+                                    <span class="text-muted" id="kapalInfo">
+                                        <i class="bi bi-ship me-1"></i>
+                                        <span id="kapalName"></span>
+                                    </span>
                                 </div>
 
                                 <!-- Loading state -->
                                 <div id="loadingMutasi" style="display: none;">
-                                    <div class="text-center py-5">
-                                        <div class="spinner mx-auto mb-3"></div>
-                                        <p class="text-muted">Memuat data mutasi...</p>
+                                    <div class="loading-container">
+                                        <div class="spinner"></div>
+                                        <span class="ms-3 text-muted">Memuat data mutasi...</span>
                                     </div>
                                 </div>
 
                                 <!-- Empty state -->
                                 <div id="emptyMutasi" style="display: none;">
-                                    <div class="text-center py-5">
-                                        <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
-                                        <h5 class="mt-3 text-muted">Tidak ada mutasi yang perlu dokumen sertijab</h5>
-                                        <p class="text-muted">Semua mutasi untuk kapal ini sudah memiliki dokumen sertijab atau belum ada mutasi yang terdaftar.</p>
+                                    <div class="empty-state">
+                                        <i class="bi bi-inbox empty-icon"></i>
+                                        <h5 class="empty-title">Tidak Ada Mutasi Ditemukan</h5>
+                                        <p class="empty-desc">
+                                            Belum ada mutasi yang disetujui untuk kapal ini, atau semua mutasi sudah memiliki dokumen lengkap.
+                                        </p>
                                     </div>
                                 </div>
 
-                                <!-- Mutasi table -->
-                                <div id="mutasiTableContainer" style="display: none;">
-                                    <div class="mutasi-table-container">
-                                        <table class="table mutasi-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>TMT</th>
-                                                    <th>ABK Turun</th>
-                                                    <th>ABK Naik</th>
-                                                    <th>Jabatan</th>
-                                                    <th>Kapal</th>
-                                                    <th>Upload Dokumen</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="mutasiTableBody">
-                                                <!-- Data will be populated by JavaScript -->
-                                            </tbody>
-                                        </table>
+                                <!-- Mutasi Table -->
+                                <div class="table-container" id="tableContainer" style="display: none;">
+                                    <div class="table-header">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h5 class="table-title mb-0">
+                                                <i class="bi bi-table"></i>
+                                                Daftar Mutasi ABK
+                                            </h5>
+                                            <div class="table-controls">
+                                                <button type="button" class="btn btn-success btn-sm me-2" id="batchSubmitBtn" style="display: none;">
+                                                    <i class="bi bi-check-circle"></i>
+                                                    Submit Terpilih ke Admin
+                                                </button>
+                                                <button type="button" class="btn btn-outline-primary btn-sm" id="selectAllBtn">
+                                                    <i class="bi bi-check-all"></i>
+                                                    Pilih Semua
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
+                                    
+                                    <table id="mutasiTable" class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th width="40">
+                                                    <input type="checkbox" id="selectAllCheckbox" class="form-check-input">
+                                                </th>
+                                                <th>ID Mutasi</th>
+                                                <th>Periode</th>
+                                                <th>ABK Naik</th>
+                                                <th>ABK Turun</th>
+                                                <th>Status</th>
+                                                <th>Status Dokumen</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="mutasiTableBody">
+                                            <!-- Data will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
                                 </div>
 
                                 <div class="text-center mt-4">
                                     <button type="button" class="btn-secondary-custom" id="backStep1">
                                         <i class="bi bi-arrow-left"></i>
-                                        Kembali
+                                        Pilih Kapal Lain
                                     </button>
                                 </div>
                             </div>
@@ -672,485 +898,689 @@
         </div>
     </div>
 
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadModalLabel">Upload Dokumen Mutasi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="uploadModalContent">
+                        <!-- Content will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery (required for Select2 and DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
     
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const step1 = document.getElementById('step1');
-            const step2 = document.getElementById('step2');
-            const divider1 = document.getElementById('divider1');
-            const section1 = document.getElementById('section1');
-            const section2 = document.getElementById('section2');
-            const nextStep1Btn = document.getElementById('nextStep1');
-            const backStep1Btn = document.getElementById('backStep1');
-            const kapalSelect = document.getElementById('id_kapal');
-            const alertContainer = document.getElementById('alertContainer');
+    // Ganti bagian JavaScript dengan yang sudah diperbaiki ini:
 
-            // Debug log untuk memastikan elemen ditemukan
-            console.log('Elements found:', {
-                nextStep1Btn: !!nextStep1Btn,
-                kapalSelect: !!kapalSelect,
-                alertContainer: !!alertContainer
+<script>
+// Global variables
+let dataTable = null;
+let currentMutasis = [];
+let isSubmitting = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Select2
+    $('#id_kapal').select2({
+        theme: 'bootstrap-5',
+        placeholder: '-- Pilih Kapal untuk Melihat Daftar Mutasi --',
+        allowClear: true
+    });
+
+    // Disable next button initially
+    document.getElementById('nextStep1').disabled = true;
+
+    // Setup event listeners
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    // Select2 change event
+    $('#id_kapal').on('change', function() {
+        const kapalId = $(this).val();
+        const selectedOption = $(this).find('option:selected');
+        
+        if (kapalId) {
+            document.getElementById('nextStep1').disabled = false;
+            showKapalBadge(selectedOption);
+        } else {
+            document.getElementById('nextStep1').disabled = true;
+            hideKapalBadge();
+        }
+    });
+
+    // Next step button
+    document.getElementById('nextStep1').addEventListener('click', function() {
+        const kapalId = $('#id_kapal').val();
+        if (kapalId) {
+            goToStep2();
+            loadMutasiData(kapalId);
+        }
+    });
+
+    // Back button
+    document.getElementById('backStep1').addEventListener('click', goToStep1);
+
+    // Select all checkbox
+    document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+        const isChecked = this.checked;
+        document.querySelectorAll('.mutasi-checkbox').forEach(cb => {
+            if (!cb.disabled) {
+                cb.checked = isChecked;
+            }
+        });
+        updateBatchSubmitBtn();
+    });
+
+    // Select all button
+    document.getElementById('selectAllBtn').addEventListener('click', function() {
+        const selectAllCb = document.getElementById('selectAllCheckbox');
+        selectAllCb.checked = !selectAllCb.checked;
+        selectAllCb.dispatchEvent(new Event('change'));
+    });
+
+    // Batch submit button
+    document.getElementById('batchSubmitBtn').addEventListener('click', batchSubmit);
+
+    // Individual checkboxes
+    document.addEventListener('change', function(e) {
+        if (e.target.matches('.mutasi-checkbox')) {
+            updateBatchSubmitBtn();
+        }
+    });
+
+    // File uploads
+    document.addEventListener('change', function(e) {
+        if (e.target.matches('input[type="file"]') && e.target.dataset.mutasiId) {
+            const file = e.target.files[0];
+            if (file) {
+                uploadFile(e.target.dataset.mutasiId, e.target.dataset.jenis, file);
+            }
+        }
+    });
+}
+
+function showKapalBadge(selectedOption) {
+    const kapalName = selectedOption.text().split(' - ')[0];
+    const kapalCode = selectedOption.data('kode') || `KPL${String(selectedOption.val()).padStart(3, '0')}`;
+    
+    document.getElementById('selectedKapalName').textContent = kapalName;
+    document.getElementById('selectedKapalCode').textContent = kapalCode;
+    document.getElementById('kapalInfoContainer').style.display = 'block';
+}
+
+function hideKapalBadge() {
+    document.getElementById('kapalInfoContainer').style.display = 'none';
+}
+
+function goToStep2() {
+    document.getElementById('step1').className = 'step completed';
+    document.getElementById('step2').className = 'step active';
+    document.getElementById('divider1').classList.add('completed');
+    
+    document.getElementById('section1').classList.remove('active');
+    document.getElementById('section2').classList.add('active');
+}
+
+function goToStep1() {
+    document.getElementById('step1').className = 'step active';
+    document.getElementById('step2').className = 'step inactive';
+    document.getElementById('divider1').classList.remove('completed');
+    
+    document.getElementById('section2').classList.remove('active');
+    document.getElementById('section1').classList.add('active');
+    
+    if (dataTable) {
+        dataTable.destroy();
+        dataTable = null;
+    }
+}
+
+function loadMutasiData(kapalId) {
+    showLoading(true);
+    
+    fetch('{{ route("puk.get-mutasi-by-kapal") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ id_kapal: kapalId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        
+        if (data.success) {
+            document.getElementById('kapalName').textContent = data.kapal.nama_kapal;
+            currentMutasis = data.mutasis;
+            
+            if (data.mutasis.length === 0) {
+                showEmptyState();
+            } else {
+                showMutasiTable(data.mutasis);
+            }
+        } else {
+            showAlert('Gagal memuat data mutasi: ' + data.message, 'error');
+            showEmptyState();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showLoading(false);
+        showAlert('Terjadi kesalahan saat memuat data.', 'error');
+        showEmptyState();
+    });
+}
+
+function showLoading(show) {
+    document.getElementById('loadingMutasi').style.display = show ? 'block' : 'none';
+    document.getElementById('emptyMutasi').style.display = 'none';
+    document.getElementById('tableContainer').style.display = 'none';
+}
+
+function showEmptyState() {
+    document.getElementById('emptyMutasi').style.display = 'block';
+    document.getElementById('tableContainer').style.display = 'none';
+}
+
+function showMutasiTable(mutasis) {
+    const tableBody = document.getElementById('mutasiTableBody');
+    tableBody.innerHTML = '';
+
+    mutasis.forEach(mutasi => {
+        const row = createTableRow(mutasi);
+        tableBody.appendChild(row);
+    });
+
+    document.getElementById('tableContainer').style.display = 'block';
+    
+    // Initialize DataTable
+    if (dataTable) {
+        dataTable.destroy();
+    }
+    
+    dataTable = $('#mutasiTable').DataTable({
+        responsive: true,
+        pageLength: 10,
+        language: {
+            search: "Cari:",
+            lengthMenu: "Tampilkan _MENU_ data per halaman",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            paginate: {
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
+            }
+        },
+        columnDefs: [
+            { orderable: false, targets: [0, 7] }
+        ],
+        order: [[2, 'desc']]
+    });
+}
+
+function createTableRow(mutasi) {
+    const tr = document.createElement('tr');
+    const docStatus = getDocumentStatus(mutasi.dokumen);
+    const isComplete = docStatus.class === 'complete';
+    const isSubmitted = mutasi.submitted_by_puk;
+    
+    tr.innerHTML = `
+        <td>
+            ${!isSubmitted && isComplete ? `
+                <input type="checkbox" class="form-check-input mutasi-checkbox" value="${mutasi.id}">
+            ` : `
+                <input type="checkbox" class="form-check-input" disabled>
+            `}
+        </td>
+        <td>
+            <strong>MUT-${String(mutasi.id).padStart(4, '0')}</strong>
+            ${isSubmitted ? '<br><small class="badge bg-success">Submitted</small>' : ''}
+        </td>
+        <td>
+            <div>${mutasi.periode || '-'}</div>
+            <small class="text-muted">${mutasi.jenis_mutasi || 'Definitif'}</small>
+        </td>
+        <td>
+            <div class="fw-bold">${mutasi.abk_naik.nama}</div>
+            <small class="text-muted">
+                ${mutasi.abk_naik.jabatan_tetap} → ${mutasi.abk_naik.jabatan_mutasi}
+            </small>
+        </td>
+        <td>
+            ${mutasi.abk_turun ? `
+                <div class="fw-bold">${mutasi.abk_turun.nama}</div>
+                <small class="text-muted">
+                    ${mutasi.abk_turun.jabatan_tetap} → ${mutasi.abk_turun.jabatan_mutasi}
+                </small>
+            ` : `
+                <span class="text-muted">-</span>
+            `}
+        </td>
+        <td>
+            <span class="status-badge status-${mutasi.status_mutasi.toLowerCase()}">
+                ${mutasi.status_mutasi}
+            </span>
+        </td>
+        <td>
+            <div class="doc-status ${docStatus.class}">
+                <i class="bi bi-${docStatus.icon}"></i>
+                ${docStatus.text}
+            </div>
+            <div class="mt-1">
+                <small class="text-muted">
+                    ${mutasi.dokumen.sertijab ? '✓' : '✗'} Sertijab |
+                    ${mutasi.dokumen.familisasi ? '✓' : '✗'} Familisasi |
+                    ${mutasi.dokumen.lampiran ? '✓' : '✗'} Lampiran
+                </small>
+            </div>
+        </td>
+        <td>
+            <div class="d-grid gap-1">
+                <button type="button" class="btn btn-primary btn-sm" onclick="openUploadModal(${mutasi.id})">
+                    <i class="bi bi-upload"></i> Upload
+                </button>
+                ${isComplete && !isSubmitted ? `
+                    <button type="button" class="btn btn-success btn-sm" onclick="submitSingle(${mutasi.id})">
+                        <i class="bi bi-send"></i> Submit
+                    </button>
+                ` : ''}
+            </div>
+        </td>
+    `;
+    
+    return tr;
+}
+
+function getDocumentStatus(dokumen) {
+    const sertijab = dokumen.sertijab;
+    const familisasi = dokumen.familisasi;
+    
+    if (sertijab && familisasi) {
+        return { class: 'complete', icon: 'check-circle-fill', text: 'Lengkap' };
+    } else if (sertijab || familisasi) {
+        return { class: 'partial', icon: 'exclamation-triangle-fill', text: 'Sebagian' };
+    } else {
+        return { class: 'incomplete', icon: 'x-circle-fill', text: 'Belum Lengkap' };
+    }
+}
+
+function updateBatchSubmitBtn() {
+    const checkedBoxes = document.querySelectorAll('.mutasi-checkbox:checked');
+    const btn = document.getElementById('batchSubmitBtn');
+    
+    if (checkedBoxes.length > 0) {
+        btn.style.display = 'inline-block';
+        btn.innerHTML = `<i class="bi bi-check-circle"></i> Submit ${checkedBoxes.length} Terpilih ke Admin`;
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+// Global functions
+window.openUploadModal = function(mutasiId) {
+    const mutasi = currentMutasis.find(m => m.id === mutasiId);
+    if (!mutasi) return;
+
+    const modalContent = createUploadModalContent(mutasi);
+    document.getElementById('uploadModalContent').innerHTML = modalContent;
+    document.getElementById('uploadModalLabel').textContent = 'Upload Dokumen Mutasi';
+
+    const modal = new bootstrap.Modal(document.getElementById('uploadModal'));
+    modal.show();
+};
+
+window.submitSingle = function(mutasiId) {
+    // Confirmation dengan peringatan redirect
+    const confirmed = confirm(
+        'Apakah Anda yakin ingin submit mutasi ini ke admin?\n\n' +
+        'Setelah submit berhasil, Anda akan diarahkan kembali ke dashboard dan ' +
+        'mutasi ini tidak akan muncul lagi di daftar.'
+    );
+    
+    if (!confirmed) return;
+    
+    submitMutasi([mutasiId]);
+};
+
+function batchSubmit() {
+    const selectedIds = Array.from(document.querySelectorAll('.mutasi-checkbox:checked')).map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+        showAlert('Pilih minimal satu mutasi untuk disubmit.', 'error');
+        return;
+    }
+    
+    // Confirmation dengan peringatan redirect
+    const confirmed = confirm(
+        `Apakah Anda yakin ingin submit ${selectedIds.length} mutasi ke admin?\n\n` +
+        'Setelah submit berhasil, Anda akan diarahkan kembali ke dashboard dan ' +
+        'mutasi yang disubmit tidak akan muncul lagi di daftar.'
+    );
+    
+    if (!confirmed) return;
+    
+    submitMutasi(selectedIds);
+}
+
+// PERBAIKAN: Hapus duplikasi dan buat function submit yang clean
+function submitMutasi(mutasiIds) {
+    // Cegah submit ganda
+    if (isSubmitting) {
+        console.log('Submit already in progress');
+        return;
+    }
+    
+    isSubmitting = true;
+    
+    const url = mutasiIds.length === 1 ? '{{ route("puk.submit-dokumen") }}' : '{{ route("puk.batch-submit-dokumen") }}';
+    const data = mutasiIds.length === 1 ? 
+        { id_mutasi: mutasiIds[0] } : 
+        { mutasi_ids: mutasiIds };
+
+    // Show loading state
+    const submitButtons = document.querySelectorAll('button[onclick*="submitSingle"], #batchSubmitBtn');
+    submitButtons.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Memproses...';
+    });
+
+    // Disable semua interaksi
+    document.body.style.pointerEvents = 'none';
+    document.body.style.cursor = 'wait';
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Submit response:', data);
+        
+        if (data.success) {
+            showAlert(data.message, 'success');
+            
+            // Auto redirect ke dashboard setelah 2 detik
+            setTimeout(() => {
+                showAlert('Mengarahkan ke dashboard...', 'info');
+                setTimeout(() => {
+                    console.log('Redirecting to dashboard...');
+                    window.location.href = '{{ route("puk.dashboard") }}';
+                }, 1000);
+            }, 2000);
+            
+        } else {
+            // Reset jika error
+            isSubmitting = false;
+            document.body.style.pointerEvents = 'auto';
+            document.body.style.cursor = 'default';
+            
+            showAlert(data.message, 'error');
+            
+            // Re-enable buttons
+            submitButtons.forEach(btn => {
+                btn.disabled = false;
+                btn.innerHTML = btn.innerHTML.replace('<i class="bi bi-hourglass-split"></i> Memproses...', '<i class="bi bi-send"></i> Submit');
             });
+        }
+    })
+    .catch(error => {
+        console.error('Submit error:', error);
+        
+        // Reset jika error
+        isSubmitting = false;
+        document.body.style.pointerEvents = 'auto';
+        document.body.style.cursor = 'default';
+        
+        showAlert('Terjadi kesalahan saat submit dokumen.', 'error');
+        
+        // Re-enable buttons
+        submitButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.innerHTML = btn.innerHTML.replace('<i class="bi bi-hourglass-split"></i> Memproses...', '<i class="bi bi-send"></i> Submit');
+        });
+    });
+}
 
-            // Disable next button initially
-            if (nextStep1Btn) {
-                nextStep1Btn.disabled = true;
+function createUploadModalContent(mutasi) {
+    return `
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <strong>Mutasi ID:</strong> MUT-${String(mutasi.id).padStart(4, '0')}
+            </div>
+            <div class="col-md-6">
+                <strong>Periode:</strong> ${mutasi.periode || '-'}
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="border rounded p-3">
+                    <h6 class="text-primary mb-2">
+                        <i class="bi bi-person-plus"></i> ABK Naik
+                    </h6>
+                    <div><strong>${mutasi.abk_naik.nama}</strong></div>
+                    <small class="text-muted">
+                        ${mutasi.abk_naik.jabatan_tetap} → ${mutasi.abk_naik.jabatan_mutasi}
+                    </small>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3">
+                    <h6 class="text-primary mb-2">
+                        <i class="bi bi-person-dash"></i> ABK Turun
+                    </h6>
+                    ${mutasi.abk_turun ? `
+                        <div><strong>${mutasi.abk_turun.nama}</strong></div>
+                        <small class="text-muted">
+                            ${mutasi.abk_turun.jabatan_tetap} → ${mutasi.abk_turun.jabatan_mutasi}
+                        </small>
+                    ` : `
+                        <span class="text-muted">Tidak ada ABK turun</span>
+                    `}
+                </div>
+            </div>
+        </div>
+
+        <h6 class="mb-3">Upload Dokumen:</h6>
+        
+        <div class="row">
+            <div class="col-md-4">
+                ${createUploadCard(mutasi.id, 'sertijab', 'Serah Terima Jabatan', 'Wajib', mutasi.dokumen.sertijab, mutasi.dokumen_urls.sertijab)}
+            </div>
+            <div class="col-md-4">
+                ${createUploadCard(mutasi.id, 'familisasi', 'Familisasi', 'Wajib', mutasi.dokumen.familisasi, mutasi.dokumen_urls.familisasi)}
+            </div>
+            <div class="col-md-4">
+                ${createUploadCard(mutasi.id, 'lampiran', 'Dokumen Lampiran', 'Opsional', mutasi.dokumen.lampiran, mutasi.dokumen_urls.lampiran)}
+            </div>
+        </div>
+    `;
+}
+
+function createUploadCard(mutasiId, jenis, label, status, hasFile, fileUrl) {
+    const uploadId = `upload-${jenis}-${mutasiId}`;
+    
+    return `
+        <div class="card h-100" id="${uploadId}">
+            <div class="card-body text-center">
+                <input type="file" id="file-${jenis}-${mutasiId}" class="d-none" 
+                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" 
+                       data-mutasi-id="${mutasiId}" 
+                       data-jenis="${jenis}">
+                
+                ${hasFile ? `
+                    <i class="bi bi-file-earmark-check text-success" style="font-size: 2rem;"></i>
+                    <h6 class="mt-2">${label}</h6>
+                    <p class="text-success small">
+                        <i class="bi bi-check-circle"></i> Sudah diunggah
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="${fileUrl}" target="_blank" class="btn btn-success btn-sm">
+                            <i class="bi bi-eye"></i> Lihat
+                        </a>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteDokumen(${mutasiId}, '${jenis}')">
+                            <i class="bi bi-trash"></i> Hapus
+                        </button>
+                    </div>
+                ` : `
+                    <div onclick="document.getElementById('file-${jenis}-${mutasiId}').click()" style="cursor: pointer;">
+                        <i class="bi bi-cloud-upload text-primary" style="font-size: 2rem;"></i>
+                        <h6 class="mt-2">${label}</h6>
+                        <p class="text-muted small">${status}</p>
+                        <button type="button" class="btn btn-primary btn-sm">
+                            <i class="bi bi-upload"></i> Upload
+                        </button>
+                    </div>
+                `}
+            </div>
+        </div>
+    `;
+}
+
+function uploadFile(mutasiId, jenis, file) {
+    const formData = new FormData();
+    formData.append('id_mutasi', mutasiId);
+    formData.append('jenis_dokumen', jenis);
+    formData.append('file', file);
+
+    const uploadCard = document.getElementById(`upload-${jenis}-${mutasiId}`);
+    const originalContent = uploadCard.innerHTML;
+    
+    uploadCard.innerHTML = `
+        <div class="card-body text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 mb-0">Mengunggah...</p>
+        </div>
+    `;
+
+    fetch('{{ route("puk.upload-dokumen") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            
+            // Update current mutasis data
+            const mutasiIndex = currentMutasis.findIndex(m => m.id == mutasiId);
+            if (mutasiIndex !== -1) {
+                currentMutasis[mutasiIndex].dokumen[jenis] = true;
+                currentMutasis[mutasiIndex].dokumen_urls[jenis] = data.file_info.url;
             }
             
-            // Enable next button when kapal is selected
-            if (kapalSelect) {
-                kapalSelect.addEventListener('change', function() {
-                    const selectedValue = this.value;
-                    console.log("Kapal selection changed to:", selectedValue);
-                    
-                    // Aktifkan tombol jika ada nilai yang dipilih
-                    if (selectedValue && selectedValue !== "") {
-                        if (nextStep1Btn) {
-                            nextStep1Btn.disabled = false;
-                            nextStep1Btn.removeAttribute('disabled');
-                            console.log("Button enabled successfully");
-                        }
-                        kapalSelect.classList.add('has-value');
-                        
-                        // Hapus alert jika ada
-                        if (alertContainer) {
-                            alertContainer.innerHTML = '';
-                        }
-                    } else {
-                        if (nextStep1Btn) {
-                            nextStep1Btn.disabled = true;
-                            nextStep1Btn.setAttribute('disabled', 'disabled');
-                            console.log("Button disabled");
-                        }
-                        kapalSelect.classList.remove('has-value');
-                    }
-                });
+            // Refresh modal and table
+            openUploadModal(mutasiId);
+            showMutasiTable(currentMutasis);
+        } else {
+            showAlert(data.message, 'error');
+            uploadCard.innerHTML = originalContent;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Terjadi kesalahan saat mengunggah file.', 'error');
+        uploadCard.innerHTML = originalContent;
+    });
+}
+
+window.deleteDokumen = function(mutasiId, jenis) {
+    if (!confirm('Apakah Anda yakin ingin menghapus dokumen ini?')) return;
+
+    fetch('{{ route("puk.delete-dokumen") }}', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ 
+            id_mutasi: mutasiId, 
+            jenis_dokumen: jenis 
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            
+            // Update current mutasis data
+            const mutasiIndex = currentMutasis.findIndex(m => m.id == mutasiId);
+            if (mutasiIndex !== -1) {
+                currentMutasis[mutasiIndex].dokumen[jenis] = false;
+                currentMutasis[mutasiIndex].dokumen_urls[jenis] = null;
             }
+            
+            // Refresh modal and table
+            openUploadModal(mutasiId);
+            showMutasiTable(currentMutasis);
+        } else {
+            showAlert(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Terjadi kesalahan saat menghapus file.', 'error');
+    });
+};
 
-            // Step navigation - pastikan event listener terpasang dengan benar
-            if (nextStep1Btn) {
-                nextStep1Btn.addEventListener('click', function(e) {
-                    e.preventDefault(); // Prevent default behavior
-                    
-                    const kapalId = kapalSelect ? kapalSelect.value : '';
-                    console.log("Next button clicked, kapalId:", kapalId);
-                    console.log("Button disabled state:", this.disabled);
-                    
-                    // Cek apakah tombol disabled
-                    if (this.disabled) {
-                        console.log("Button is disabled, ignoring click");
-                        return;
-                    }
-                    
-                    if (!kapalId || kapalId === "") {
-                        showAlert('Silakan pilih kapal terlebih dahulu.', 'error');
-                        return;
-                    }
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alertContainer');
+    const alertId = 'alert-' + Date.now();
+    
+    const alertHtml = `
+        <div class="alert-custom alert-${type}" id="${alertId}">
+            <i class="bi bi-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+            ${message}
+        </div>
+    `;
+    
+    alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+    
+    // Auto remove alert setelah 5 detik
+    setTimeout(() => {
+        const alertElement = document.getElementById(alertId);
+        if (alertElement) {
+            alertElement.style.opacity = '0';
+            alertElement.style.transform = 'translateY(-20px)';
+            setTimeout(() => alertElement.remove(), 300);
+        }
+    }, 5000);
+}
 
-                    // Update steps
-                    if (step1) step1.classList.remove('active');
-                    if (step1) step1.classList.add('completed');
-                    if (step2) step2.classList.remove('inactive');
-                    if (step2) step2.classList.add('active');
-                    if (divider1) divider1.classList.add('completed');
-
-                    // Switch sections
-                    if (section1) section1.classList.remove('active');
-                    if (section2) section2.classList.add('active');
-
-                    // Load mutasi data
-                    loadMutasiData(kapalId);
-                });
-            }
-
-            // Back button event listener
-            if (backStep1Btn) {
-                backStep1Btn.addEventListener('click', function() {
-                    // Update steps
-                    if (step1) step1.classList.remove('completed');
-                    if (step1) step1.classList.add('active');
-                    if (step2) step2.classList.remove('active');
-                    if (step2) step2.classList.add('inactive');
-                    if (divider1) divider1.classList.remove('completed');
-
-                    // Switch sections
-                    if (section2) section2.classList.remove('active');
-                    if (section1) section1.classList.add('active');
-                });
-            }
-
-            // Load mutasi data
-            function loadMutasiData(kapalId) {
-                const loadingMutasi = document.getElementById('loadingMutasi');
-                const emptyMutasi = document.getElementById('emptyMutasi');
-                const mutasiTableContainer = document.getElementById('mutasiTableContainer');
-                const kapalName = document.getElementById('kapalName');
-
-                // Show loading
-                if (loadingMutasi) loadingMutasi.style.display = 'block';
-                if (emptyMutasi) emptyMutasi.style.display = 'none';
-                if (mutasiTableContainer) mutasiTableContainer.style.display = 'none';
-
-                // Get CSRF token
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-                fetch('{{ route("puk.get-mutasi-by-kapal") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({
-                        id_kapal: kapalId
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (loadingMutasi) loadingMutasi.style.display = 'none';
-
-                    if (data.success) {
-                        if (kapalName) kapalName.textContent = data.kapal.nama_kapal;
-
-                        if (data.mutasis.length === 0) {
-                            if (emptyMutasi) emptyMutasi.style.display = 'block';
-                        } else {
-                            if (mutasiTableContainer) mutasiTableContainer.style.display = 'block';
-                            populateMutasiTable(data.mutasis);
-                        }
-                    } else {
-                        showAlert('Gagal memuat data mutasi.', 'error');
-                        if (emptyMutasi) emptyMutasi.style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    if (loadingMutasi) loadingMutasi.style.display = 'none';
-                    showAlert('Terjadi kesalahan saat memuat data.', 'error');
-                    if (emptyMutasi) emptyMutasi.style.display = 'block';
-                });
-            }
-
-            // Populate mutasi table
-            function populateMutasiTable(mutasis) {
-                const tableBody = document.getElementById('mutasiTableBody');
-                tableBody.innerHTML = '';
-
-                mutasis.forEach(mutasi => {
-                    const row = document.createElement('tr');
-                    row.classList.add('mutasi-row');
-                    
-                    row.innerHTML = `
-                        <td>
-                            <strong>${formatDate(mutasi.TMT)}</strong>
-                            ${mutasi.keterangan ? `<br><small class="text-muted">${mutasi.keterangan}</small>` : ''}
-                        </td>
-                        <td>
-                            <strong>${mutasi.abk_turun.nama}</strong><br>
-                            <small class="text-muted">NRP: ${mutasi.abk_turun.NRP}</small>
-                        </td>
-                        <td>
-                            ${mutasi.abk_naik ? `
-                                <strong>${mutasi.abk_naik.nama}</strong><br>
-                                <small class="text-muted">NRP: ${mutasi.abk_naik.NRP}</small>
-                            ` : '<span class="text-muted">-</span>'}
-                        </td>
-                        <td>
-                            <strong>Dari:</strong> ${mutasi.jabatan_lama}<br>
-                            <strong>Ke:</strong> ${mutasi.jabatan_baru || '-'}
-                        </td>
-                        <td>
-                            <strong>Dari:</strong> ${mutasi.kapal_asal}<br>
-                            <strong>Ke:</strong> ${mutasi.kapal_tujuan || '-'}
-                        </td>
-                        <td>
-                            <div id="upload-section-${mutasi.id}">
-                                ${createUploadSection(mutasi.id)}
-                            </div>
-                        </td>
-                    `;
-
-                    tableBody.appendChild(row);
-                });
-
-                // Initialize upload functionality
-                initializeUploadFunctionality();
-            }
-
-            // Create upload section HTML
-            function createUploadSection(mutasiId) {
-                return `
-                    <div class="upload-section">
-                        <div class="upload-area" onclick="document.getElementById('file-${mutasiId}').click()">
-                            <input type="file" id="file-${mutasiId}" class="file-input" accept=".pdf,.doc,.docx" data-mutasi-id="${mutasiId}">
-                            <div class="upload-icon">
-                                <i class="bi bi-cloud-upload"></i>
-                            </div>
-                            <div class="upload-text">Klik untuk upload dokumen</div>
-                            <div class="upload-subtext">PDF, DOC, DOCX (Max: 5MB)</div>
-                        </div>
-                        <div id="file-preview-${mutasiId}"></div>
-                        <div class="mt-2">
-                            <textarea class="form-control" id="keterangan-${mutasiId}" placeholder="Keterangan tambahan (opsional)" rows="2"></textarea>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Initialize upload functionality
-            function initializeUploadFunctionality() {
-                const fileInputs = document.querySelectorAll('.file-input');
-                
-                fileInputs.forEach(input => {
-                    input.addEventListener('change', function() {
-                        const mutasiId = this.dataset.mutasiId;
-                        const file = this.files[0];
-                        
-                        if (file) {
-                            showFilePreview(mutasiId, file);
-                        }
-                    });
-                });
-
-                // Drag and drop functionality
-                const uploadAreas = document.querySelectorAll('.upload-area');
-                uploadAreas.forEach(area => {
-                    area.addEventListener('dragover', function(e) {
-                        e.preventDefault();
-                        this.classList.add('dragover');
-                    });
-
-                    area.addEventListener('dragleave', function(e) {
-                        e.preventDefault();
-                        this.classList.remove('dragover');
-                    });
-
-                    area.addEventListener('drop', function(e) {
-                        e.preventDefault();
-                        this.classList.remove('dragover');
-                        
-                        const files = e.dataTransfer.files;
-                        if (files.length > 0) {
-                            const mutasiId = this.querySelector('.file-input').dataset.mutasiId;
-                            showFilePreview(mutasiId, files[0]);
-                        }
-                    });
-                });
-            }
-
-            // Show file preview
-            function showFilePreview(mutasiId, file) {
-                const previewContainer = document.getElementById(`file-preview-${mutasiId}`);
-                const fileSize = (file.size / 1024 / 1024).toFixed(2);
-                
-                previewContainer.innerHTML = `
-                    <div class="file-preview">
-                        <div class="file-icon">
-                            <i class="bi bi-file-earmark-text"></i>
-                        </div>
-                        <div class="file-info">
-                            <div class="file-name">${file.name}</div>
-                            <div class="file-size">${fileSize} MB</div>
-                        </div>
-                        <div class="file-actions">
-                            <button type="button" class="btn-sm-custom btn-success-sm" onclick="uploadFile(${mutasiId})">
-                                <i class="bi bi-upload"></i> Upload
-                            </button>
-                            <button type="button" class="btn-sm-custom btn-danger-sm" onclick="removeFile(${mutasiId})">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Upload file function (global scope)
-            window.uploadFile = function(mutasiId) {
-                const fileInput = document.getElementById(`file-${mutasiId}`);
-                const keteranganInput = document.getElementById(`keterangan-${mutasiId}`);
-                const file = fileInput.files[0];
-
-                if (!file) {
-                    showAlert('Tidak ada file yang dipilih.', 'error');
-                    return;
-                }
-
-                // Validate file size (5MB)
-                if (file.size > 5 * 1024 * 1024) {
-                    showAlert('Ukuran file tidak boleh lebih dari 5MB.', 'error');
-                    return;
-                }
-
-                // Validate file type
-                const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-                if (!allowedTypes.includes(file.type)) {
-                    showAlert('Format file harus PDF, DOC, atau DOCX.', 'error');
-                    return;
-                }
-
-                const formData = new FormData();
-                formData.append('id_mutasi', mutasiId);
-                formData.append('file', file);
-                formData.append('keterangan_puk', keteranganInput.value);
-
-                // Get CSRF token
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-                // Show loading state
-                const uploadSection = document.getElementById(`upload-section-${mutasiId}`);
-                const originalContent = uploadSection.innerHTML;
-                uploadSection.innerHTML = `
-                    <div class="loading-overlay">
-                        <div class="spinner"></div>
-                    </div>
-                `;
-
-                fetch('{{ route("puk.upload-sertijab") }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showAlert('Dokumen berhasil diunggah!', 'success');
-                        // Update upload section to show success state
-                        uploadSection.innerHTML = `
-                            <div class="upload-section">
-                                <div class="alert-custom alert-success">
-                                    <i class="bi bi-check-circle"></i>
-                                    Dokumen berhasil diunggah
-                                </div>
-                                <div class="file-preview">
-                                    <div class="file-icon">
-                                        <i class="bi bi-file-earmark-check"></i>
-                                    </div>
-                                    <div class="file-info">
-                                        <div class="file-name">${file.name}</div>
-                                        <div class="file-size">Status: <span class="status-badge status-uploaded">Terupload</span></div>
-                                    </div>
-                                    <div class="file-actions">
-                                        <button type="button" class="btn-sm-custom btn-danger-sm" onclick="deleteSertijab(${data.sertijab.id_sertijab}, ${mutasiId})">
-                                            <i class="bi bi-trash"></i> Hapus
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        showAlert(data.message, 'error');
-                        uploadSection.innerHTML = originalContent;
-                        initializeUploadFunctionality();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert('Terjadi kesalahan saat mengunggah file.', 'error');
-                    uploadSection.innerHTML = originalContent;
-                    initializeUploadFunctionality();
-                });
-            };
-
-            // Remove file function (global scope)
-            window.removeFile = function(mutasiId) {
-                const fileInput = document.getElementById(`file-${mutasiId}`);
-                const previewContainer = document.getElementById(`file-preview-${mutasiId}`);
-                
-                fileInput.value = '';
-                previewContainer.innerHTML = '';
-            };
-
-            // Delete sertijab function (global scope)
-            window.deleteSertijab = function(sertijabId, mutasiId) {
-                if (!confirm('Apakah Anda yakin ingin menghapus dokumen ini?')) {
-                    return;
-                }
-
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-                fetch('{{ route("puk.delete-sertijab") }}', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({
-                        id_sertijab: sertijabId
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showAlert('Dokumen berhasil dihapus!', 'success');
-                        // Reset upload section
-                        const uploadSection = document.getElementById(`upload-section-${mutasiId}`);
-                        uploadSection.innerHTML = createUploadSection(mutasiId);
-                        initializeUploadFunctionality();
-                    } else {
-                        showAlert(data.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert('Terjadi kesalahan saat menghapus file.', 'error');
-                });
-            };
-
-            // Show alert function
-            function showAlert(message, type) {
-                const alertHtml = `
-                    <div class="alert-custom alert-${type === 'error' ? 'error' : 'success'}">
-                        <i class="bi bi-${type === 'error' ? 'exclamation-triangle' : 'check-circle'}"></i>
-                        ${message}
-                    </div>
-                `;
-
-                alertContainer.innerHTML = alertHtml;
-
-                // Auto hide after 5 seconds
-                setTimeout(() => {
-                    alertContainer.innerHTML = '';
-                }, 5000);
-            }
-
-            // Format date function
-            function formatDate(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-            }
-
-            // Fix dengan timeout untuk memastikan DOM sudah siap
-            setTimeout(function() {
-                const kapalSelect = document.getElementById('id_kapal');
-                const nextStep1Btn = document.getElementById('nextStep1');
-                
-                if (kapalSelect && nextStep1Btn) {
-                    console.log("Re-checking kapal select after timeout");
-                    
-                    // Trigger change event secara manual jika sudah ada nilai
-                    if (kapalSelect.value && kapalSelect.value !== "") {
-                        nextStep1Btn.disabled = false;
-                        kapalSelect.classList.add('has-value');
-                        console.log("Enabling button via timeout check");
-                    }
-                    
-                    // Tambahkan event listener untuk re-validate
-                    kapalSelect.addEventListener('click', function() {
-                        if (this.value && this.value !== "") {
-                            nextStep1Btn.disabled = false;
-                            console.log("Enabling button via click check");
-                        }
-                    });
-                }
-            }, 500);
-        });
-    </script>
+// Handle page unload prevention during submission
+window.addEventListener('beforeunload', function(e) {
+    if (isSubmitting) {
+        e.preventDefault();
+        e.returnValue = 'Sedang memproses submit dokumen. Jangan tutup halaman.';
+        return e.returnValue;
+    }
+});
+</script>
 </body>
 </html>

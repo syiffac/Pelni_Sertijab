@@ -781,7 +781,7 @@
                         pengiriman dokumen serah terima jabatan (sertijab) awak kapal.
                     </p>
                     <div class="cta-buttons animate-scale animate-delay-6">
-                        <a href="{{ route('puk.upload.form') }}" class="btn-primary-custom" id="mulai">
+                        <a href="{{ route('puk.upload-form') }}" class="btn-primary-custom" id="mulai">
                             <i class="bi bi-upload"></i>
                             Mulai Unggah
                         </a>
