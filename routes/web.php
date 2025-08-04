@@ -47,9 +47,12 @@ Route::post('/abk/check-nrp', [ABKController::class, 'checkNRP'])->name('abk.che
 
 // Protected admin routes
 Route::middleware(['auth'])->group(function () {
-    // Dashboard
+    // Dashboard - PERBAIKAN: Hapus duplikasi dan gunakan satu route saja
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
+    // Dashboard real-time API
+    Route::get('/dashboard/realtime-data', [DashboardController::class, 'getRealtimeData'])->name('dashboard.realtime');
+
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/wak', [ABKController::class, 'index']);
     
