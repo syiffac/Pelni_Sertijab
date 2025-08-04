@@ -512,4 +512,12 @@ class Sertijab extends Model
     {
         return $this->catatan_admin;
     }
+    
+    /**
+     * Accessor untuk verification_progress
+     */
+    public function getVerificationProgressAttribute()
+    {
+        return $this->getVerificationProgress();
+    }
 }

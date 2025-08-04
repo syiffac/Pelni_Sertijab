@@ -12,108 +12,69 @@ class Kapal extends Model
 
     protected $table = 'kapal';
     protected $primaryKey = 'id';
-    public $incrementing = false; // Penting: Matikan auto-increment
-    protected $keyType = 'string'; // Menggunakan string untuk ID
     
     protected $fillable = [
-        'id', // Tambahkan id ke fillable
         'nama_kapal',
         'tipe_pax',
         'home_base',
+        'status_kapal'
     ];
 
-    // Cast tipe_pax sebagai integer
-    protected $casts = [
-        'tipe_pax' => 'integer',
-    ];
+    // ===== RELATIONSHIPS =====
 
     /**
-     * Get kode kapal alias untuk id
+     * FIXED: Relasi ke mutasi baru dengan kolom yang benar
      */
-    public function getKodeKapalAttribute()
+    public function mutasiNew(): HasMany
     {
-        return $this->id; // Langsung gunakan id
+        return $this->hasMany(Mutasi::class, 'id_kapal', 'id'); // FIXED: gunakan id_kapal
     }
 
     /**
-     * Get the ABK for this kapal
+     * Relasi ke ABK melalui mutasi
      */
     public function abk(): HasMany
     {
         return $this->hasMany(ABK::class, 'id_kapal', 'id');
     }
 
-    public function abkAktif()
+    /**
+     * Get mutasi with sertijab for arsip purposes
+     */
+    public function mutasiWithSertijab(): HasMany
     {
-        return $this->hasMany(ABK::class, 'id_kapal', 'id')->where('status_abk', 'Aktif');
+        return $this->mutasiNew()->has('sertijab');
     }
 
     /**
-     * Get ABK tidak aktif untuk kapal ini
+     * Get completed arsip count
      */
-    public function abkTidakAktif()
+    public function getCompletedArsipCountAttribute()
     {
-        return $this->hasMany(ABK::class, 'id_kapal', 'id')->where('status_abk', '!=', 'Aktif');
-    }
-
-    /**
-     * Get mutasi where this kapal is the source
-     */
-    public function mutasiAsal(): HasMany
-    {
-        return $this->hasMany(Mutasi::class, 'id_kapal_asal', 'id');
-    }
-
-    /**
-     * Get mutasi where this kapal is the destination
-     */
-    public function mutasiTujuan(): HasMany
-    {
-        return $this->hasMany(Mutasi::class, 'id_kapal_tujuan', 'id');
-    }
-
-    /**
-     * Get all mutasi related to this kapal (asal or tujuan)
-     */
-    public function allMutasi()
-    {
-        return Mutasi::where('id_kapal_asal', $this->id)
-                     ->orWhere('id_kapal_tujuan', $this->id);
-    }
-
-    /**
-     * Get count of arsip sertijab for this kapal
-     */
-    public function getArsipStats()
-    {
-        $totalArsip = $this->allMutasi()
-            ->whereHas('sertijab')
-            ->count();
-
-        $finalArsip = $this->allMutasi()
+        return $this->mutasiNew()
             ->whereHas('sertijab', function($query) {
-                $query->where('status_verifikasi', 'verified');
+                $query->where('status_dokumen', 'final');
             })
             ->count();
-
-        $draftArsip = $this->allMutasi()
-            ->whereHas('sertijab', function($query) {
-                $query->whereIn('status_verifikasi', ['pending', 'rejected']);
-            })
-            ->count();
-
-        return [
-            'total_arsip' => $totalArsip,
-            'final_arsip' => $finalArsip,
-            'draft_arsip' => $draftArsip,
-        ];
     }
 
     /**
-     * Format tipe_pax untuk tampilan
+     * Get total arsip count
      */
-    public function getFormattedTipePaxAttribute()
+    public function getTotalArsipCountAttribute()
     {
-        return $this->tipe_pax ? number_format($this->tipe_pax) . ' PAX' : '-';
+        return $this->mutasiNew()->has('sertijab')->count();
+    }
+
+    /**
+     * Get draft arsip count
+     */
+    public function getDraftArsipCountAttribute()
+    {
+        return $this->mutasiNew()
+            ->whereHas('sertijab', function($query) {
+                $query->whereIn('status_dokumen', ['draft', 'partial']);
+            })
+            ->count();
     }
 }

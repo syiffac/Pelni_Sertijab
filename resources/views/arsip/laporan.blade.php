@@ -63,10 +63,10 @@
                         <div class="progress-container">
                             <div class="progress-header">
                                 <span class="progress-label">Progress Pengembangan</span>
-                                <span class="progress-percentage">65%</span>
+                                <span class="progress-percentage">75%</span>
                             </div>
                             <div class="progress-bar-container">
-                                <div class="progress-bar" style="width: 65%"></div>
+                                <div class="progress-bar" style="width: 75%"></div>
                             </div>
                         </div>
 
@@ -168,25 +168,25 @@
                                     </div>
                                 </div>
 
+                                <div class="timeline-item completed">
+                                    <div class="timeline-marker">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <h6 class="timeline-title">Backend API</h6>
+                                        <p class="timeline-desc">Pengembangan controller dan routes</p>
+                                        <span class="timeline-date">Selesai</span>
+                                    </div>
+                                </div>
+
                                 <div class="timeline-item active">
                                     <div class="timeline-marker">
                                         <i class="bi bi-gear-fill"></i>
                                     </div>
                                     <div class="timeline-content">
-                                        <h6 class="timeline-title">Backend Development</h6>
-                                        <p class="timeline-desc">Pengembangan API dan logic laporan</p>
+                                        <h6 class="timeline-title">Report Generation</h6>
+                                        <p class="timeline-desc">Implementasi generator PDF & Excel</p>
                                         <span class="timeline-date">Dalam Progress</span>
-                                    </div>
-                                </div>
-
-                                <div class="timeline-item">
-                                    <div class="timeline-marker">
-                                        <i class="bi bi-circle"></i>
-                                    </div>
-                                    <div class="timeline-content">
-                                        <h6 class="timeline-title">Frontend Implementation</h6>
-                                        <p class="timeline-desc">Implementasi interface dan integrasi</p>
-                                        <span class="timeline-date">Q1 2025</span>
                                     </div>
                                 </div>
 
@@ -232,7 +232,7 @@
                 <div class="alternative-actions">
                     <h5 class="alternatives-title">Sementara Waktu, Anda Dapat:</h5>
                     <div class="action-cards">
-                        <a href="{{ route('arsip.index') }}" class="action-card">
+                        <a href="{{ route('arsip.search') }}" class="action-card">
                             <div class="action-icon">
                                 <i class="bi bi-search"></i>
                             </div>
@@ -278,6 +278,63 @@
     --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
     --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Page Header - consistent dengan arsip index */
+.page-header {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-light);
+    border: 1px solid var(--border-color);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.breadcrumb {
+    background: none;
+    padding: 0;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.breadcrumb-item a {
+    color: var(--text-muted);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.breadcrumb-item.active {
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.page-title i {
+    color: var(--primary-blue);
+}
+
+.page-subtitle {
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+    font-size: 14px;
 }
 
 /* Development Container */
@@ -598,6 +655,58 @@
     margin: 0;
 }
 
+/* Buttons */
+.btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: var(--primary-blue);
+    border: 2px solid var(--primary-blue);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-blue);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    color: var(--text-muted);
+    border: 2px solid var(--border-color);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--text-muted);
+    color: white;
+    border-color: var(--text-muted);
+    text-decoration: none;
+}
+
 /* Animations */
 @keyframes pulse {
     0%, 100% {
@@ -610,6 +719,11 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
     .development-header {
         padding: 2rem 1.5rem;
     }

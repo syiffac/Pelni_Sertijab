@@ -150,21 +150,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [ArsipController::class, 'index'])->name('index');
         Route::get('/search', [ArsipController::class, 'search'])->name('search');
         Route::get('/create', [ArsipController::class, 'create'])->name('create');
-        Route::post('/', [ArsipController::class, 'store'])->name('store');
-        Route::get('/{id}', [ArsipController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [ArsipController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [ArsipController::class, 'update'])->name('update');
-        Route::delete('/{id}', [ArsipController::class, 'destroy'])->name('destroy');
+        Route::post('/store', [ArsipController::class, 'store'])->name('store');
         
-        // TAMBAHAN routes yang missing
-        Route::get('/kapal/{kapalId}', [ArsipController::class, 'byKapal'])->name('by-kapal');
-        Route::get('/export/excel', [ArsipController::class, 'exportExcel'])->name('export.excel');
-        Route::get('/export/pdf', [ArsipController::class, 'exportPdf'])->name('export.pdf');
+        // FIXED: Route laporan yang benar
+        Route::match(['GET', 'POST'], '/laporan', [ArsipController::class, 'laporan'])->name('laporan');
         
-        // Laporan routes
-        Route::get('/laporan/index', [ArsipController::class, 'laporanIndex'])->name('laporan');
-        Route::get('/laporan/generate', [ArsipController::class, 'generateLaporan'])->name('laporan.generate');
         Route::post('/bulk-update-status', [ArsipController::class, 'bulkUpdateStatus'])->name('bulk-update-status');
+        Route::get('/statistics', [ArsipController::class, 'getStatistics'])->name('statistics');
+        
+        Route::get('/{id}', [ArsipController::class, 'show'])->name('show');
     });
     
     // Settings routes
