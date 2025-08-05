@@ -121,18 +121,6 @@
 
         <!-- Right Section - Actions & Profile -->
         <div class="navbar-right">
-            <!-- Search -->
-            <div class="navbar-search">
-                <div class="search-container">
-                    <form action="{{ route('arsip.search') }}" method="GET" id="searchForm">
-                        <input type="text" name="q" class="search-input" placeholder="Cari arsip sertijab..." value="{{ request('q') }}">
-                        <button type="submit" class="search-btn">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-
             <!-- Notifications -->
             <div class="navbar-notifications">
                 <button class="notification-btn" id="notificationBtn">
@@ -253,7 +241,7 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Navbar Container - DIPERBAIKI */
+/* Navbar Container */
 .navbar {
     position: fixed;
     top: 0;
@@ -276,27 +264,27 @@
     height: 100%;
     display: flex;
     align-items: center;
-    justify-content: space-between; /* DIPERBAIKI: space-between untuk alignment yang tepat */
+    justify-content: space-between;
     padding: 0 24px;
     position: relative;
     max-width: 100%;
 }
 
-/* Left Section - Logo - DIKECILKAN */
+/* Left Section - Logo */
 .navbar-left {
     display: flex;
     align-items: center;
-    flex-shrink: 0; /* Prevent shrinking */
+    flex-shrink: 0;
 }
 
 .navbar-logo {
     display: flex;
     align-items: center;
-    gap: 8px; /* Reduced gap */
+    gap: 8px;
 }
 
 .logo-img {
-    height: 28px; /* DIKECILKAN dari 40px ke 28px */
+    height: 28px;
     width: auto;
     object-fit: contain;
     transition: var(--transition);
@@ -314,45 +302,45 @@
 }
 
 .logo-title {
-    font-size: 16px; /* DIKECILKAN dari 18px ke 16px */
+    font-size: 16px;
     font-weight: 700;
     color: var(--primary-blue);
     letter-spacing: -0.3px;
 }
 
 .logo-subtitle {
-    font-size: 10px; /* DIKECILKAN dari 11px ke 10px */
+    font-size: 10px;
     color: var(--text-muted);
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
 
-/* Center Section - Breadcrumb - DIPERBAIKI */
+/* Center Section - Breadcrumb - DIPERLUAS KARENA TIDAK ADA SEARCH */
 .navbar-center {
-    flex: 1; /* Take available space */
+    flex: 1;
     display: flex;
     align-items: center;
-    justify-content: center; /* Center the breadcrumb */
-    margin: 0 32px;
-    min-width: 0; /* Allow shrinking */
+    justify-content: center;
+    margin: 0 40px; /* INCREASED MARGIN karena tidak ada search */
+    min-width: 0;
 }
 
 .breadcrumb-container {
     width: 100%;
-    max-width: 600px; /* Limit max width */
+    max-width: 800px; /* INCREASED MAX WIDTH */
 }
 
 .breadcrumb {
     display: flex;
     align-items: center;
-    justify-content: center; /* Center breadcrumb items */
+    justify-content: center;
     margin: 0;
     padding: 0;
     list-style: none;
     font-size: 14px;
     gap: 8px;
-    flex-wrap: wrap; /* Allow wrapping on small screens */
+    flex-wrap: wrap;
 }
 
 .breadcrumb-item {
@@ -383,84 +371,16 @@
     flex-shrink: 0;
 }
 
-/* Right Section - DIPERBAIKI ALIGNMENT */
+/* Right Section - SIMPLIFIED */
 .navbar-right {
     display: flex;
     align-items: center;
-    gap: 12px; /* Consistent spacing */
-    flex-shrink: 0; /* Prevent shrinking */
-    margin-left: auto; /* Push to right */
-}
-
-/* Search - DIPERBAIKI */
-.navbar-search {
-    position: relative;
+    gap: 16px; /* INCREASED GAP karena search sudah dihapus */
     flex-shrink: 0;
+    margin-left: auto;
 }
 
-.search-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.search-container form {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
-}
-
-.search-container .search-input {
-    width: 240px; /* DIKECILKAN dari 280px ke 240px */
-    height: 36px; /* DIKECILKAN dari 40px ke 36px */
-    padding: 0 36px 0 14px; /* Adjusted padding */
-    border: 2px solid var(--border-color);
-    border-radius: 10px; /* Smaller radius */
-    font-size: 13px; /* Smaller font */
-    background: #f8fafc;
-    transition: var(--transition);
-    outline: none;
-}
-
-.search-container .search-input:focus {
-    border-color: var(--primary-blue);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(42, 63, 142, 0.1);
-}
-
-.search-container .search-input::placeholder {
-    color: var(--text-muted);
-    font-size: 13px;
-}
-
-.search-container .search-btn {
-    position: absolute;
-    right: 6px; /* Adjusted position */
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 5px;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-}
-
-.search-container .search-btn:hover {
-    color: var(--primary-blue);
-    background: rgba(42, 63, 142, 0.1);
-}
-
-.search-container .search-btn i {
-    font-size: 14px;
-}
-
-/* Notifications - DIPERBAIKI */
+/* Notifications */
 .navbar-notifications {
     position: relative;
     flex-shrink: 0;
@@ -471,7 +391,7 @@
     background: none;
     border: none;
     color: var(--text-muted);
-    font-size: 18px; /* Slightly smaller */
+    font-size: 18px;
     cursor: pointer;
     padding: 8px;
     border-radius: 8px;
@@ -494,7 +414,7 @@
     right: 4px;
     background: #ef4444;
     color: white;
-    font-size: 9px; /* Slightly smaller */
+    font-size: 9px;
     font-weight: 700;
     padding: 2px 5px;
     border-radius: 8px;
@@ -508,7 +428,7 @@
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    width: 340px; /* Slightly smaller */
+    width: 340px;
     background: white;
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
@@ -645,7 +565,7 @@
     color: var(--secondary-blue);
 }
 
-/* Profile - DIPERBAIKI */
+/* Profile */
 .navbar-profile {
     position: relative;
     flex-shrink: 0;
@@ -654,14 +574,14 @@
 .profile-btn {
     display: flex;
     align-items: center;
-    gap: 8px; /* Consistent gap */
+    gap: 8px;
     background: none;
     border: none;
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 10px;
     transition: var(--transition);
-    max-width: 200px; /* Prevent overflow */
+    max-width: 220px; /* INCREASED WIDTH karena ada lebih banyak ruang */
 }
 
 .profile-btn:hover {
@@ -669,7 +589,7 @@
 }
 
 .profile-avatar {
-    width: 32px; /* DIKECILKAN dari 35px ke 32px */
+    width: 32px;
     height: 32px;
     border-radius: 50%;
     overflow: hidden;
@@ -688,33 +608,33 @@
     flex-direction: column;
     align-items: flex-start;
     text-align: left;
-    min-width: 0; /* Allow text to truncate */
+    min-width: 0;
     flex: 1;
 }
 
 .profile-name {
-    font-size: 13px; /* DIKECILKAN dari 14px ke 13px */
+    font-size: 13px;
     font-weight: 600;
     color: var(--text-dark);
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 120px;
+    max-width: 140px; /* INCREASED WIDTH */
 }
 
 .profile-role {
-    font-size: 10px; /* DIKECILKAN dari 11px ke 10px */
+    font-size: 10px;
     color: var(--text-muted);
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 120px;
+    max-width: 140px; /* INCREASED WIDTH */
 }
 
 .profile-arrow {
-    font-size: 11px; /* Smaller arrow */
+    font-size: 11px;
     color: var(--text-muted);
     transition: var(--transition);
     flex-shrink: 0;
@@ -728,7 +648,7 @@
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    width: 260px; /* Slightly smaller */
+    width: 260px;
     background: white;
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
@@ -755,7 +675,7 @@
 }
 
 .profile-avatar-large {
-    width: 45px; /* Slightly smaller */
+    width: 45px;
     height: 45px;
     border-radius: 50%;
     overflow: hidden;
@@ -774,7 +694,7 @@
 }
 
 .profile-name-large {
-    font-size: 15px; /* Slightly smaller */
+    font-size: 15px;
     font-weight: 600;
     color: var(--text-dark);
     margin-bottom: 2px;
@@ -784,7 +704,7 @@
 }
 
 .profile-email {
-    font-size: 12px; /* Slightly smaller */
+    font-size: 12px;
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -799,10 +719,10 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 18px; /* Slightly smaller padding */
+    padding: 10px 18px;
     color: var(--text-dark);
     text-decoration: none;
-    font-size: 13px; /* Slightly smaller font */
+    font-size: 13px;
     transition: var(--transition);
 }
 
@@ -854,18 +774,8 @@
     background: rgba(42, 63, 142, 0.1);
 }
 
-/* Responsive Design - DIPERBAIKI */
-@media (max-width: 1400px) {
-    .search-input {
-        width: 200px;
-    }
-}
-
+/* Responsive Design - DIPERBAIKI untuk layout tanpa search */
 @media (max-width: 1200px) {
-    .search-input {
-        width: 180px;
-    }
-    
     .profile-info {
         display: none;
     }
@@ -875,7 +785,7 @@
     }
     
     .navbar-center {
-        margin: 0 16px;
+        margin: 0 24px; /* ADJUSTED margin */
     }
 }
 
@@ -890,10 +800,6 @@
     }
     
     .navbar-center {
-        display: none;
-    }
-    
-    .navbar-search {
         display: none;
     }
     
@@ -980,11 +886,6 @@
 }
 
 /* Focus states for accessibility */
-.search-input:focus {
-    outline: 2px solid var(--primary-blue);
-    outline-offset: 2px;
-}
-
 .notification-btn:focus,
 .profile-btn:focus,
 .mobile-menu-toggle:focus {
@@ -1055,45 +956,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const observer = new MutationObserver(adjustNavbar);
         observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
         adjustNavbar(); // Initial check
-    }
-
-    // Enhanced search functionality
-    const searchForm = document.getElementById('searchForm');
-    const searchInput = document.querySelector('.search-input');
-    const searchBtn = document.querySelector('.search-btn');
-
-    if (searchForm && searchInput && searchBtn) {
-        // Handle form submission
-        searchForm.addEventListener('submit', function(e) {
-            const query = searchInput.value.trim();
-            if (!query) {
-                e.preventDefault();
-                searchInput.focus();
-                return false;
-            }
-        });
-
-        // Handle enter key
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchForm.submit();
-            }
-        });
-
-        // Handle search button click
-        searchBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            searchForm.submit();
-        });
-
-        // Auto-focus search input with keyboard shortcut (Ctrl/Cmd + K)
-        document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                e.preventDefault();
-                searchInput.focus();
-                searchInput.select();
-            }
-        });
     }
 
     // Mark notifications as read when clicked

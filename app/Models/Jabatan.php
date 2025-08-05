@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Schema;
 
 class Jabatan extends Model
 {
     protected $table = 'jabatan';
+    // FIXED: Use 'id' as primary key instead of custom field
     protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'integer';
@@ -60,44 +60,6 @@ class Jabatan extends Model
     public function scopeOrdered($query, $direction = 'asc')
     {
         return $query->orderBy('nama_jabatan', $direction);
-    }
-
-    // Accessor untuk nama lengkap jabatan (sama dengan nama jabatan karena tidak ada kode)
-    public function getNamaLengkapAttribute()
-    {
-        return $this->nama_jabatan;
-    }
-
-    // Method untuk get display text (untuk dropdown)
-    public function getDisplayTextAttribute()
-    {
-        return $this->nama_jabatan;
-    }
-
-    // Method untuk cek apakah jabatan memiliki ABK
-    public function hasABK()
-    {
-        return $this->abkNew()->exists();
-    }
-
-    // Method untuk hitung jumlah ABK dengan jabatan ini
-    public function countABK()
-    {
-        return $this->abkNew()->count();
-    }
-
-    // Method untuk cek apakah jabatan digunakan dalam mutasi
-    public function isUsedInMutasi()
-    {
-        return $this->mutasiJabatanTetapNaik()->exists() || 
-               $this->mutasiJabatanTetapTurun()->exists() || 
-               $this->mutasiJabatanMutasi()->exists();
-    }
-
-    // Method untuk validasi sebelum delete
-    public function canBeDeleted()
-    {
-        return !$this->hasABK() && !$this->isUsedInMutasi();
     }
 
     // Static method untuk dropdown options

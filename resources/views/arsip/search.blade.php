@@ -6,7 +6,7 @@
 
 @section('content')
 <div class="container-fluid px-4">
-    <!-- Page Header dengan styling yang sama seperti arsip index -->
+    <!-- Page Header -->
     <div class="page-header">
         <div class="header-content">
             <div>
@@ -25,16 +25,16 @@
                     </ol>
                 </nav>
                 <h1 class="page-title">
-                    <i class="bi bi-search"></i>
-                    Pencarian Arsip Sertijab
+                    <i class="bi bi-archive-fill"></i>
+                    Arsip Sertijab
                 </h1>
-                <p class="page-subtitle">Cari dan filter dokumen arsip serah terima jabatan</p>
+                <p class="page-subtitle">Lihat dan cari dokumen arsip serah terima jabatan ABK PELNI</p>
             </div>
             <div class="header-actions">
                 <div class="action-buttons">
-                    <a href="{{ route('arsip.create') }}" class="btn btn-success">
-                        <i class="bi bi-plus-circle me-2"></i>
-                        Tambah Arsip
+                    <a href="{{ route('monitoring.sertijab') }}" class="btn btn-primary">
+                        <i class="bi bi-eye me-2"></i>
+                        Monitoring
                     </a>
                     <a href="{{ route('arsip.index') }}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left me-2"></i>
@@ -62,18 +62,18 @@
     @endif
 
     <!-- Filter Section -->
-    <div class="table-section">
-        <div class="table-card">
-            <div class="table-header">
-                <h5 class="table-title">
+    <div class="filter-section">
+        <div class="filter-card">
+            <div class="filter-header">
+                <h5 class="filter-title">
                     <i class="bi bi-funnel me-2"></i>
                     Filter Pencarian
                 </h5>
-                <div class="table-info">
-                    <small class="text-muted">Gunakan filter untuk mempersempit hasil pencarian</small>
+                <div class="filter-info">
+                    <small class="text-muted">Gunakan filter untuk mempersempit hasil pencarian arsip</small>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="filter-body">
                 <form method="GET" action="{{ route('arsip.search') }}">
                     <div class="row g-3">
                         <div class="col-lg-3 col-md-6">
@@ -130,7 +130,7 @@
                     
                     <div class="d-flex gap-2 mt-3">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-search me-1"></i> Cari
+                            <i class="bi bi-search me-1"></i> Cari Arsip
                         </button>
                         <a href="{{ route('arsip.search') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-clockwise me-1"></i> Reset
@@ -142,119 +142,160 @@
     </div>
 
     <!-- Results Section -->
-    <div class="table-section">
-        <div class="table-card">
-            <div class="table-header">
-                <h5 class="table-title">
-                    <i class="bi bi-list-ul me-2"></i>
-                    Hasil Pencarian 
+    <div class="results-section">
+        <div class="results-card">
+            <div class="results-header">
+                <h5 class="results-title">
+                    <i class="bi bi-archive me-2"></i>
+                    Arsip Ditemukan
                     @if(isset($arsipList))
-                        ({{ $arsipList->total() }} dokumen)
+                        <span class="badge bg-primary ms-2">{{ $arsipList->total() }}</span>
                     @endif
                 </h5>
-                <div class="table-info">
-                    <div class="d-flex gap-2">
-                        @if(isset($arsipList) && $arsipList->count() > 0)
-                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bulkActionModal">
-                                <i class="bi bi-check2-all me-1"></i> Aksi Massal
-                            </button>
-                        @endif
-                        <button type="button" class="btn btn-sm btn-outline-info" id="select-all-btn">
-                            <i class="bi bi-check-all me-1"></i> Pilih Semua
-                        </button>
-                    </div>
+                <div class="results-info">
+                    @if(isset($arsipList) && $arsipList->count() > 0)
+                        <span class="text-muted">
+                            Menampilkan {{ $arsipList->firstItem() }}-{{ $arsipList->lastItem() }} 
+                            dari {{ $arsipList->total() }} dokumen
+                        </span>
+                    @endif
                 </div>
             </div>
-            <div class="card-body">
+            <div class="results-body">
                 @if(isset($arsipList) && $arsipList->count() > 0)
-                    <div class="row g-3">
+                    {{-- UPDATED: More compact card layout --}}
+                    <div class="arsip-grid">
                         @foreach($arsipList as $arsip)
-                            <div class="col-lg-4 col-md-6">
-                                <div class="arsip-card">
-                                    <div class="arsip-card-header">
-                                        <div class="form-check">
-                                            <input class="form-check-input arsip-checkbox" type="checkbox" 
-                                                   value="{{ $arsip->id }}" id="arsip{{ $arsip->id }}">
-                                        </div>
-                                        <div class="arsip-info">
-                                            <h6 class="arsip-title">
-                                                {{ $arsip->mutasi->nama_lengkap_turun ?? $arsip->mutasi->nama_lengkap_naik ?? 'N/A' }}
-                                            </h6>
-                                            <p class="arsip-subtitle">
-                                                NRP: {{ $arsip->mutasi->id_abk_turun ?? $arsip->mutasi->id_abk_naik ?? 'N/A' }}
-                                            </p>
-                                        </div>
-                                        <span class="badge {{ $arsip->status_badge }}">
+                            <div class="arsip-card">
+                                {{-- Compact Card Header --}}
+                                <div class="arsip-header">
+                                    <div class="arsip-meta">
+                                        <h6 class="arsip-title">
+                                            {{ $arsip->mutasi->kapal->nama_kapal ?? 'N/A' }}
+                                        </h6>
+                                        <p class="arsip-date">
+                                            TMT: {{ $arsip->mutasi->TMT ? $arsip->mutasi->TMT->format('d M Y') : 'N/A' }}
+                                        </p>
+                                    </div>
+                                    <div class="header-badges">
+                                        <span class="status-badge badge-{{ $arsip->status_dokumen }}">
                                             {{ $arsip->status_text }}
                                         </span>
-                                    </div>
-                                    
-                                    <div class="arsip-details">
-                                        <div class="detail-item">
-                                            <strong>Kapal:</strong> 
-                                            {{ $arsip->mutasi->kapal->nama_kapal ?? 'N/A' }}
-                                        </div>
-                                        <div class="detail-item">
-                                            <strong>Jabatan:</strong> 
-                                            {{ $arsip->mutasi->jabatanMutasi->nama_jabatan ?? 'N/A' }}
-                                        </div>
-                                        <div class="detail-item">
-                                            <strong>TMT:</strong> 
-                                            {{ $arsip->mutasi->TMT ? $arsip->mutasi->TMT->format('d/m/Y') : 'N/A' }}
-                                        </div>
-                                        <div class="detail-item">
-                                            <strong>Submit:</strong> 
-                                            {{ $arsip->submitted_at ? $arsip->submitted_at->format('d/m/Y H:i') : 'N/A' }}
-                                        </div>
-                                    </div>
-                                    
-                                    @if($arsip->catatan_admin)
-                                        <div class="arsip-notes">
-                                            <em>"{{ Str::limit($arsip->catatan_admin, 50) }}"</em>
-                                        </div>
-                                    @endif
-
-                                    <div class="arsip-progress">
                                         @php
                                             $progress = $arsip->verification_progress ?? 0;
                                             $progressClass = $progress < 50 ? 'danger' : ($progress < 100 ? 'warning' : 'success');
                                         @endphp
-                                        <div class="progress-wrapper">
-                                            <div class="progress">
-                                                <div class="progress-bar bg-{{ $progressClass }}" style="width: {{ $progress }}%"></div>
-                                            </div>
-                                            <span class="progress-text">{{ $progress }}% terverifikasi</span>
+                                        <span class="progress-badge bg-{{ $progressClass }}">
+                                            {{ $progress }}%
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {{-- UPDATED: Simplified ABK Data Table --}}
+                                <div class="abk-data-section">
+                                    <div class="abk-table-container">
+                                        <table class="abk-table-compact">
+                                            <thead>
+                                                <tr>
+                                                    <th>Data</th>
+                                                    <th>ABK Naik</th>
+                                                    <th>ABK Turun</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="field-label">Nama</td>
+                                                    <td class="field-value">
+                                                        <div class="abk-name">{{ $arsip->mutasi->nama_lengkap_naik ?? '-' }}</div>
+                                                        <div class="abk-nrp">{{ $arsip->mutasi->id_abk_naik ?? '-' }}</div>
+                                                    </td>
+                                                    <td class="field-value">
+                                                        <div class="abk-name">{{ $arsip->mutasi->nama_lengkap_turun ?? '-' }}</div>
+                                                        <div class="abk-nrp">{{ $arsip->mutasi->id_abk_turun ?? '-' }}</div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="field-label">Jabatan Tetap</td>
+                                                    <td class="field-value">
+                                                        {{ $arsip->mutasi->jabatanTetapNaik->nama_jabatan ?? '-' }}
+                                                    </td>
+                                                    <td class="field-value">
+                                                        {{ $arsip->mutasi->jabatanTetapTurun->nama_jabatan ?? '-' }}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="field-label">Jabatan Mutasi</td>
+                                                    <td class="field-value" colspan="2">
+                                                        {{ $arsip->mutasi->jabatanMutasi->nama_jabatan ?? '-' }}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                {{-- Compact Document Status --}}
+                                <div class="document-status-compact">
+                                    <div class="document-row">
+                                        <span class="document-label">
+                                            <i class="bi bi-file-earmark me-1"></i>
+                                            Dokumen:
+                                        </span>
+                                        <div class="document-badges">
+                                            @if($arsip->dokumen_sertijab_path)
+                                                <span class="doc-badge badge-{{ $arsip->status_sertijab === 'final' ? 'success' : 'warning' }}">
+                                                    Sertijab
+                                                </span>
+                                            @endif
+                                            @if($arsip->dokumen_familisasi_path)
+                                                <span class="doc-badge badge-{{ $arsip->status_familisasi === 'final' ? 'success' : 'warning' }}">
+                                                    Familisasi
+                                                </span>
+                                            @endif
+                                            @if($arsip->dokumen_lampiran_path)
+                                                <span class="doc-badge badge-{{ $arsip->status_lampiran === 'final' ? 'success' : 'warning' }}">
+                                                    Lampiran
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
-                                    
-                                    <div class="arsip-actions">
-                                        <a href="{{ route('arsip.index', $arsip->id) }}" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i> Detail
+                                </div>
+
+                                {{-- Compact Admin Notes --}}
+                                @if($arsip->catatan_admin)
+                                    <div class="admin-notes-compact">
+                                        <i class="bi bi-chat-quote text-info me-1"></i>
+                                        <span class="notes-text">"{{ Str::limit($arsip->catatan_admin, 60) }}"</span>
+                                    </div>
+                                @endif
+
+                                {{-- Compact Card Actions --}}
+                                <div class="arsip-actions-compact">
+                                    <div class="action-buttons-left">
+                                        <a href="{{ route('arsip.show', $arsip->id) }}" 
+                                           class="btn btn-outline-primary btn-xs">
+                                            <i class="bi bi-eye"></i> Preview
                                         </a>
-                                        <a href="{{ route('arsip.index', $arsip->id) }}" 
-                                           class="btn btn-sm btn-outline-warning">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </a>
-                                        @if($arsip->hasAnyDocuments())
+                                        
+                                        @if(method_exists($arsip, 'hasAnyDocuments') && $arsip->hasAnyDocuments())
                                             <div class="btn-group">
-                                                <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" 
+                                                <button type="button" class="btn btn-outline-info btn-xs dropdown-toggle" 
                                                         data-bs-toggle="dropdown">
-                                                    <i class="bi bi-download"></i> File
+                                                    <i class="bi bi-download"></i>
                                                 </button>
-                                                <ul class="dropdown-menu">
+                                                <ul class="dropdown-menu dropdown-menu-end">
                                                     @if($arsip->dokumen_sertijab_path)
-                                                        <li><a class="dropdown-item" href="{{ $arsip->sertijab_url }}" target="_blank">
+                                                        <li><a class="dropdown-item" href="{{ asset('storage/' . $arsip->dokumen_sertijab_path) }}" target="_blank">
                                                             <i class="bi bi-file-earmark-pdf me-1"></i> Sertijab
                                                         </a></li>
                                                     @endif
                                                     @if($arsip->dokumen_familisasi_path)
-                                                        <li><a class="dropdown-item" href="{{ $arsip->familisasi_url }}" target="_blank">
+                                                        <li><a class="dropdown-item" href="{{ asset('storage/' . $arsip->dokumen_familisasi_path) }}" target="_blank">
                                                             <i class="bi bi-file-earmark-pdf me-1"></i> Familisasi
                                                         </a></li>
                                                     @endif
                                                     @if($arsip->dokumen_lampiran_path)
-                                                        <li><a class="dropdown-item" href="{{ $arsip->lampiran_url }}" target="_blank">
+                                                        <li><a class="dropdown-item" href="{{ asset('storage/' . $arsip->dokumen_lampiran_path) }}" target="_blank">
                                                             <i class="bi bi-file-earmark-pdf me-1"></i> Lampiran
                                                         </a></li>
                                                     @endif
@@ -262,68 +303,45 @@
                                             </div>
                                         @endif
                                     </div>
+                                    
+                                    <div class="submission-info-compact">
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar3 me-1"></i>
+                                            {{ $arsip->submitted_at ? $arsip->submitted_at->format('d/m/y') : 'N/A' }}
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
                     </div>
                     
-                    <!-- Pagination -->
+                    {{-- Pagination --}}
                     @if(isset($arsipList) && $arsipList->hasPages())
-                        <div class="d-flex justify-content-center mt-4">
+                        <div class="pagination-wrapper">
                             {{ $arsipList->appends(request()->query())->links() }}
                         </div>
                     @endif
                 @else
                     <div class="empty-state">
-                        <i class="bi bi-search fs-1 text-muted mb-3"></i>
-                        <h5 class="text-muted">Tidak Ada Arsip Ditemukan</h5>
-                        <p class="text-muted mb-3">Coba ubah filter pencarian atau tambah arsip baru</p>
-                        <a href="{{ route('arsip.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle me-1"></i> Tambah Arsip
-                        </a>
+                        <div class="empty-icon">
+                            <i class="bi bi-archive"></i>
+                        </div>
+                        <h5 class="empty-title">Tidak Ada Arsip Ditemukan</h5>
+                        <p class="empty-description">
+                            Tidak ada dokumen arsip yang sesuai dengan filter pencarian. 
+                            Coba ubah filter atau kata kunci pencarian.
+                        </p>
+                        <div class="empty-actions">
+                            <a href="{{ route('arsip.search') }}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Reset Filter
+                            </a>
+                            <a href="{{ route('monitoring.sertijab') }}" class="btn btn-primary">
+                                <i class="bi bi-eye me-1"></i> Lihat Monitoring
+                            </a>
+                        </div>
                     </div>
                 @endif
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Bulk Action Modal -->
-<div class="modal fade" id="bulkActionModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Aksi Massal</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ route('arsip.bulk-update-status') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="bulk_status" class="form-label">Ubah Status</label>
-                        <select class="form-select" id="bulk_status" name="status" required>
-                            <option value="">Pilih Status</option>
-                            <option value="final">Final (Verified)</option>
-                            <option value="partial">Partial (Sebagian)</option>
-                            <option value="draft">Draft (Pending)</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="bulk_notes" class="form-label">Catatan</label>
-                        <textarea class="form-control" id="bulk_notes" name="notes" rows="3" 
-                                  placeholder="Catatan untuk perubahan status..."></textarea>
-                    </div>
-                    <div id="selected-count" class="text-muted small">
-                        Belum ada dokumen yang dipilih
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary" id="bulk-submit-btn" disabled>
-                        <i class="bi bi-check-circle me-1"></i> Terapkan
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
@@ -331,7 +349,7 @@
 
 @push('styles')
 <style>
-/* Import styling dari arsip index */
+/* Compact Styling for Arsip Search */
 :root {
     --primary-blue: #2563eb;
     --success-color: #10b981;
@@ -342,18 +360,20 @@
     --text-muted: #6b7280;
     --border-color: #e5e7eb;
     --background-light: #f8fafc;
-    --border-radius: 12px;
+    --background-card: #ffffff;
+    --border-radius: 8px;
     --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
     --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --shadow-hover: 0 4px 12px rgba(37, 99, 235, 0.15);
+    --transition: all 0.2s ease;
 }
 
-/* Page Header */
+/* Page Layout */
 .page-header {
-    background: white;
+    background: var(--background-card);
     border-radius: var(--border-radius);
-    padding: 24px;
-    margin-bottom: 24px;
+    padding: 20px;
+    margin-bottom: 20px;
     box-shadow: var(--shadow-light);
     border: 1px solid var(--border-color);
 }
@@ -365,23 +385,11 @@
     gap: 20px;
 }
 
-.header-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-end;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 12px;
-}
-
 .breadcrumb {
     background: none;
     padding: 0;
-    margin-bottom: 12px;
-    font-size: 14px;
+    margin-bottom: 8px;
+    font-size: 13px;
 }
 
 .breadcrumb-item a {
@@ -392,13 +400,8 @@
     gap: 4px;
 }
 
-.breadcrumb-item.active {
-    color: var(--text-dark);
-    font-weight: 600;
-}
-
 .page-title {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
     color: var(--text-dark);
     margin: 0;
@@ -414,176 +417,380 @@
 .page-subtitle {
     color: var(--text-muted);
     margin: 4px 0 0 0;
-    font-size: 14px;
+    font-size: 13px;
 }
 
-/* Table Section */
-.table-section {
-    background: white;
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+/* Filter Section */
+.filter-section {
+    margin-bottom: 20px;
+}
+
+.filter-card {
+    background: var(--background-card);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-light);
     border: 1px solid var(--border-color);
     overflow: hidden;
-    margin-bottom: 24px;
 }
 
-.table-card {
-    background: white;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-}
-
-.table-header {
+.filter-header {
     background: var(--background-light);
-    padding: 20px 24px;
-    border-bottom: 2px solid var(--border-color);
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.table-title {
+.filter-title {
     margin: 0;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text-dark);
     display: flex;
     align-items: center;
 }
 
-.table-info {
-    color: var(--text-muted);
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.filter-body {
+    padding: 20px;
 }
 
-/* Arsip Cards */
-.arsip-card {
-    background: white;
-    border: 2px solid var(--border-color);
+/* Results Section */
+.results-section {
+    margin-bottom: 20px;
+}
+
+.results-card {
+    background: var(--background-card);
     border-radius: var(--border-radius);
-    padding: 20px;
-    transition: var(--transition);
-    height: 100%;
+    box-shadow: var(--shadow-light);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.results-header {
+    background: var(--background-light);
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.results-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+}
+
+.results-body {
+    padding: 20px;
+}
+
+/* UPDATED: More Compact Arsip Grid */
+.arsip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+/* UPDATED: More Compact Arsip Cards */
+.arsip-card {
+    background: var(--background-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 14px;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    font-size: 13px;
 }
 
 .arsip-card:hover {
     border-color: var(--primary-blue);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
+    box-shadow: var(--shadow-hover);
 }
 
-.arsip-card-header {
+.arsip-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-blue), var(--info-color));
+}
+
+/* UPDATED: Compact Card Header */
+.arsip-header {
     display: flex;
+    justify-content: space-between;
     align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.arsip-info {
-    flex: 1;
-    min-width: 0;
+    margin-bottom: 12px;
+    padding-top: 4px;
 }
 
 .arsip-title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text-dark);
-    margin: 0 0 4px 0;
-    word-wrap: break-word;
+    margin: 0 0 2px 0;
+    line-height: 1.2;
 }
 
-.arsip-subtitle {
-    font-size: 12px;
+.arsip-date {
+    font-size: 11px;
     color: var(--text-muted);
     margin: 0;
 }
 
-.arsip-details {
-    margin-bottom: 16px;
-    font-size: 13px;
-}
-
-.detail-item {
-    margin-bottom: 8px;
-    color: var(--text-dark);
-}
-
-.detail-item strong {
-    color: var(--text-muted);
-    font-weight: 600;
-}
-
-.arsip-notes {
-    margin-bottom: 16px;
-    padding: 12px;
-    background: var(--background-light);
-    border-radius: 8px;
-    font-size: 12px;
-    color: var(--text-muted);
-    font-style: italic;
-}
-
-.arsip-progress {
-    margin-bottom: 16px;
-}
-
-.progress-wrapper {
+.header-badges {
     display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+}
+
+/* UPDATED: Compact Status Badges */
+.status-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.progress-badge {
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 9px;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+}
+
+.badge-final {
+    background: var(--success-color);
+    color: white;
+}
+
+.badge-partial {
+    background: var(--warning-color);
+    color: white;
+}
+
+.badge-draft {
+    background: #6b7280;
+    color: white;
+}
+
+/* UPDATED: Simplified ABK Data Table */
+.abk-data-section {
+    margin-bottom: 12px;
+}
+
+.abk-table-container {
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.abk-table-compact {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    background: white;
+}
+
+.abk-table-compact th {
+    background: var(--background-light);
+    padding: 8px 10px;
+    font-weight: 600;
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.abk-table-compact td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: top;
+}
+
+.abk-table-compact tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.abk-table-compact tbody tr:hover {
+    background: var(--background-light);
+}
+
+.field-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    background: #f9fafb;
+    white-space: nowrap;
+    min-width: 70px;
+    font-size: 10px;
+}
+
+.field-value {
+    color: var(--text-dark);
+    word-wrap: break-word;
+}
+
+/* UPDATED: ABK Name styling */
+.abk-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.abk-nrp {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* UPDATED: Compact Document Status */
+.document-status-compact {
+    margin-bottom: 12px;
+    padding: 8px;
+    background: var(--background-light);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.document-row {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
-.progress {
-    flex: 1;
-    height: 6px;
-    background-color: #e5e7eb;
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    transition: width 0.6s ease;
-    border-radius: 3px;
-}
-
-.progress-text {
+.document-label {
     font-size: 11px;
     font-weight: 600;
     color: var(--text-muted);
     white-space: nowrap;
 }
 
-.arsip-actions {
+.document-badges {
     display: flex;
-    gap: 8px;
-    margin-top: auto;
+    gap: 4px;
     flex-wrap: wrap;
 }
 
-/* Buttons */
-.btn {
-    padding: 10px 20px;
-    border-radius: 8px;
+.doc-badge {
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 9px;
     font-weight: 600;
-    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* UPDATED: Compact Admin Notes */
+.admin-notes-compact {
+    margin-bottom: 12px;
+    padding: 6px 8px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 6px;
+    font-size: 11px;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.notes-text {
+    color: var(--text-dark);
+    font-style: italic;
+    line-height: 1.3;
+    flex: 1;
+}
+
+/* UPDATED: Compact Card Actions */
+.arsip-actions-compact {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+}
+
+.action-buttons-left {
+    display: flex;
+    gap: 6px;
+}
+
+.submission-info-compact {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+/* UPDATED: Compact Badges */
+.badge {
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.badge-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.badge-warning {
+    background: var(--warning-color);
+    color: white;
+}
+
+.badge-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+/* UPDATED: Extra Small Buttons */
+.btn-xs {
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* UPDATED: Compact Buttons */
+.btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
     border: none;
     cursor: pointer;
     transition: var(--transition);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 4px;
     text-decoration: none;
-}
-
-.btn-sm {
-    padding: 6px 12px;
-    font-size: 12px;
 }
 
 .btn-primary {
@@ -597,34 +804,10 @@
     text-decoration: none;
 }
 
-.btn-success {
-    background: var(--success-color);
-    color: white;
-}
-
-.btn-success:hover {
-    background: #059669;
-    color: white;
-    text-decoration: none;
-}
-
-.btn-outline-secondary {
-    background: transparent;
-    color: var(--text-muted);
-    border: 2px solid var(--border-color);
-}
-
-.btn-outline-secondary:hover {
-    background: var(--text-muted);
-    color: white;
-    border-color: var(--text-muted);
-    text-decoration: none;
-}
-
 .btn-outline-primary {
     background: transparent;
     color: var(--primary-blue);
-    border: 2px solid var(--primary-blue);
+    border: 1px solid var(--primary-blue);
 }
 
 .btn-outline-primary:hover {
@@ -633,22 +816,10 @@
     text-decoration: none;
 }
 
-.btn-outline-warning {
-    background: transparent;
-    color: var(--warning-color);
-    border: 2px solid var(--warning-color);
-}
-
-.btn-outline-warning:hover {
-    background: var(--warning-color);
-    color: white;
-    text-decoration: none;
-}
-
 .btn-outline-info {
     background: transparent;
     color: var(--info-color);
-    border: 2px solid var(--info-color);
+    border: 1px solid var(--info-color);
 }
 
 .btn-outline-info:hover {
@@ -657,66 +828,91 @@
     text-decoration: none;
 }
 
-/* Badges */
-.badge {
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.btn-outline-secondary {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
 }
 
-.bg-success {
-    background-color: var(--success-color) !important;
+.btn-outline-secondary:hover {
+    background: var(--text-muted);
     color: white;
-}
-
-.bg-warning {
-    background-color: var(--warning-color) !important;
-    color: white;
-}
-
-.bg-secondary {
-    background-color: #6b7280 !important;
-    color: white;
-}
-
-/* Empty State */
-.empty-state {
-    padding: 60px 20px;
-    text-align: center;
+    text-decoration: none;
 }
 
 /* Form Controls */
 .form-label {
     font-weight: 600;
     color: var(--text-dark);
-    margin-bottom: 8px;
+    margin-bottom: 4px;
+    font-size: 13px;
 }
 
 .form-select,
 .form-control {
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
     transition: var(--transition);
 }
 
 .form-select:focus,
 .form-control:focus {
     border-color: var(--primary-blue);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
     outline: none;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.empty-description {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.empty-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+/* Pagination */
+.pagination-wrapper {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
 }
 
 /* Alert styling */
 .alert {
     border-radius: var(--border-radius);
     border: none;
-    padding: 16px 20px;
-    margin-bottom: 24px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
 }
 
 .alert-danger {
@@ -729,41 +925,95 @@
     color: #166534;
 }
 
+/* Dropdown Menus */
+.dropdown-menu {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: var(--shadow-medium);
+    font-size: 11px;
+    min-width: 120px;
+}
+
+.dropdown-item {
+    padding: 6px 12px;
+    font-size: 11px;
+}
+
+.dropdown-item:hover {
+    background: var(--background-light);
+    color: var(--text-dark);
+}
+
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
+    .arsip-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 14px;
+    }
+}
+
+@media (max-width: 992px) {
+    .arsip-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px;
+    }
+    
     .header-content {
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
     }
     
     .action-buttons {
-        flex-direction: column;
         width: 100%;
+        justify-content: stretch;
+    }
+}
+
+@media (max-width: 768px) {
+    .arsip-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 10px;
+    }
+    
+    .arsip-actions-compact {
+        flex-direction: column;
+        gap: 6px;
         align-items: stretch;
     }
     
-    .arsip-actions {
-        flex-direction: column;
+    .action-buttons-left {
+        justify-content: space-between;
     }
     
-    .progress-wrapper {
-        flex-direction: column;
-        gap: 8px;
-        align-items: stretch;
+    .abk-table-compact {
+        font-size: 10px;
     }
     
-    .progress-text {
-        text-align: center;
+    .abk-table-compact th,
+    .abk-table-compact td {
+        padding: 6px 8px;
     }
 }
 
 @media (max-width: 576px) {
-    .page-header {
+    .page-header,
+    .filter-body,
+    .results-body {
         padding: 16px;
     }
     
     .arsip-card {
-        padding: 16px;
+        padding: 12px;
+    }
+    
+    .arsip-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .empty-actions {
+        flex-direction: column;
+        align-items: center;
     }
 }
 </style>
@@ -772,46 +1022,62 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const checkboxes = document.querySelectorAll('.arsip-checkbox');
-    const selectedCount = document.getElementById('selected-count');
-    const bulkSubmitBtn = document.getElementById('bulk-submit-btn');
-    const bulkForm = document.querySelector('#bulkActionModal form');
-    
-    function updateSelectedCount() {
-        const selected = document.querySelectorAll('.arsip-checkbox:checked');
-        const count = selected.length;
-        
-        selectedCount.textContent = count > 0 ? `${count} dokumen dipilih` : 'Belum ada dokumen yang dipilih';
-        bulkSubmitBtn.disabled = count === 0;
-        
-        // Update hidden inputs
-        const existingInputs = bulkForm.querySelectorAll('input[name="sertijab_ids[]"]');
-        existingInputs.forEach(input => input.remove());
-        
-        selected.forEach(checkbox => {
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'sertijab_ids[]';
-            hiddenInput.value = checkbox.value;
-            bulkForm.appendChild(hiddenInput);
+    // Enhanced search functionality
+    const searchForm = document.querySelector('form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function() {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Mencari...';
+            }
         });
     }
-    
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateSelectedCount);
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
     });
-    
-    // Select All functionality
-    const selectAllBtn = document.getElementById('select-all-btn');
-    if (selectAllBtn) {
-        selectAllBtn.addEventListener('click', function() {
-            const allChecked = document.querySelectorAll('.arsip-checkbox:checked').length === checkboxes.length;
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = !allChecked;
-            });
-            updateSelectedCount();
+
+    // Subtle card hover effects
+    const arsipCards = document.querySelectorAll('.arsip-card');
+    arsipCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
         });
-    }
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+
+    // Lazy loading for large datasets
+    const observerOptions = {
+        root: null,
+        rootMargin: '50px',
+        threshold: 0.1
+    };
+
+    const cardObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, observerOptions);
+
+    arsipCards.forEach(card => {
+        cardObserver.observe(card);
+    });
 });
 </script>
 @endpush

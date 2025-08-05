@@ -151,14 +151,19 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/search', [ArsipController::class, 'search'])->name('search');
         Route::get('/create', [ArsipController::class, 'create'])->name('create');
         Route::post('/store', [ArsipController::class, 'store'])->name('store');
-        
-        // FIXED: Route laporan yang benar
-        Route::match(['GET', 'POST'], '/laporan', [ArsipController::class, 'laporan'])->name('laporan');
-        
-        Route::post('/bulk-update-status', [ArsipController::class, 'bulkUpdateStatus'])->name('bulk-update-status');
-        Route::get('/statistics', [ArsipController::class, 'getStatistics'])->name('statistics');
-        
         Route::get('/{id}', [ArsipController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ArsipController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ArsipController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ArsipController::class, 'destroy'])->name('destroy');
+        
+        // ADDED: Missing laporan route
+        Route::get('/laporan/export', [ArsipController::class, 'generateLaporan'])->name('laporan');
+        
+        // Document verification routes
+        Route::post('/{id}/verify-document', [ArsipController::class, 'verifyDocument'])->name('verify-document');
+        Route::post('/{id}/verify-all', [ArsipController::class, 'verifyAllDocuments'])->name('verify-all');
+        Route::post('/{id}/update-status', [ArsipController::class, 'updateStatus'])->name('update-status');
+        Route::post('/bulk-update-status', [ArsipController::class, 'bulkUpdateStatus'])->name('bulk-update-status');
     });
     
     // Settings routes
@@ -173,4 +178,24 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/update', [ProfileController::class, 'update'])->name('update');
         Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
     });
+});
+
+// Add this route for AJAX call
+Route::get('/arsip/get-mutasi-by-kapal', [ArsipController::class, 'getMutasiByKapal'])->name('arsip.get-mutasi-by-kapal');
+
+// ABK export-import routes
+Route::middleware(['auth'])->group(function () {
+    // ABK routes
+    Route::resource('abk', ABKController::class);
+    Route::get('abk/check-nrp', [ABKController::class, 'checkNRP'])->name('abk.check-nrp');
+    
+    // Export & Import routes - ADD THESE
+    Route::get('abk-export-import', [ABKController::class, 'exportImport'])->name('abk.export-import');
+    Route::get('abk/export/{format?}', [ABKController::class, 'export'])->name('abk.export');
+    Route::post('abk/import', [ABKController::class, 'import'])->name('abk.import');
+    Route::get('abk/template/{type}', [ABKController::class, 'downloadTemplate'])->name('abk.template');
+    
+    // Specific template routes
+    Route::get('abk/template/excel', [ABKController::class, 'downloadTemplate'])->defaults('type', 'excel')->name('abk.template.excel');
+    Route::get('abk/template/pdf', [ABKController::class, 'downloadTemplate'])->defaults('type', 'pdf')->name('abk.template.pdf');
 });

@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="container-fluid px-4">
-    <!-- Page Header dengan styling yang sama seperti monitoring -->
+    <!-- Page Header -->
     <div class="page-header">
         <div class="header-content">
             <div>
@@ -57,7 +57,7 @@
         </div>
     @endif
 
-    <!-- Stats Cards dengan styling yang sama seperti monitoring -->
+    <!-- Stats Cards -->
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="stats-card stats-card-primary">
@@ -128,172 +128,214 @@
         </div>
     </div>
 
-    <!-- Monthly Chart & Quick Actions dengan styling yang sama -->
+    <!-- Chart & Quick Actions -->
     <div class="row mb-4">
         <div class="col-lg-8">
-            <div class="table-section">
-                <div class="table-card">
-                    <div class="table-header">
-                        <h5 class="table-title">
-                            <i class="bi bi-graph-up me-2"></i>
-                            Grafik Arsip Bulanan ({{ date('Y') }})
-                        </h5>
-                        <div class="table-info">
-                            <a href="{{ route('arsip.laporan') }}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-file-earmark-pdf me-1"></i> Lihat Laporan
-                            </a>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div style="height: 300px;">
-                            <canvas id="monthlyChart" height="300"></canvas>
-                        </div>
-                    </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="chart-title">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Grafik Arsip Bulanan ({{ date('Y') }})
+                    </h5>
+                    <a href="{{ route('arsip.laporan') }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Lihat Laporan
+                    </a>
+                </div>
+                <div class="chart-body">
+                    <canvas id="monthlyChart" height="300"></canvas>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-4">
-            <div class="table-section">
-                <div class="table-card">
-                    <div class="table-header">
-                        <h5 class="table-title">
-                            <i class="bi bi-lightning me-2"></i>
-                            Aksi Cepat
-                        </h5>
+            <div class="quick-actions-card">
+                <div class="quick-actions-header">
+                    <h5 class="quick-actions-title">
+                        <i class="bi bi-lightning me-2"></i>
+                        Aksi Cepat
+                    </h5>
+                </div>
+                <div class="quick-actions-body">
+                    {{-- Action Buttons --}}
+                    <div class="actions-grid">
+                        <a href="{{ route('arsip.search') }}" class="action-btn btn-outline-primary">
+                            <i class="bi bi-search"></i>
+                            <span>Pencarian Arsip</span>
+                        </a>
+                        <a href="{{ route('arsip.create') }}" class="action-btn btn-outline-success">
+                            <i class="bi bi-plus-circle"></i>
+                            <span>Tambah Arsip Manual</span>
+                        </a>
+                        <a href="{{ route('monitoring.sertijab') }}" class="action-btn btn-outline-info">
+                            <i class="bi bi-eye"></i>
+                            <span>Monitoring Sertijab</span>
+                        </a>
                     </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-3">
-                            <a href="{{ route('arsip.search') }}" class="btn btn-outline-primary">
-                                <i class="bi bi-search me-2"></i> Pencarian Arsip
-                            </a>
-                            <a href="{{ route('arsip.create') }}" class="btn btn-outline-success">
-                                <i class="bi bi-plus-circle me-2"></i> Tambah Arsip Manual
-                            </a>
-                            <a href="{{ route('monitoring.sertijab') }}" class="btn btn-outline-info">
-                                <i class="bi bi-eye me-2"></i> Monitoring Sertijab
-                            </a>
-                            <a href="{{ route('arsip.laporan') }}" class="btn btn-outline-dark">
-                                <i class="bi bi-file-earmark-pdf me-2"></i> Generate Laporan
-                            </a>
-                        </div>
 
-                        <hr class="my-4">
+                    <div class="divider"></div>
 
-                        <div class="small text-muted mb-3">
-                            <strong>Status Distribution:</strong>
+                    {{-- FIXED: Status Distribution with proper progress bars --}}
+                    <div class="status-distribution">
+                        <div class="section-title">Status Distribution:</div>
+                        
+                        @php
+                            $finalPercentage = $stats['completion_rate'];
+                            $draftPercentage = 100 - $finalPercentage;
+                        @endphp
+                        
+                        {{-- Final Progress --}}
+                        <div class="progress-item">
+                            <div class="progress-label">
+                                <span>Final</span>
+                                <span class="progress-value text-success">{{ $finalPercentage }}%</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar bg-success" 
+                                     style="width: {{ max($finalPercentage, 2) }}%"
+                                     data-percentage="{{ $finalPercentage }}">
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-2">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="small">Final</span>
-                                <span class="small fw-medium">{{ $stats['completion_rate'] }}%</span>
+                        
+                        {{-- Draft Progress --}}
+                        @if($draftPercentage > 0)
+                        <div class="progress-item">
+                            <div class="progress-label">
+                                <span>Draft</span>
+                                <span class="progress-value text-warning">{{ $draftPercentage }}%</span>
                             </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ $stats['completion_rate'] }}%"></div>
-                            </div>
-                        </div>
-                        <div class="mb-2">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="small">Draft</span>
-                                <span class="small fw-medium">{{ 100 - $stats['completion_rate'] }}%</span>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-warning" role="progressbar" style="width: {{ 100 - $stats['completion_rate'] }}%"></div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar bg-warning" 
+                                     style="width: {{ max($draftPercentage, 2) }}%"
+                                     data-percentage="{{ $draftPercentage }}">
+                                </div>
                             </div>
                         </div>
+                        @endif
+                    </div>
+
+                    <div class="info-footer">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Total {{ number_format($stats['total_arsip']) }} dokumen arsip tersimpan
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Kapal Selection Cards dengan styling yang sama -->
-    <div class="row">
-        <div class="col-12">
-            <div class="table-section">
-                <div class="table-card">
-                    <div class="table-header">
-                        <h5 class="table-title">
-                            <i class="bi bi-ship me-2"></i>
-                            Pilih Kapal untuk Melihat Arsip
-                        </h5>
-                        <div class="table-info">
-                            <small class="text-muted">Klik kapal untuk melihat arsip sertijab</small>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            @forelse($kapalList as $kapal)
-                            <div class="col-xl-3 col-lg-4 col-md-6">
-                                <a href="{{ route('arsip.search', ['kapal_id' => $kapal->id]) }}" class="text-decoration-none">
-                                    <div class="kapal-card">
-                                        <div class="kapal-card-header">
-                                            <div class="kapal-icon">
-                                                <i class="bi bi-ship"></i>
-                                            </div>
-                                            <div class="kapal-info">
-                                                <h6 class="kapal-name">{{ $kapal->nama_kapal }}</h6>
-                                                <p class="kapal-type">{{ $kapal->tipe_pax ?? 'Kapal Penumpang' }}</p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="kapal-stats">
-                                            <div class="stat-item">
-                                                <div class="stat-value text-primary">{{ $kapal->total_arsip ?? 0 }}</div>
-                                                <div class="stat-label">Total</div>
-                                            </div>
-                                            <div class="stat-item">
-                                                <div class="stat-value text-success">{{ $kapal->final_arsip ?? 0 }}</div>
-                                                <div class="stat-label">Final</div>
-                                            </div>
-                                            <div class="stat-item">
-                                                <div class="stat-value text-warning">{{ $kapal->draft_arsip ?? 0 }}</div>
-                                                <div class="stat-label">Draft</div>
-                                            </div>
-                                        </div>
+    <!-- Kapal Selection dengan Search -->
+    <div class="kapal-section">
+        <div class="kapal-header">
+            <h5 class="kapal-title">
+                <i class="bi bi-ship me-2"></i>
+                Pilih Kapal untuk Melihat Arsip
+            </h5>
+            <div class="kapal-search">
+                <div class="search-wrapper">
+                    <input type="text" 
+                           class="search-input" 
+                           id="kapalSearch" 
+                           placeholder="Cari nama kapal..."
+                           autocomplete="off">
+                    <i class="bi bi-search search-icon"></i>
+                    <button type="button" class="search-clear" id="searchClear" style="display: none;">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="search-info" id="searchInfo">
+                    <small>{{ count($kapalList) }} kapal tersedia</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="kapal-body">
+            <div class="search-status" id="searchStatus" style="display: none;">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <span id="searchStatusText">Menampilkan hasil pencarian</span>
+                </div>
+            </div>
 
-                                        @if(($kapal->total_arsip ?? 0) > 0)
-                                        <div class="kapal-progress">
-                                            @php
-                                                $completion = round((($kapal->final_arsip ?? 0) / ($kapal->total_arsip ?? 1)) * 100);
-                                                $progressClass = $completion < 50 ? 'danger' : ($completion < 80 ? 'warning' : 'success');
-                                            @endphp
-                                            <div class="progress-wrapper">
-                                                <div class="progress">
-                                                    <div class="progress-bar bg-{{ $progressClass }}" style="width: {{ $completion }}%"></div>
-                                                </div>
-                                                <span class="progress-text">{{ $completion }}% final</span>
-                                            </div>
-                                        </div>
-                                        @endif
-
-                                        <div class="kapal-footer">
-                                            <span class="footer-text">Klik untuk lihat arsip</span>
-                                            <i class="bi bi-arrow-right footer-icon"></i>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            @empty
-                            <div class="col-12">
-                                <div class="empty-state">
-                                    <i class="bi bi-ship fs-1 text-muted mb-3"></i>
-                                    <h5 class="text-muted">Belum Ada Data Kapal</h5>
-                                    <p class="text-muted mb-3">Tambahkan data kapal terlebih dahulu atau terjadi kesalahan saat memuat data</p>
-                                    <div class="d-flex gap-2 justify-content-center">
-                                        <a href="{{ route('kapal.create') }}" class="btn btn-primary">
-                                            <i class="bi bi-plus-circle me-1"></i> Tambah Kapal
-                                        </a>
-                                        <button class="btn btn-outline-secondary" onclick="location.reload()">
-                                            <i class="bi bi-arrow-clockwise me-1"></i> Muat Ulang
-                                        </button>
-                                    </div>
+            <div class="kapal-grid" id="kapalGrid">
+                @forelse($kapalList as $kapal)
+                <div class="kapal-item" 
+                     data-name="{{ strtolower($kapal->nama_kapal) }}"
+                     data-type="{{ strtolower($kapal->tipe_pax ?? 'kapal penumpang') }}">
+                    <a href="{{ route('arsip.search', ['kapal_id' => $kapal->id]) }}" class="kapal-link">
+                        <div class="kapal-card">
+                            <div class="kapal-header">
+                                <div class="kapal-icon">
+                                    <i class="bi bi-ship"></i>
+                                </div>
+                                <div class="kapal-info">
+                                    <h6 class="kapal-name">{{ $kapal->nama_kapal }}</h6>
+                                    <p class="kapal-type">{{ $kapal->tipe_pax ?? 'Kapal Penumpang' }}</p>
                                 </div>
                             </div>
-                            @endforelse
+                            
+                            <div class="kapal-stats">
+                                <div class="stat">
+                                    {{-- FIXED: Use correct attribute names from withCount --}}
+                                    <div class="stat-value text-primary">{{ $kapal->total_arsip ?? 0 }}</div>
+                                    <div class="stat-label">Total</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value text-success">{{ $kapal->final_arsip ?? 0 }}</div>
+                                    <div class="stat-label">Final</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value text-warning">{{ $kapal->draft_arsip ?? 0 }}</div>
+                                    <div class="stat-label">Draft</div>
+                                </div>
+                            </div>
+
+                            {{-- FIXED: Calculate completion percentage correctly --}}
+                            @if(($kapal->total_arsip ?? 0) > 0)
+                            <div class="kapal-progress">
+                                @php
+                                    $totalArsip = $kapal->total_arsip ?? 0;
+                                    $finalArsip = $kapal->final_arsip ?? 0;
+                                    $completion = $totalArsip > 0 ? round(($finalArsip / $totalArsip) * 100) : 0;
+                                    $progressClass = $completion < 50 ? 'danger' : ($completion < 80 ? 'warning' : 'success');
+                                @endphp
+                                <div class="progress-wrapper">
+                                    <div class="progress-bar-wrapper">
+                                        <div class="progress-bar bg-{{ $progressClass }}" 
+                                             style="width: {{ max($completion, 2) }}%"
+                                             data-percentage="{{ $completion }}">
+                                        </div>
+                                    </div>
+                                    <span class="progress-text">{{ $completion }}% final</span>
+                                </div>
+                            </div>
+                            @endif
+
+                            <div class="kapal-footer">
+                                <span>Klik untuk lihat arsip</span>
+                                <i class="bi bi-arrow-right"></i>
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
+                @empty
+                <div class="empty-state">
+                    <i class="bi bi-ship fs-1 text-muted mb-3"></i>
+                    <h5 class="text-muted">Belum Ada Data Kapal</h5>
+                    <p class="text-muted mb-3">Tambahkan data kapal terlebih dahulu</p>
+                    <a href="{{ route('kapal.create') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Tambah Kapal
+                    </a>
+                </div>
+                @endforelse
+            </div>
+
+            <div class="empty-state" id="noResults" style="display: none;">
+                <i class="bi bi-search fs-1 text-muted mb-3"></i>
+                <h5 class="text-muted">Tidak Ada Kapal Ditemukan</h5>
+                <p class="text-muted mb-3">Coba ubah kata kunci pencarian</p>
+                <button class="btn btn-outline-primary" id="resetSearch">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Reset Pencarian
+                </button>
             </div>
         </div>
     </div>
@@ -302,7 +344,6 @@
 
 @push('styles')
 <style>
-/* Import all styling variables from monitoring page */
 :root {
     --primary-blue: #2563eb;
     --success-color: #10b981;
@@ -314,18 +355,17 @@
     --border-color: #e5e7eb;
     --background-light: #f8fafc;
     --border-radius: 12px;
-    --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
 }
 
-/* Page Header - sama seperti monitoring */
+/* Simplified Page Header */
 .page-header {
     background: white;
     border-radius: var(--border-radius);
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: var(--shadow-light);
+    box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
 }
 
@@ -334,18 +374,6 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 20px;
-}
-
-.header-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-end;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 12px;
 }
 
 .breadcrumb {
@@ -388,7 +416,12 @@
     font-size: 14px;
 }
 
-/* Stats Cards - sama seperti monitoring */
+.action-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+/* Simplified Stats Cards */
 .stats-card {
     background: white;
     border-radius: var(--border-radius);
@@ -412,41 +445,14 @@
     background: var(--accent-color);
 }
 
-.stats-card-primary {
-    --accent-color: var(--primary-blue);
-}
-
-.stats-card-primary .stats-icon {
-    background: linear-gradient(135deg, var(--primary-blue), #3b82f6);
-}
-
-.stats-card-success {
-    --accent-color: var(--success-color);
-}
-
-.stats-card-success .stats-icon {
-    background: linear-gradient(135deg, var(--success-color), #34d399);
-}
-
-.stats-card-warning {
-    --accent-color: var(--warning-color);
-}
-
-.stats-card-warning .stats-icon {
-    background: linear-gradient(135deg, var(--warning-color), #fbbf24);
-}
-
-.stats-card-info {
-    --accent-color: var(--info-color);
-}
-
-.stats-card-info .stats-icon {
-    background: linear-gradient(135deg, var(--info-color), #22d3ee);
-}
+.stats-card-primary { --accent-color: var(--primary-blue); }
+.stats-card-success { --accent-color: var(--success-color); }
+.stats-card-warning { --accent-color: var(--warning-color); }
+.stats-card-info { --accent-color: var(--info-color); }
 
 .stats-card:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-medium);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .stats-icon {
@@ -458,7 +464,7 @@
     justify-content: center;
     color: white;
     font-size: 24px;
-    flex-shrink: 0;
+    background: var(--accent-color);
 }
 
 .stats-content {
@@ -482,42 +488,22 @@
 .stats-description {
     color: var(--text-muted);
     font-size: 12px;
-    line-height: 1.4;
 }
 
-.progress-indicator {
-    font-weight: 600;
-}
+.progress-success { color: var(--success-color); }
+.progress-warning { color: var(--warning-color); }
+.progress-danger { color: var(--danger-color); }
 
-.progress-success {
-    color: var(--success-color);
-}
-
-.progress-warning {
-    color: var(--warning-color);
-}
-
-.progress-danger {
-    color: var(--danger-color);
-}
-
-/* Table Section - sama seperti monitoring */
-.table-section {
+/* Simplified Chart Card */
+.chart-card {
     background: white;
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow-light);
+    box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
     overflow: hidden;
-    margin-bottom: 24px;
 }
 
-.table-card {
-    background: white;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-}
-
-.table-header {
+.chart-header {
     background: var(--background-light);
     padding: 20px 24px;
     border-bottom: 2px solid var(--border-color);
@@ -526,7 +512,7 @@
     align-items: center;
 }
 
-.table-title {
+.chart-title {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
@@ -535,15 +521,299 @@
     align-items: center;
 }
 
-.table-info {
-    color: var(--text-muted);
-    font-size: 14px;
+.chart-body {
+    padding: 24px;
+    height: 350px;
+}
+
+/* FIXED: Simplified Quick Actions */
+.quick-actions-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    height: fit-content;
+}
+
+.quick-actions-header {
+    background: var(--background-light);
+    padding: 20px 24px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.quick-actions-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-dark);
     display: flex;
     align-items: center;
+}
+
+.quick-actions-body {
+    padding: 24px;
+}
+
+.actions-grid {
+    display: flex;
+    flex-direction: column;
     gap: 12px;
 }
 
-/* Kapal Cards - styling baru yang sama dengan monitoring */
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border: 2px solid;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.action-btn i {
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+.btn-outline-primary {
+    color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-blue);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+.btn-outline-success {
+    color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.btn-outline-success:hover {
+    background: var(--success-color);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+.btn-outline-info {
+    color: var(--info-color);
+    border-color: var(--info-color);
+}
+
+.btn-outline-info:hover {
+    background: var(--info-color);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+.divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+    margin: 24px 0;
+}
+
+/* FIXED: Status Distribution with proper progress bars */
+.status-distribution {
+    margin-bottom: 24px;
+}
+
+.section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.progress-item {
+    margin-bottom: 16px;
+}
+
+.progress-item:last-child {
+    margin-bottom: 0;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.progress-value {
+    font-weight: 700;
+}
+
+/* FIXED: Progress bar wrapper with minimum width */
+.progress-bar-wrapper {
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease-out;
+    /* FIXED: Ensure minimum width for visibility */
+    min-width: 4px !important;
+}
+
+.progress-bar.bg-success {
+    background: linear-gradient(90deg, var(--success-color), #34d399);
+}
+
+.progress-bar.bg-warning {
+    background: linear-gradient(90deg, var(--warning-color), #fbbf24);
+}
+
+.progress-bar.bg-danger {
+    background: linear-gradient(90deg, var(--danger-color), #f87171);
+}
+
+/* FIXED: Progress bar animation on load */
+.progress-bar[data-percentage="100"] {
+    width: 100% !important;
+    min-width: unset !important;
+}
+
+.info-footer {
+    text-align: center;
+    padding: 16px 12px 0;
+    border-top: 1px solid var(--border-color);
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Simplified Kapal Section */
+.kapal-section {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.kapal-header {
+    background: var(--background-light);
+    padding: 20px 24px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.kapal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+}
+
+.kapal-search {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 300px;
+}
+
+.search-wrapper {
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 8px 16px 8px 40px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+    border-color: var(--primary-blue);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.search-clear:hover {
+    color: var(--danger-color);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.search-info {
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.kapal-body {
+    padding: 24px;
+}
+
+.kapal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.kapal-item {
+    transition: var(--transition);
+}
+
+.kapal-item.hidden {
+    display: none;
+}
+
+.kapal-item.highlighted .kapal-card {
+    border-color: var(--primary-blue);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.kapal-link {
+    text-decoration: none;
+    color: inherit;
+}
+
 .kapal-card {
     background: white;
     border: 2px solid var(--border-color);
@@ -552,8 +822,6 @@
     transition: var(--transition);
     cursor: pointer;
     height: 100%;
-    display: flex;
-    flex-direction: column;
 }
 
 .kapal-card:hover {
@@ -562,7 +830,7 @@
     box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
 }
 
-.kapal-card-header {
+.kapal-header {
     display: flex;
     align-items: flex-start;
     gap: 16px;
@@ -579,12 +847,10 @@
     justify-content: center;
     color: white;
     font-size: 20px;
-    flex-shrink: 0;
 }
 
 .kapal-info {
     flex: 1;
-    min-width: 0;
 }
 
 .kapal-name {
@@ -592,7 +858,6 @@
     font-weight: 700;
     color: var(--text-dark);
     margin: 0 0 4px 0;
-    word-wrap: break-word;
 }
 
 .kapal-type {
@@ -610,7 +875,7 @@
     border-radius: 8px;
 }
 
-.stat-item {
+.stat {
     text-align: center;
     flex: 1;
 }
@@ -639,19 +904,6 @@
     gap: 12px;
 }
 
-.progress {
-    flex: 1;
-    height: 6px;
-    background-color: #e5e7eb;
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    transition: width 0.6s ease;
-    border-radius: 3px;
-}
-
 .progress-text {
     font-size: 11px;
     font-weight: 600;
@@ -663,35 +915,19 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: auto;
     padding-top: 16px;
     border-top: 1px solid var(--border-color);
-}
-
-.footer-text {
     font-size: 12px;
     color: var(--text-muted);
     font-weight: 500;
 }
 
-.footer-icon {
-    color: var(--text-muted);
-    font-size: 14px;
-    transition: var(--transition);
-}
-
-.kapal-card:hover .footer-icon {
+.kapal-card:hover .kapal-footer i {
     color: var(--primary-blue);
     transform: translateX(4px);
 }
 
-/* Empty State */
-.empty-state {
-    padding: 60px 20px;
-    text-align: center;
-}
-
-/* Buttons - sama seperti monitoring */
+/* Common Styles */
 .btn {
     padding: 10px 20px;
     border-radius: 8px;
@@ -714,8 +950,6 @@
 
 .btn-primary:hover {
     background: #1d4ed8;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-medium);
     color: white;
     text-decoration: none;
 }
@@ -729,64 +963,14 @@
 .btn-outline-secondary:hover {
     background: var(--text-muted);
     color: white;
-    border-color: var(--text-muted);
     text-decoration: none;
 }
 
-.btn-outline-primary {
-    background: transparent;
-    color: var(--primary-blue);
-    border: 2px solid var(--primary-blue);
-}
-
-.btn-outline-primary:hover {
-    background: var(--primary-blue);
-    color: white;
-    text-decoration: none;
-}
-
-.btn-outline-success {
-    background: transparent;
-    color: var(--success-color);
-    border: 2px solid var(--success-color);
-}
-
-.btn-outline-success:hover {
-    background: var(--success-color);
-    color: white;
-    text-decoration: none;
-}
-
-.btn-outline-info {
-    background: transparent;
-    color: var(--info-color);
-    border: 2px solid var(--info-color);
-}
-
-.btn-outline-info:hover {
-    background: var(--info-color);
-    color: white;
-    text-decoration: none;
-}
-
-.btn-outline-dark {
-    background: transparent;
-    color: var(--text-dark);
-    border: 2px solid var(--text-dark);
-}
-
-.btn-outline-dark:hover {
-    background: var(--text-dark);
-    color: white;
-    text-decoration: none;
-}
-
-/* Alert styling */
 .alert {
     border-radius: var(--border-radius);
     border: none;
     padding: 16px 20px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .alert-danger {
@@ -799,7 +983,26 @@
     color: #166534;
 }
 
-/* Responsive Design */
+.alert-info {
+    background: #f0f9ff;
+    color: #1e40af;
+}
+
+.empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    grid-column: 1 / -1;
+}
+
+.search-highlight {
+    background: linear-gradient(120deg, #fbbf24, #f59e0b);
+    color: #92400e;
+    padding: 1px 2px;
+    border-radius: 2px;
+    font-weight: 600;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
     .header-content {
         flex-direction: column;
@@ -809,55 +1012,20 @@
     .action-buttons {
         flex-direction: column;
         width: 100%;
-        align-items: stretch;
     }
     
-    .kapal-card-header {
+    .kapal-header {
         flex-direction: column;
-        gap: 12px;
-        text-align: center;
+        gap: 16px;
     }
     
-    .kapal-stats {
-        gap: 8px;
+    .kapal-search {
+        min-width: auto;
+        width: 100%;
     }
     
-    .stat-value {
-        font-size: 16px;
-    }
-    
-    .progress-wrapper {
-        flex-direction: column;
-        gap: 8px;
-        align-items: stretch;
-    }
-    
-    .progress-text {
-        text-align: center;
-    }
-}
-
-@media (max-width: 576px) {
-    .page-header {
-        padding: 16px;
-    }
-    
-    .stats-card {
-        padding: 16px;
-    }
-    
-    .stats-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 20px;
-    }
-    
-    .stats-number {
-        font-size: 20px;
-    }
-    
-    .kapal-card {
-        padding: 16px;
+    .kapal-grid {
+        grid-template-columns: 1fr;
     }
 }
 </style>
@@ -866,98 +1034,167 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Monthly Chart
-        const monthlyCtx = document.getElementById('monthlyChart');
+document.addEventListener('DOMContentLoaded', function() {
+    // FIXED: Progress bars animation with proper 100% handling
+    const progressBars = document.querySelectorAll('.progress-bar[data-percentage]');
+    
+    progressBars.forEach(bar => {
+        const percentage = parseInt(bar.dataset.percentage);
         
-        if (monthlyCtx) {
-            const monthlyChart = new Chart(monthlyCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
-                    datasets: [{
-                        label: 'Dokumen Arsip',
-                        data: @json($monthlyData),
-                        borderColor: '#2563eb',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#2563eb',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    }]
+        // Reset width first
+        bar.style.width = '0%';
+        
+        // Animate to target width
+        setTimeout(() => {
+            if (percentage === 100) {
+                bar.style.width = '100%';
+                bar.style.minWidth = 'unset';
+            } else {
+                bar.style.width = Math.max(percentage, 2) + '%';
+            }
+        }, 500);
+    });
+
+    // Monthly Chart
+    const monthlyCtx = document.getElementById('monthlyChart');
+    if (monthlyCtx) {
+        new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+                datasets: [{
+                    label: 'Dokumen Arsip',
+                    data: @json($monthlyData),
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: '#ffffff',
-                            bodyColor: '#ffffff',
-                            cornerRadius: 8,
-                            padding: 12,
-                            callbacks: {
-                                title: function(context) {
-                                    return 'Bulan ' + context[0].label + ' {{ date("Y") }}';
-                                },
-                                label: function(context) {
-                                    return 'Dokumen Arsip: ' + context.parsed.y;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1,
-                                color: '#6b7280',
-                                font: {
-                                    size: 12
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(107, 114, 128, 0.1)',
-                                drawBorder: false
-                            },
-                            border: {
-                                display: false
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                color: '#6b7280',
-                                font: {
-                                    size: 12
-                                }
-                            },
-                            grid: {
-                                display: false
-                            },
-                            border: {
-                                display: false
-                            }
-                        }
-                    },
-                    elements: {
-                        point: {
-                            hoverBackgroundColor: '#2563eb'
-                        }
-                    },
-                    animation: {
-                        duration: 1500,
-                        easing: 'easeOutQuart'
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
                     }
                 }
-            });
+            }
+        });
+    }
+
+    // Simplified Search Functionality
+    const searchInput = document.getElementById('kapalSearch');
+    const searchClear = document.getElementById('searchClear');
+    const searchInfo = document.getElementById('searchInfo');
+    const searchStatus = document.getElementById('searchStatus');
+    const searchStatusText = document.getElementById('searchStatusText');
+    const kapalGrid = document.getElementById('kapalGrid');
+    const noResults = document.getElementById('noResults');
+    const resetSearch = document.getElementById('resetSearch');
+    
+    const kapalItems = document.querySelectorAll('.kapal-item');
+    const totalKapal = kapalItems.length;
+
+    searchInput?.addEventListener('input', function() {
+        const query = this.value.trim().toLowerCase();
+        
+        if (query.length > 0) {
+            searchClear.style.display = 'block';
+            performSearch(query);
+        } else {
+            searchClear.style.display = 'none';
+            resetSearchResults();
         }
     });
+
+    searchClear?.addEventListener('click', function() {
+        searchInput.value = '';
+        searchClear.style.display = 'none';
+        resetSearchResults();
+        searchInput.focus();
+    });
+
+    resetSearch?.addEventListener('click', function() {
+        searchInput.value = '';
+        searchClear.style.display = 'none';
+        resetSearchResults();
+    });
+
+    function performSearch(query) {
+        let visibleCount = 0;
+
+        kapalItems.forEach(item => {
+            const name = item.dataset.name || '';
+            const type = item.dataset.type || '';
+            
+            if (name.includes(query) || type.includes(query)) {
+                item.classList.remove('hidden');
+                item.classList.add('highlighted');
+                highlightText(item, query);
+                visibleCount++;
+            } else {
+                item.classList.add('hidden');
+                item.classList.remove('highlighted');
+            }
+        });
+
+        updateSearchUI(query, visibleCount);
+    }
+
+    function resetSearchResults() {
+        kapalItems.forEach(item => {
+            item.classList.remove('hidden', 'highlighted');
+            removeHighlight(item);
+        });
+        
+        searchStatus.style.display = 'none';
+        noResults.style.display = 'none';
+        kapalGrid.style.display = 'grid';
+        searchInfo.innerHTML = `<small>${totalKapal} kapal tersedia</small>`;
+    }
+
+    function updateSearchUI(query, count) {
+        if (count === 0) {
+            kapalGrid.style.display = 'none';
+            noResults.style.display = 'block';
+            searchStatus.style.display = 'block';
+            searchStatusText.textContent = `Tidak ditemukan kapal dengan kata kunci "${query}"`;
+        } else {
+            kapalGrid.style.display = 'grid';
+            noResults.style.display = 'none';
+            searchStatus.style.display = 'block';
+            searchStatusText.textContent = `Menampilkan ${count} dari ${totalKapal} kapal`;
+        }
+        
+        searchInfo.innerHTML = `<small>${count} kapal ditemukan</small>`;
+    }
+
+    function highlightText(item, query) {
+        const nameEl = item.querySelector('.kapal-name');
+        const typeEl = item.querySelector('.kapal-type');
+        
+        [nameEl, typeEl].forEach(el => {
+            if (el && !el.dataset.original) {
+                el.dataset.original = el.textContent;
+                const regex = new RegExp(`(${query})`, 'gi');
+                el.innerHTML = el.textContent.replace(regex, '<span class="search-highlight">$1</span>');
+            }
+        });
+    }
+
+    function removeHighlight(item) {
+        const elements = item.querySelectorAll('[data-original]');
+        elements.forEach(el => {
+            el.innerHTML = el.dataset.original;
+            delete el.dataset.original;
+        });
+    }
+});
 </script>
 @endpush
