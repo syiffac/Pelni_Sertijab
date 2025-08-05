@@ -348,40 +348,61 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <div class="mb-4">
-                            <canvas id="verificationChart" height="240"></canvas>
-                        </div>
-                        
-                        <div class="mt-4">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-success rounded-circle me-2" style="width:12px;height:12px;"></div>
-                                    <span>Terverifikasi</span>
-                                </div>
-                                <span class="fw-medium">{{ $stats['sertijab_verified'] }}</span>
+                        @if($chartData['total'] > 0)
+                            <div class="chart-container mb-4">
+                                <canvas id="verificationChart" width="240" height="240"></canvas>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-warning rounded-circle me-2" style="width:12px;height:12px;"></div>
-                                    <span>Menunggu Verifikasi</span>
+                            
+                            <div class="chart-legend">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-success rounded-circle me-2" style="width:12px;height:12px;"></div>
+                                        <span>Terverifikasi</span>
+                                    </div>
+                                    <span class="fw-medium">{{ $chartData['values'][0] }}</span>
                                 </div>
-                                <span class="fw-medium">{{ $stats['sertijab_pending'] }}</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-danger rounded-circle me-2" style="width:12px;height:12px;"></div>
-                                    <span>Ditolak</span>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-warning rounded-circle me-2" style="width:12px;height:12px;"></div>
+                                        <span>Menunggu Verifikasi</span>
+                                    </div>
+                                    <span class="fw-medium">{{ $chartData['values'][1] }}</span>
                                 </div>
-                                <span class="fw-medium">{{ $stats['sertijab_rejected'] }}</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-secondary rounded-circle me-2" style="width:12px;height:12px;"></div>
-                                    <span>Belum Dikumpulkan</span>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-info rounded-circle me-2" style="width:12px;height:12px;"></div>
+                                        <span>Sebagian Verified</span>
+                                    </div>
+                                    <span class="fw-medium">{{ $chartData['values'][2] }}</span>
                                 </div>
-                                <span class="fw-medium">{{ $stats['total_mutasi'] - $stats['sertijab_submitted'] }}</span>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-danger rounded-circle me-2" style="width:12px;height:12px;"></div>
+                                        <span>Ditolak</span>
+                                    </div>
+                                    <span class="fw-medium">{{ $chartData['values'][3] }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-secondary rounded-circle me-2" style="width:12px;height:12px;"></div>
+                                        <span>Belum Dikumpulkan</span>
+                                    </div>
+                                    <span class="fw-medium">{{ $chartData['values'][4] }}</span>
+                                </div>
                             </div>
-                        </div>
+                            
+                            <div class="text-center mt-3 pt-3 border-top">
+                                <small class="text-muted">
+                                    Total: {{ $chartData['total'] }} Dokumen
+                                </small>
+                            </div>
+                        @else
+                            <div class="empty-state py-4">
+                                <i class="bi bi-pie-chart fs-1 text-muted mb-2"></i>
+                                <p class="mb-0 text-muted">Belum ada data untuk ditampilkan</p>
+                                <small class="text-muted">Data akan muncul setelah ada mutasi yang perlu sertijab</small>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -398,15 +419,54 @@
                             <i class="bi bi-clock-history me-2"></i>
                             Aktivitas Terbaru
                         </h5>
+                        <div class="table-info">
+                            <small class="text-muted">{{ $recentActivities->count() }} aktivitas terakhir</small>
+                        </div>
                     </div>
                     <div class="card-body p-0">
-                        <div class="list-group list-group-flush">
-                            <!-- List akan diisi dengan aktivitas terbaru dari model Activity (jika ada) -->
-                            <div class="empty-state">
-                                <i class="bi bi-clock-history fs-1 text-muted mb-2"></i>
-                                <p class="mb-0">Belum ada aktivitas terbaru</p>
+                        @if($recentActivities->count() > 0)
+                            <div class="activity-list">
+                                @foreach($recentActivities as $activity)
+                                    <div class="activity-item">
+                                        <div class="activity-icon activity-{{ $activity['color'] }}">
+                                            <i class="{{ $activity['icon'] }}"></i>
+                                        </div>
+                                        <div class="activity-content">
+                                            <div class="activity-title">{{ $activity['title'] }}</div>
+                                            <div class="activity-description">{{ $activity['description'] }}</div>
+                                            <div class="activity-time">
+                                                <i class="bi bi-clock"></i>
+                                                {{ $activity['time']->diffForHumans() }}
+                                            </div>
+                                        </div>
+                                        <div class="activity-action">
+                                            <a href="{{ $activity['url'] }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
-                        </div>
+                            
+                            <div class="activity-footer">
+                                <div class="text-center">
+                                    <a href="{{ route('monitoring.sertijab') }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-list-ul me-1"></i>
+                                        Lihat Semua Aktivitas
+                                    </a>
+                                </div>
+                            </div>
+                        @else
+                            <div class="empty-state py-4">
+                                <i class="bi bi-clock-history fs-1 text-muted mb-3"></i>
+                                <h6 class="text-muted">Belum Ada Aktivitas</h6>
+                                <p class="text-muted mb-3">Aktivitas akan muncul setelah ada submit atau verifikasi dokumen</p>
+                                <a href="{{ route('monitoring.sertijab') }}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-plus-circle me-1"></i>
+                                    Mulai Monitoring
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -842,91 +902,277 @@
     text-decoration: none;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .header-content {
-        flex-direction: column;
-        gap: 16px;
-    }
-    
-    .action-buttons {
-        flex-direction: row;
-        align-items: center;
-    }
-    
-    .table-responsive {
-        font-size: 12px;
-    }
-    
-    .action-buttons-mini {
-        flex-direction: column;
-        gap: 2px;
-    }
-    
-    .btn-action {
-        width: 28px;
-        height: 28px;
-        font-size: 10px;
-    }
+/* Chart Container */
+.chart-container {
+    position: relative;
+    height: 240px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Progress bar dan badge legacy styling untuk backward compatibility */
-.progress {
-    background-color: #e5e7eb;
-    border-radius: 4px;
-    overflow: hidden;
-    height: 8px;
+.chart-legend {
+    font-size: 13px;
 }
 
-.progress-bar {
-    transition: width 0.6s ease;
-    border-radius: 4px;
+.chart-legend .rounded-circle {
+    flex-shrink: 0;
 }
 
-.badge {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 6px;
-}
-
-.badge.bg-primary.bg-opacity-10 {
-    background-color: rgba(37, 99, 235, 0.1) !important;
-    color: #2563eb !important;
-    border: 1px solid rgba(37, 99, 235, 0.2);
-}
-
-/* Pagination styling */
-.pagination {
+/* Activity List Styles */
+.activity-list {
+    padding: 0;
     margin: 0;
 }
 
-.page-link {
-    border: 1px solid #d1d5db;
-    color: #6b7280;
-    padding: 6px 12px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    border-radius: 6px;
-    margin: 0 2px;
+.activity-item {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-color);
+    transition: var(--transition);
+    gap: 16px;
 }
 
-.page-link:hover {
-    border-color: #2563eb;
-    color: #2563eb;
-    background-color: #f1f5f9;
+.activity-item:last-child {
+    border-bottom: none;
 }
 
-.page-item.active .page-link {
-    background-color: #2563eb;
-    border-color: #2563eb;
+.activity-item:hover {
+    background-color: #f8fafc;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
     color: white;
+    flex-shrink: 0;
 }
 
-.page-item.disabled .page-link {
-    color: #9ca3af;
-    background-color: #f9fafb;
-    border-color: #e5e7eb;
+.activity-primary {
+    background: linear-gradient(135deg, var(--primary-blue), #3b82f6);
+}
+
+.activity-success {
+    background: linear-gradient(135deg, var(--success-color), #34d399);
+}
+
+.activity-info {
+    background: linear-gradient(135deg, var(--info-color), #22d3ee);
+}
+
+.activity-warning {
+    background: linear-gradient(135deg, var(--warning-color), #fbbf24);
+}
+
+.activity-danger {
+    background: linear-gradient(135deg, var(--danger-color), #f87171);
+}
+
+.activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+
+.activity-description {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.activity-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.activity-time i {
+    font-size: 10px;
+}
+
+.activity-action {
+    flex-shrink: 0;
+}
+
+.activity-footer {
+    padding: 16px 24px;
+    background: var(--background-light);
+    border-top: 1px solid var(--border-color);
+}
+
+/* Responsive Activity List */
+@media (max-width: 768px) {
+    .activity-item {
+        padding: 12px 16px;
+        gap: 12px;
+    }
+    
+    .activity-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+    
+    .activity-description {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: initial;
+        line-height: 1.3;
+    }
+    
+    .activity-action .btn {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    .chart-container {
+        height: 200px;
+    }
+}
+
+/* Chart responsive */
+#verificationChart {
+    max-width: 100%;
+    height: auto !important;
 }
 </style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Verification Status Pie Chart
+    const ctx = document.getElementById('verificationChart');
+    if (ctx) {
+        @if($chartData['total'] > 0)
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: {!! json_encode($chartData['labels']) !!},
+                datasets: [{
+                    data: {!! json_encode($chartData['values']) !!},
+                    backgroundColor: {!! json_encode($chartData['colors']) !!},
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverBorderWidth: 3,
+                    hoverBorderColor: '#ffffff',
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : '0.0';
+                                return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                            }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#ffffff',
+                        borderWidth: 1,
+                        cornerRadius: 6,
+                        displayColors: true,
+                        titleFont: {
+                            size: 13,
+                            weight: '600'
+                        },
+                        bodyFont: {
+                            size: 12
+                        }
+                    }
+                },
+                cutout: '60%',
+                animation: {
+                    animateRotate: true,
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+        
+        // Add click event for chart segments
+        ctx.onclick = function(event) {
+            const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
+            if (points.length) {
+                const firstPoint = points[0];
+                const label = chart.data.labels[firstPoint.index];
+                console.log('Clicked on:', label);
+                // You can add navigation to specific filtered view here
+            }
+        };
+        @else
+        // Show message for no data
+        const canvasContainer = ctx.parentElement;
+        canvasContainer.innerHTML = `
+            <div class="empty-state text-center py-4">
+                <i class="bi bi-pie-chart display-4 text-muted mb-3"></i>
+                <h6 class="text-muted">Belum Ada Data</h6>
+                <p class="text-muted mb-0">Data akan muncul setelah ada mutasi yang perlu sertijab</p>
+            </div>
+        `;
+        @endif
+    }
+    
+    // Auto refresh chart data every 5 minutes
+    setInterval(function() {
+        // Only reload if page is visible
+        if (!document.hidden) {
+            fetch(window.location.href, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Parse and update chart data if needed
+                console.log('Chart data refreshed');
+            })
+            .catch(error => {
+                console.log('Auto-refresh failed:', error);
+            });
+        }
+    }, 300000); // 5 minutes
+    
+    // Handle page visibility change
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            // Page became visible, refresh data
+            console.log('Page visible, refreshing data');
+        }
+    });
+});
+</script>
 @endpush
