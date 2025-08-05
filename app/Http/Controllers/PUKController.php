@@ -257,9 +257,16 @@ class PUKController extends Controller
                 'submitted_at' => now()
             ]);
 
-            // Buat notifikasi untuk admin
-            NotificationService::createSubmitNotification($mutasi);
-            NotificationService::createUnverifiedNotification($mutasi);
+            // Buat notifikasi untuk admin jika ada
+            if (class_exists('App\Services\NotificationService')) {
+                try {
+                    NotificationService::createSubmitNotification($mutasi);
+                    NotificationService::createUnverifiedNotification($mutasi);
+                } catch (\Exception $e) {
+                    Log::error("Error creating notification: " . $e->getMessage());
+                    // Lanjutkan proses meskipun notifikasi gagal
+                }
+            }
 
             return response()->json([
                 'success' => true,
@@ -267,6 +274,7 @@ class PUKController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            Log::error("Error submitting document: " . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal submit dokumen: ' . $e->getMessage()

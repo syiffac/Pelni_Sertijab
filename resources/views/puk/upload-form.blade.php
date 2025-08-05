@@ -1281,7 +1281,7 @@ function batchSubmit() {
     submitMutasi(selectedIds);
 }
 
-// PERBAIKAN: Hapus duplikasi dan buat function submit yang clean
+// PERBAIKAN: Function submit untuk mengirim data ke server
 function submitMutasi(mutasiIds) {
     // Cegah submit ganda
     if (isSubmitting) {
@@ -1291,10 +1291,15 @@ function submitMutasi(mutasiIds) {
     
     isSubmitting = true;
     
-    const url = mutasiIds.length === 1 ? '{{ route("puk.submit-dokumen") }}' : '{{ route("puk.batch-submit-dokumen") }}';
-    const data = mutasiIds.length === 1 ? 
-        { id_mutasi: mutasiIds[0] } : 
-        { mutasi_ids: mutasiIds };
+    // Persiapkan data sesuai dengan yang diharapkan controller
+    let url, data;
+    if (mutasiIds.length === 1) {
+        url = '{{ route("puk.submit-dokumen") }}';
+        data = { mutasi_id: mutasiIds[0] };  // Ganti id_mutasi menjadi mutasi_id
+    } else {
+        url = '{{ route("puk.batch-submit-dokumen") }}';
+        data = { mutasi_ids: mutasiIds };
+    }
 
     // Show loading state
     const submitButtons = document.querySelectorAll('button[onclick*="submitSingle"], #batchSubmitBtn');
