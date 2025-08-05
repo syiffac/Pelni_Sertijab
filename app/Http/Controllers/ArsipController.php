@@ -401,160 +401,233 @@ class ArsipController extends Controller
      * Get mutasi list by kapal
      */
     public function getMutasiByKapal(Request $request)
-    {
-        $kapalId = $request->input('kapal_id');
+{
+    $kapalId = $request->input('kapal_id');
+    
+    if (!$kapalId) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Kapal ID tidak ditemukan'
+        ]);
+    }
+    
+    try {
+        Log::info("Fetching mutasi for kapal ID: {$kapalId}");
         
-        if (!$kapalId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Kapal ID tidak ditemukan'
-            ]);
-        }
+        // Cek dulu apakah ada data mutasi untuk kapal ini
+        $mutasiCount = DB::table('mutasi_new')->where('id_kapal', $kapalId)->count();
+        Log::info("Total mutasi found: {$mutasiCount}");
         
-        try {
-            // Get mutasi yang belum ada dokumen sertijabnya atau status draft
-            $mutasiList = Mutasi::with([
-                'kapal',
-                'jabatanTetapNaik',
-                'jabatanTetapTurun',
-                'jabatanMutasi',
-                'sertijab'
-            ])
-            ->where('id_kapal', $kapalId)
-            ->where('status_mutasi', '!=', 'Ditolak')
-            ->whereDoesntHave('sertijab', function($query) {
-                $query->where('status_dokumen', 'final');
-            })
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function($mutasi) {
-                return [
-                    'id' => $mutasi->id,
-                    'nama_mutasi' => $mutasi->nama_mutasi,
-                    'jenis_mutasi' => $mutasi->jenis_mutasi,
-                    'periode_mutasi' => $mutasi->periode_mutasi_naik,
-                    'abk_naik' => [
-                        'nrp' => $mutasi->id_abk_naik,
-                        'nama' => $mutasi->nama_lengkap_naik,
-                        'jabatan' => $mutasi->jabatanTetapNaik->nama_jabatan ?? 'N/A',
-                        'jabatan_mutasi' => $mutasi->jabatanMutasi->nama_jabatan ?? 'N/A'
-                    ],
-                    'abk_turun' => $mutasi->ada_abk_turun ? [
-                        'nrp' => $mutasi->id_abk_turun,
-                        'nama' => $mutasi->nama_lengkap_turun,
-                        'jabatan' => $mutasi->jabatanTetapTurun->nama_jabatan ?? 'N/A'
-                    ] : null,
-                    'ada_abk_turun' => $mutasi->ada_abk_turun,
-                    'status_mutasi' => $mutasi->status_mutasi,
-                    'has_sertijab' => $mutasi->sertijab ? true : false,
-                    'sertijab_status' => $mutasi->sertijab ? $mutasi->sertijab->status_dokumen : null
-                ];
-            });
-            
+        if ($mutasiCount === 0) {
             return response()->json([
                 'success' => true,
-                'data' => $mutasiList,
-                'total' => $mutasiList->count()
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Error getting mutasi by kapal: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan saat mengambil data mutasi'
+                'data' => [],
+                'total' => 0,
+                'message' => 'Tidak ada data mutasi untuk kapal ini'
             ]);
         }
+        
+        // Query dengan join manual untuk menghindari masalah relasi
+        $mutasiList = DB::table('mutasi_new as m')
+            ->leftJoin('kapal as k', 'm.id_kapal', '=', 'k.id')
+            ->leftJoin('jabatan as j1', 'm.jabatan_tetap_naik', '=', 'j1.id')
+            ->leftJoin('jabatan as j2', 'm.jabatan_tetap_turun', '=', 'j2.id')
+            ->leftJoin('jabatan as j3', 'm.id_jabatan_mutasi', '=', 'j3.id')
+            ->leftJoin('jabatan as j4', 'm.id_jabatan_mutasi_turun', '=', 'j4.id')
+            ->leftJoin('sertijab_new as s', 'm.id', '=', 's.id_mutasi')
+            ->select(
+                'm.id',
+                'm.nama_mutasi',
+                'm.jenis_mutasi',
+                'm.TMT',
+                'm.TAT',
+                'm.id_abk_naik',
+                'm.nama_lengkap_naik',
+                'm.id_abk_turun',
+                'm.nama_lengkap_turun',
+                'm.ada_abk_turun',
+                'm.status_mutasi',
+                'm.TMT_turun',
+                'm.TAT_turun',
+                'k.nama_kapal',
+                'j1.nama_jabatan as jabatan_naik_nama',
+                'j2.nama_jabatan as jabatan_turun_nama', 
+                'j3.nama_jabatan as jabatan_mutasi_nama',
+                'j4.nama_jabatan as jabatan_mutasi_turun_nama',
+                's.id as sertijab_id',
+                's.status_dokumen as sertijab_status'
+            )
+            ->where('m.id_kapal', $kapalId)
+            ->where(function($query) {
+                $query->where('m.status_mutasi', '!=', 'Ditolak')
+                      ->orWhereNull('m.status_mutasi');
+            })
+            ->where(function($query) {
+                $query->whereNull('s.status_dokumen')
+                      ->orWhere('s.status_dokumen', '!=', 'final');
+            })
+            ->orderBy('m.created_at', 'desc')
+            ->get();
+        
+        Log::info("Query result count: " . $mutasiList->count());
+        
+        // Format data untuk frontend
+        $formattedData = $mutasiList->map(function($mutasi) {
+            // Format periode mutasi
+            $periode = '';
+            if ($mutasi->TMT && $mutasi->TAT) {
+                $periode = date('d/m/Y', strtotime($mutasi->TMT)) . ' - ' . date('d/m/Y', strtotime($mutasi->TAT));
+            }
+            
+            return [
+                'id' => $mutasi->id,
+                'nama_mutasi' => $mutasi->nama_mutasi ?? 'N/A',
+                'jenis_mutasi' => $mutasi->jenis_mutasi ?? 'N/A',
+                'periode_mutasi' => $periode,
+                'abk_naik' => [
+                    'nrp' => $mutasi->id_abk_naik ?? 'N/A',
+                    'nama' => $mutasi->nama_lengkap_naik ?? 'N/A',
+                    'jabatan' => $mutasi->jabatan_naik_nama ?? 'N/A',
+                    'jabatan_mutasi' => $mutasi->jabatan_mutasi_nama ?? 'N/A'
+                ],
+                'abk_turun' => $mutasi->ada_abk_turun ? [
+                    'nrp' => $mutasi->id_abk_turun ?? 'N/A',
+                    'nama' => $mutasi->nama_lengkap_turun ?? 'N/A',
+                    'jabatan' => $mutasi->jabatan_turun_nama ?? 'N/A'
+                ] : null,
+                'ada_abk_turun' => (bool)$mutasi->ada_abk_turun,
+                'status_mutasi' => $mutasi->status_mutasi ?? 'Draft',
+                'has_sertijab' => $mutasi->sertijab_id ? true : false,
+                'sertijab_status' => $mutasi->sertijab_status ?? null
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $formattedData->values(),
+            'total' => $formattedData->count()
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Error getting mutasi by kapal: ' . $e->getMessage());
+        Log::error('Stack trace: ' . $e->getTraceAsString());
+        Log::error('Kapal ID: ' . $kapalId);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Terjadi kesalahan saat mengambil data mutasi: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Store new arsip
      */
     public function store(Request $request)
-    {
-        $request->validate([
-            'mutasi_id' => 'required|exists:mutasi,id',
-            'dokumen_sertijab' => 'required|file|mimes:pdf|max:10240',
-            'dokumen_familisasi' => 'nullable|file|mimes:pdf|max:10240',
-            'dokumen_lampiran' => 'nullable|file|mimes:pdf|max:10240',
-            'keterangan_dokumen' => 'nullable|string|max:1000',
-            'status_verifikasi' => 'required|in:draft,final',
-            'catatan_admin' => 'nullable|string|max:1000',
+{
+    // Debug request data
+    Log::info('Arsip store request data:', $request->all());
+    Log::info('Files in request:', $request->allFiles());
+    
+    $request->validate([
+        'mutasi_id' => 'required|exists:mutasi_new,id', // Perbaikan: gunakan tabel yang benar
+        'dokumen_sertijab' => 'required|file|mimes:pdf|max:10240',
+        'dokumen_familisasi' => 'nullable|file|mimes:pdf|max:10240',
+        'dokumen_lampiran' => 'nullable|file|mimes:pdf|max:10240',
+        'keterangan_dokumen' => 'nullable|string|max:1000',
+        'status_verifikasi' => 'required|in:draft,final',
+        'catatan_admin' => 'nullable|string|max:1000',
+    ]);
+    
+    try {
+        DB::beginTransaction();
+        
+        // 1. Get mutasi data dari tabel yang benar
+        $mutasi = DB::table('mutasi_new')->where('id', $request->mutasi_id)->first();
+        
+        if (!$mutasi) {
+            throw new \Exception('Data mutasi tidak ditemukan');
+        }
+        
+        // 2. Check if sertijab already exists
+        $existingSertijab = DB::table('sertijab_new')->where('id_mutasi', $request->mutasi_id)->first();
+        
+        if ($existingSertijab) {
+            throw new \Exception('Dokumen sertijab untuk mutasi ini sudah ada');
+        }
+        
+        // 3. Prepare sertijab data
+        $sertijabData = [
+            'id_mutasi' => $request->mutasi_id,
+            'submitted_at' => now(),
+            'updated_by_admin' => auth()->user()->NRP_admin ?? 1,
+            'catatan_admin' => $request->catatan_admin,
+            'created_at' => now(),
+            'updated_at' => now()
+        ];
+        
+        // 4. Upload documents
+        if ($request->hasFile('dokumen_sertijab')) {
+            $sertijabPath = $request->file('dokumen_sertijab')->store('dokumen/sertijab', 'public');
+            $sertijabData['dokumen_sertijab_path'] = $sertijabPath;
+            $sertijabData['status_sertijab'] = $request->status_verifikasi;
+        }
+        
+        if ($request->hasFile('dokumen_familisasi')) {
+            $familisasiPath = $request->file('dokumen_familisasi')->store('dokumen/familisasi', 'public');
+            $sertijabData['dokumen_familisasi_path'] = $familisasiPath;
+            $sertijabData['status_familisasi'] = $request->status_verifikasi;
+        }
+        
+        if ($request->hasFile('dokumen_lampiran')) {
+            $lampiranPath = $request->file('dokumen_lampiran')->store('dokumen/lampiran', 'public');
+            $sertijabData['dokumen_lampiran_path'] = $lampiranPath;
+            $sertijabData['status_lampiran'] = $request->status_verifikasi;
+        }
+        
+        // 5. Set verification status
+        if ($request->status_verifikasi === 'final') {
+            $sertijabData['verified_at'] = now();
+            $sertijabData['verified_by_admin_nrp'] = auth()->user()->NRP_admin ?? 1;
+            $sertijabData['status_dokumen'] = 'final';
+        } else {
+            $sertijabData['status_dokumen'] = 'draft';
+        }
+        
+        // 6. Insert to database
+        $sertijabId = DB::table('sertijab_new')->insertGetId($sertijabData);
+        
+        DB::commit();
+        
+        Log::info('Arsip created successfully with ID: ' . $sertijabId);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Dokumen arsip berhasil disimpan',
+            'redirect_url' => route('arsip.search')
         ]);
         
-        try {
-            DB::beginTransaction();
-            
-            // 1. Get mutasi data
-            $mutasi = Mutasi::findOrFail($request->mutasi_id);
-            
-            // 2. Check if sertijab already exists
-            $sertijab = $mutasi->sertijab;
-            
-            if (!$sertijab) {
-                // Create new sertijab record
-                $sertijab = new Sertijab();
-                $sertijab->id_mutasi = $mutasi->id;
-            }
-            
-            // 3. Upload documents
-            if ($request->hasFile('dokumen_sertijab')) {
-                // Delete old file if exists
-                if ($sertijab->dokumen_sertijab_path) {
-                    Storage::disk('public')->delete($sertijab->dokumen_sertijab_path);
-                }
-                $sertijab->dokumen_sertijab_path = $request->file('dokumen_sertijab')->store('dokumen/sertijab', 'public');
-                $sertijab->status_sertijab = $request->status_verifikasi;
-            }
-            
-            if ($request->hasFile('dokumen_familisasi')) {
-                if ($sertijab->dokumen_familisasi_path) {
-                    Storage::disk('public')->delete($sertijab->dokumen_familisasi_path);
-                }
-                $sertijab->dokumen_familisasi_path = $request->file('dokumen_familisasi')->store('dokumen/familisasi', 'public');
-                $sertijab->status_familisasi = $request->status_verifikasi;
-            }
-            
-            if ($request->hasFile('dokumen_lampiran')) {
-                if ($sertijab->dokumen_lampiran_path) {
-                    Storage::disk('public')->delete($sertijab->dokumen_lampiran_path);
-                }
-                $sertijab->dokumen_lampiran_path = $request->file('dokumen_lampiran')->store('dokumen/lampiran', 'public');
-                $sertijab->status_lampiran = $request->status_verifikasi;
-            }
-            
-            // 4. Set document metadata
-            $sertijab->catatan_admin = $request->catatan_admin;
-            $sertijab->submitted_at = now();
-            $sertijab->updated_by_admin = auth()->user()->NRP_admin ?? 1;
-            
-            if ($request->status_verifikasi === 'final') {
-                $sertijab->verified_at = now();
-                $sertijab->verified_by_admin_nrp = auth()->user()->NRP_admin ?? 1;
-            }
-            
-            $sertijab->save();
-            
-            // 5. Update overall status
-            $sertijab->updateOverallStatus();
-            
-            DB::commit();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Dokumen arsip berhasil disimpan',
-                'redirect_url' => route('arsip.search')
-            ]);
-            
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Error storing arsip: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menyimpan dokumen: ' . $e->getMessage()
-            ], 500);
-        }
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        DB::rollback();
+        Log::error('Validation errors:', $e->errors());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Terjadi kesalahan validasi',
+            'errors' => $e->errors()
+        ], 422);
+        
+    } catch (\Exception $e) {
+        DB::rollback();
+        Log::error('Error storing arsip: ' . $e->getMessage());
+        Log::error('Stack trace: ' . $e->getTraceAsString());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal menyimpan dokumen: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Edit arsip

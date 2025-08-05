@@ -34,7 +34,7 @@
                         </h1>
                         <p class="page-subtitle">Pantau dan verifikasi dokumen serah terima jabatan ABK</p>
                     </div>
-                    <div class="header-actions">
+                    {{-- <div class="header-actions">
                         <div class="action-buttons">
                             <a href="{{ route('monitoring.documents') }}" class="btn btn-primary">
                                 <i class="bi bi-eye-fill me-2"></i>
@@ -45,7 +45,7 @@
                                 Export Data
                             </button>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
 
@@ -1119,50 +1119,7 @@ let sertijabToVerify = null;
 let sertijabRowData = null;
 
 function viewSertijab(id) {
-    const modalContent = document.getElementById('detailSertijabContent');
-    modalContent.innerHTML = `
-        <div class="text-center py-4">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2 text-muted">Memuat detail sertijab...</p>
-        </div>
-    `;
-    
-    const modal = new bootstrap.Modal(document.getElementById('detailSertijabModal'));
-    modal.show();
-    
-    fetch(`{{ route('monitoring.sertijab', '') }}/${id}`, {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            modalContent.innerHTML = data.html;
-        } else {
-            throw new Error(data.message || 'Gagal memuat detail sertijab');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        modalContent.innerHTML = `
-            <div class="alert alert-danger text-center">
-                <i class="bi bi-exclamation-triangle fs-1 text-danger mb-3"></i>
-                <h5>Gagal Memuat Detail</h5>
-                <p class="mb-0">${error.message}</p>
-            </div>
-        `;
-        showNotification('Gagal memuat detail sertijab', 'error');
-    });
+    window.location.href = "{{ route('monitoring.show', ':id') }}".replace(':id', id);
 }
 
 function quickVerify(id) {

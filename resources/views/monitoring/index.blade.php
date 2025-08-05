@@ -213,11 +213,11 @@
                                                     title="Lihat Detail">
                                                 <i class="bi bi-eye"></i>
                                             </button>
-                                            <button class="btn-action btn-verify" 
+                                            {{-- <button class="btn-action btn-verify" 
                                                     onclick="window.location.href='{{ route('monitoring.documents', ['kapal_id' => $data->id]) }}'"
                                                     title="Verifikasi Dokumen">
                                                 <i class="bi bi-check2-circle"></i>
-                                            </button>
+                                            </button> --}}
                                             <button class="btn-action btn-info" 
                                                     onclick="window.location.href='{{ route('mutasi.index', ['kapal_id' => $data->id]) }}'"
                                                     title="Data Mutasi">

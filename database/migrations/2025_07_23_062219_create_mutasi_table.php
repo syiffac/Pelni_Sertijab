@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             
             // Data Kapal - KOLOM SUDAH ADA DI FILE INI
-            $table->string('id_kapal'); // Foreign key ke tabel kapal
+            $table->foreignId('id_kapal')->constrained('kapal')->onDelete('cascade'); // FK ke tabel kapal
             $table->string('nama_kapal'); // Redundant untuk performa query
             
             // ABK yang naik/masuk
@@ -58,7 +58,7 @@ return new class extends Migration
             $table->timestamps();
             
             // Foreign keys - PERBAIKI INI
-            $table->foreign('id_kapal')->references('id')->on('kapal'); // FK ke tabel kapal
+            // $table->foreign('id_kapal')->references('id')->on('kapal'); // FK ke tabel kapal
             // $table->foreign('id_abk_naik')->references('id')->on('abk_new'); // Uncomment setelah tabel abk_new ada
             // $table->foreign('id_abk_turun')->references('id')->on('abk_new'); // Uncomment setelah tabel abk_new ada
             

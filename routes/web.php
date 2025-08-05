@@ -132,10 +132,11 @@ Route::middleware(['auth'])->group(function () {
         
         // Document verification - TAMBAHAN ROUTES YANG MISSING
         Route::get('/documents', [MonitoringController::class, 'documents'])->name('documents');
-        Route::get('/documents/{id}', [MonitoringController::class, 'show'])->name('documents.show');
+        Route::get('/documents/{id}', [MonitoringController::class, 'show'])->name('show');
         Route::put('/documents/{id}/verify', [MonitoringController::class, 'updateVerification'])->name('documents.verify');
         Route::post('/documents/{id}/quick-verify', [MonitoringController::class, 'quickVerifyAll'])->name('documents.quick-verify');
-        
+        Route::put('/documents/{id}/update-note', [MonitoringController::class, 'updateNote'])->name('documents.update-note');
+
         // Legacy routes (untuk backward compatibility)
         Route::get('/sertijab', [MonitoringController::class, 'sertijab'])->name('sertijab');
         Route::get('/sertijab/detail/{id}', [MonitoringController::class, 'sertijabDetail'])->name('sertijab.detail');
@@ -148,6 +149,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [ArsipController::class, 'index'])->name('index');
         Route::get('/search', [ArsipController::class, 'search'])->name('search');
         Route::get('/create', [ArsipController::class, 'create'])->name('create');
+        Route::get('/get-mutasi-by-kapal', [ArsipController::class, 'getMutasiByKapal'])->name('get-mutasi-by-kapal');
         Route::post('/store', [ArsipController::class, 'store'])->name('store');
         Route::get('/{id}', [ArsipController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [ArsipController::class, 'edit'])->name('edit');

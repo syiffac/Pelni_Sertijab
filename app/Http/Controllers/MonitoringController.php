@@ -300,10 +300,10 @@ class MonitoringController extends Controller
      */
     public function show($id)
     {
-        $sertijab = Sertijab::with([
+        $arsip = Sertijab::with([
+            'mutasi.kapal',
             'mutasi.abkNaik',
             'mutasi.abkTurun',
-            'mutasi.kapal',
             'mutasi.jabatanTetapNaik',
             'mutasi.jabatanTetapTurun',
             'mutasi.jabatanMutasi',
@@ -311,7 +311,7 @@ class MonitoringController extends Controller
             'adminVerifikator'
         ])->findOrFail($id);
 
-        return view('monitoring.show', compact('sertijab'));
+        return view('monitoring.show', compact('arsip'));
     }
     
     /**
@@ -429,55 +429,60 @@ class MonitoringController extends Controller
      */
     public function updateVerification(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'status_sertijab' => 'nullable|in:draft,final',
             'status_familisasi' => 'nullable|in:draft,final',
             'status_lampiran' => 'nullable|in:draft,final',
             'catatan_admin' => 'nullable|string|max:2000',
-            'verify_all' => 'nullable|boolean',
         ]);
 
         try {
             DB::beginTransaction();
 
             $sertijab = Sertijab::findOrFail($id);
-            $adminNrp = auth()->user()->NRP_admin;
-
-            if ($request->boolean('verify_all')) {
-                $sertijab->verifyAllDocuments($request->catatan_admin, $adminNrp);
-            } else {
-                if ($request->has('status_sertijab')) {
-                    $sertijab->status_sertijab = $request->status_sertijab;
-                }
-
-                if ($request->has('status_familisasi')) {
-                    $sertijab->status_familisasi = $request->status_familisasi;
-                }
-
-                if ($request->has('status_lampiran') && $sertijab->dokumen_lampiran_path) {
-                    $sertijab->status_lampiran = $request->status_lampiran;
-                }
-
-                if ($request->has('catatan_admin')) {
-                    $sertijab->updateAdminComment($request->catatan_admin, $adminNrp);
-                }
-
+            $adminNrp = auth()->user()->NRP_admin ?? 1; // Fallback jika tidak ada auth
+            
+            // Update catatan saja jika hanya itu yang dikirim
+            if ($request->has('catatan_admin') && count($validated) === 1) {
+                $sertijab->catatan_admin = $request->catatan_admin;
                 $sertijab->updated_by_admin = $adminNrp;
                 $sertijab->save();
-                $sertijab->updateOverallStatus();
-
-                if ($sertijab->isFullyVerified()) {
-                    $sertijab->markAsVerified($adminNrp);
-                }
+                
+                DB::commit();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Catatan berhasil diperbarui'
+                ]);
             }
+
+            // Handle status updates...
+            if ($request->has('status_sertijab')) {
+                $sertijab->status_sertijab = $request->status_sertijab;
+            }
+
+            if ($request->has('status_familisasi')) {
+                $sertijab->status_familisasi = $request->status_familisasi;
+            }
+
+            if ($request->has('status_lampiran')) {
+                $sertijab->status_lampiran = $request->status_lampiran;
+            }
+
+            if ($request->has('catatan_admin')) {
+                $sertijab->catatan_admin = $request->catatan_admin;
+            }
+
+            $sertijab->updated_by_admin = $adminNrp;
+            $sertijab->save();
+            
+            // Update overall status
+            $sertijab->updateOverallStatus();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Status verifikasi berhasil diupdate',
-                'status_dokumen' => $sertijab->status_dokumen,
-                'abk_pairing' => $sertijab->abk_pairing_info ?? null
+                'message' => 'Status verifikasi berhasil diupdate'
             ]);
 
         } catch (\Exception $e) {
@@ -521,6 +526,36 @@ class MonitoringController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal verifikasi dokumen: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Update note for sertijab
+     */
+    public function updateNote(Request $request, $id)
+    {
+        $request->validate([
+            'catatan_admin' => 'required|string|max:2000',
+        ]);
+        
+        try {
+            $sertijab = Sertijab::findOrFail($id);
+            $adminNrp = auth()->user()->NRP_admin ?? 1;
+            
+            $sertijab->catatan_admin = $request->catatan_admin;
+            $sertijab->updated_by_admin = $adminNrp;
+            $sertijab->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Catatan berhasil diperbarui'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating note: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui catatan: ' . $e->getMessage()
             ], 500);
         }
     }

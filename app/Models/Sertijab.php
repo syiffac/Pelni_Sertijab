@@ -248,18 +248,23 @@ class Sertijab extends Model
     /**
      * Check if all documents are verified as final
      */
-    public function isFullyVerified(): bool
+    public function isFullyVerified()
     {
-        $sertijabOk = empty($this->dokumen_sertijab_path) || $this->status_sertijab === 'final';
-        $familisasiOk = empty($this->dokumen_familisasi_path) || $this->status_familisasi === 'final';
-        
-        // FIXED: Handle NULL status_lampiran properly
-        $lampiranOk = true; // Default OK jika tidak ada lampiran
-        if (!empty($this->dokumen_lampiran_path)) {
-            $lampiranOk = $this->status_lampiran === 'final';
+        // Dokumen sertijab wajib final
+        if ($this->status_sertijab !== 'final') {
+            return false;
         }
         
-        return $sertijabOk && $familisasiOk && $lampiranOk && $this->hasAnyDocuments();
+        // Dokumen opsional jika ada, juga harus final
+        if ($this->dokumen_familisasi_path && $this->status_familisasi !== 'final') {
+            return false;
+        }
+        
+        if ($this->dokumen_lampiran_path && $this->status_lampiran !== 'final') {
+            return false;
+        }
+        
+        return true;
     }
     
     /**
@@ -292,16 +297,29 @@ class Sertijab extends Model
     /**
      * Update overall document status based on individual document statuses
      */
-    public function updateOverallStatus(): void
+    public function updateOverallStatus()
     {
-        if ($this->isFullyVerified()) {
-            $this->status_dokumen = 'final';
-        } elseif ($this->isPartiallyVerified()) {
-            $this->status_dokumen = 'partial';
-        } else {
-            $this->status_dokumen = 'draft';
+        $status = 'draft';
+        
+        // Jika semua dokumen wajib sudah final, maka overall status adalah final
+        if ($this->status_sertijab === 'final') {
+            $status = 'final';
+            
+            // Jika ada dokumen opsional yang belum final (tapi ada), maka overall status adalah partial
+            if (($this->dokumen_familisasi_path && $this->status_familisasi !== 'final') || 
+                ($this->dokumen_lampiran_path && $this->status_lampiran !== 'final')) {
+                $status = 'partial';
+            }
+        } 
+        // Jika sertijab belum final tapi ada yang sudah final, maka overall status adalah partial
+        else if ($this->status_familisasi === 'final' || $this->status_lampiran === 'final') {
+            $status = 'partial';
         }
+        
+        $this->status_dokumen = $status;
         $this->save();
+        
+        return $status;
     }
     
     /**
@@ -373,25 +391,22 @@ class Sertijab extends Model
     /**
      * Update admin comment for the ABK pairing
      */
-    public function updateAdminComment(string $comment, int $adminNrp = null): void
+    public function updateAdminComment($comment, $adminNrp)
     {
         $this->catatan_admin = $comment;
-        if ($adminNrp) {
-            $this->updated_by_admin = $adminNrp;
-        }
+        $this->updated_by_admin = $adminNrp;
         $this->save();
     }
     
     /**
      * Mark as verified by admin
      */
-    public function markAsVerified(int $adminNrp): void
+    public function markAsVerified($adminNrp)
     {
-        if ($this->isFullyVerified()) {
-            $this->verified_by_admin_nrp = $adminNrp;
-            $this->verified_at = now();
-            $this->save();
-        }
+        $this->verified_at = now();
+        $this->verified_by_admin_nrp = $adminNrp;
+        $this->status_dokumen = 'final';
+        $this->save();
     }
     
     /**

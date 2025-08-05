@@ -1111,41 +1111,73 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function submitForm() {
-        const submitBtn = document.querySelector('.btn-submit');
-        const formData = new FormData(form);
+    const submitBtn = document.querySelector('.btn-submit');
+    const formData = new FormData(form);
+    
+    // Debug form data
+    console.log('Form data being submitted:');
+    for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+    }
+    
+    // Validasi client-side
+    if (!selectedMutasiId) {
+        showAlert('Silakan pilih data mutasi terlebih dahulu', 'danger');
+        return;
+    }
+    
+    const sertijabFile = document.getElementById('dokumen_sertijab').files[0];
+    if (!sertijabFile) {
+        showAlert('Dokumen Sertijab wajib diupload', 'danger');
+        return;
+    }
+    
+    // Show loading
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
         
-        // Show loading
-        submitBtn.disabled = true;
-        submitBtn.classList.add('loading');
-        
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSuccessModal(data.message);
-                setTimeout(() => {
-                    window.location.href = data.redirect_url;
-                }, 2000);
+        if (data.success) {
+            showSuccessModal(data.message);
+            setTimeout(() => {
+                window.location.href = data.redirect_url;
+            }, 2000);
+        } else {
+            // Handle validation errors
+            if (data.errors) {
+                let errorMessage = 'Terjadi kesalahan validasi:\n';
+                Object.keys(data.errors).forEach(field => {
+                    errorMessage += `- ${data.errors[field].join(', ')}\n`;
+                });
+                showAlert(errorMessage, 'danger');
             } else {
                 showAlert(data.message || 'Terjadi kesalahan', 'danger');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('Terjadi kesalahan saat menyimpan data', 'danger');
-        })
-        .finally(() => {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('loading');
-        });
-    }
+        }
+    })
+    .catch(error => {
+        console.error('Fetch Error:', error);
+        showAlert('Terjadi kesalahan saat menyimpan data: ' + error.message, 'danger');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+    });
+}
     
     function hideMessages() {
         document.getElementById('noMutasiMessage').classList.add('d-none');
