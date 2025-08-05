@@ -7,8 +7,6 @@ use App\Http\Controllers\ABKController;
 use App\Http\Controllers\KapalController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\ArsipController;
-use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleSelectionController;
 use App\Http\Controllers\PUKController;
 use App\Http\Controllers\MutasiController;
@@ -164,19 +162,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/verify-all', [ArsipController::class, 'verifyAllDocuments'])->name('verify-all');
         Route::post('/{id}/update-status', [ArsipController::class, 'updateStatus'])->name('update-status');
         Route::post('/bulk-update-status', [ArsipController::class, 'bulkUpdateStatus'])->name('bulk-update-status');
-    });
-    
-    // Settings routes
-    Route::prefix('settings')->name('settings.')->group(function () {
-        Route::get('/', [SettingsController::class, 'index'])->name('index');
-        Route::post('/update', [SettingsController::class, 'update'])->name('update');
-    });
-    
-    // Profile routes
-    Route::prefix('profile')->name('profile.')->group(function () {
-        Route::get('/', [ProfileController::class, 'index'])->name('index');
-        Route::put('/update', [ProfileController::class, 'update'])->name('update');
-        Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
     });
 });
 

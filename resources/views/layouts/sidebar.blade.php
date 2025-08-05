@@ -38,7 +38,7 @@
             </div>
         </div>
         
-        <!-- Toggle Button - DIPERBAIKI POSITIONING -->
+        <!-- Toggle Button -->
         <button class="sidebar-toggle" id="sidebarToggle" type="button">
             <i class="bi bi-list"></i>
         </button>
@@ -58,7 +58,7 @@
                 </a>
             </li>
 
-            <!-- Kelola ABK - DIPERBAIKI MENGGUNAKAN ROUTE HELPER -->
+            <!-- Kelola ABK -->
             <li class="nav-item has-submenu {{ request()->routeIs('abk.*') ? 'active' : '' }}">
                 <a href="#" class="nav-link" data-submenu="abk" data-tooltip="Kelola ABK">
                     <div class="nav-icon">
@@ -70,11 +70,11 @@
                 <ul class="submenu" id="submenu-abk">
                     <li><a href="{{ route('abk.index') }}" class="submenu-link {{ request()->routeIs('abk.index') ? 'active' : '' }}">Data ABK</a></li>
                     <li><a href="{{ route('abk.create') }}" class="submenu-link {{ request()->routeIs('abk.create') ? 'active' : '' }}">Tambah ABK</a></li>
-                    <li><a href="{{ route('abk.export') }}" class="submenu-link {{ request()->routeIs('abk.export*') ? 'active' : '' }}">Export ABK</a></li>
+                    <li><a href="{{ route('abk.export-import') }}" class="submenu-link {{ request()->routeIs('abk.export*') ? 'active' : '' }}">Export & Import</a></li>
                 </ul>
             </li>
 
-            <!-- Kelola Mutasi - MENU BARU -->
+            <!-- Kelola Mutasi -->
             <li class="nav-item has-submenu {{ request()->routeIs('mutasi.*') ? 'active' : '' }}">
                 <a href="#" class="nav-link" data-submenu="mutasi" data-tooltip="Kelola Mutasi">
                     <div class="nav-icon">
@@ -121,7 +121,7 @@
                 </ul>
             </li>
 
-            <!-- Data Kapal - JUGA DIPERBAIKI MENGGUNAKAN ROUTE HELPER -->
+            <!-- Data Kapal -->
             <li class="nav-item has-submenu {{ request()->routeIs('kapal.*') ? 'active' : '' }}">
                 <a href="#" class="nav-link" data-submenu="kapal" data-tooltip="Data Kapal">
                     <div class="nav-icon">
@@ -135,32 +135,6 @@
                     <li><a href="{{ route('kapal.create') }}" class="submenu-link {{ request()->routeIs('kapal.create') ? 'active' : '' }}">Tambah Kapal</a></li>
                 </ul>
             </li>
-
-            <!-- Divider -->
-            <li class="nav-divider">
-                <span class="divider-line"></span>
-                <span class="divider-text">Pengaturan</span>
-            </li>
-
-            <!-- Settings -->
-            <li class="nav-item">
-                <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" data-tooltip="Pengaturan">
-                    <div class="nav-icon">
-                        <i class="bi bi-gear-fill"></i>
-                    </div>
-                    <span class="nav-text">Pengaturan</span>
-                </a>
-            </li>
-
-            <!-- Profile -->
-            <li class="nav-item">
-                <a href="{{ route('profile.index') }}" class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}" data-tooltip="Profil Admin">
-                    <div class="nav-icon">
-                        <i class="bi bi-person-circle"></i>
-                    </div>
-                    <span class="nav-text">Profil Admin</span>
-                </a>
-            </li>
         </ul>
     </nav>
 
@@ -171,16 +145,19 @@
                 <i class="bi bi-person-circle"></i>
             </div>
             <div class="admin-details">
-                <div class="admin-name">Administrator</div>
+                <div class="admin-name">{{ auth()->user()->nama_admin ?? 'Administrator' }}</div>
                 <div class="admin-role">System Admin</div>
             </div>
         </div>
         
         <div class="logout-section">
-            <a href="#" class="logout-btn" data-tooltip="Logout">
-                <i class="bi bi-box-arrow-right"></i>
-                <span class="nav-text">Logout</span>
-            </a>
+            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                @csrf
+                <button type="submit" class="logout-btn" data-tooltip="Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="nav-text">Logout</span>
+                </button>
+            </form>
         </div>
     </div>
 </div>
@@ -188,9 +165,8 @@
 <!-- Mobile Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-{{-- CSS dan JavaScript tetap sama seperti sebelumnya --}}
 <style>
-/* Keep all existing CSS styles unchanged */
+/* Keep all existing CSS styles but update animation delays */
 :root {
     --sidebar-width: 280px;
     --sidebar-collapsed-width: 70px;
@@ -738,12 +714,15 @@
     align-items: center;
     padding: 10px 16px;
     color: #dc2626;
-    text-decoration: none;
+    background: transparent;
+    border: 1px solid rgba(220, 38, 38, 0.2);
     border-radius: 8px;
     transition: var(--transition);
     font-weight: 500;
     font-size: 14px;
-    border: 1px solid rgba(220, 38, 38, 0.2);
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
 }
 
 .sidebar.collapsed .logout-btn {
@@ -962,13 +941,10 @@
 
 .nav-item:nth-child(1) { animation-delay: 0.1s; }  /* Dashboard */
 .nav-item:nth-child(2) { animation-delay: 0.15s; } /* Kelola ABK */
-.nav-item:nth-child(3) { animation-delay: 0.2s; }  /* Kelola Mutasi - BARU */
+.nav-item:nth-child(3) { animation-delay: 0.2s; }  /* Kelola Mutasi */
 .nav-item:nth-child(4) { animation-delay: 0.25s; } /* Monitoring */
 .nav-item:nth-child(5) { animation-delay: 0.3s; }  /* Arsip Sertijab */
 .nav-item:nth-child(6) { animation-delay: 0.35s; } /* Data Kapal */
-.nav-item:nth-child(7) { animation-delay: 0.4s; }  /* Divider */
-.nav-item:nth-child(8) { animation-delay: 0.45s; } /* Settings */
-.nav-item:nth-child(9) { animation-delay: 0.5s; }  /* Profile */
 
 @keyframes slideInLeft {
     from {
@@ -1116,20 +1092,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ================== AUTO-COLLAPSE AFTER SUBMENU SELECTION ==================
-    
-    // Handle submenu link clicks (AUTO-COLLAPSE FEATURE)
+    // Auto-collapse after submenu selection
     document.querySelectorAll('.submenu-link').forEach(submenuLink => {
         submenuLink.addEventListener('click', function(e) {
-            // Get the href to check if it's a valid navigation
             const href = this.getAttribute('href');
             
-            // Only auto-collapse if it's a valid navigation (not # or javascript:void(0))
             if (href && href !== '#' && href !== 'javascript:void(0)' && !href.startsWith('javascript:')) {
-                // Small delay to ensure the navigation starts before collapsing
                 setTimeout(() => {
                     autoCollapseSidebar();
-                }, 150); // 150ms delay for smooth transition
+                }, 150);
             }
         });
     });
@@ -1139,15 +1110,11 @@ document.addEventListener('DOMContentLoaded', function() {
         link.addEventListener('click', function() {
             const href = this.getAttribute('href');
             
-            // Check if it's a valid navigation
             if (href && href !== '#' && href !== 'javascript:void(0)' && !href.startsWith('javascript:')) {
-                // Auto-collapse for mobile and desktop
                 if (window.innerWidth <= 768) {
-                    // Mobile: Close sidebar immediately
                     sidebar.classList.remove('mobile-open');
                     sidebarOverlay.classList.remove('active');
                 } else {
-                    // Desktop: Collapse with delay
                     setTimeout(() => {
                         sidebar.classList.add('collapsed');
                         localStorage.setItem('sidebarCollapsed', 'true');
@@ -1157,13 +1124,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ================== ENHANCED AUTO-EXPAND ON PAGE LOAD ==================
-    
     // Enhanced: Auto-expand submenu if current page matches submenu item
     function autoExpandActiveSubmenu() {
         const currentPath = window.location.pathname;
         
-        // Find submenu link that matches current path
         document.querySelectorAll('.submenu-link').forEach(submenuLink => {
             const linkPath = new URL(submenuLink.href, window.location.origin).pathname;
             
@@ -1179,146 +1143,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Call on page load
     autoExpandActiveSubmenu();
 
-    // ================== SMART BEHAVIOR ENHANCEMENTS ==================
-    
-    // Smart behavior: If user manually expands sidebar, don't auto-collapse for a short period
-    let userManuallyExpanded = false;
-    let manualExpandTimeout;
-
-    // Track manual sidebar expansion
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-            if (sidebar.classList.contains('collapsed')) {
-                userManuallyExpanded = true;
-                
-                // Reset the flag after 5 seconds
-                clearTimeout(manualExpandTimeout);
-                manualExpandTimeout = setTimeout(() => {
-                    userManuallyExpanded = false;
-                }, 5000);
-            }
-        });
-    }
-
-    // Enhanced auto-collapse function with smart behavior
-    function smartAutoCollapse() {
-        // Don't auto-collapse if user just manually expanded
-        if (userManuallyExpanded) {
-            return;
-        }
-
-        autoCollapseSidebar();
-    }
-
-    // Update submenu link event listeners to use smart auto-collapse
-    document.querySelectorAll('.submenu-link').forEach(submenuLink => {
-        // Remove previous listener and add smart one
-        submenuLink.removeEventListener('click', autoCollapseSidebar);
-        
-        submenuLink.addEventListener('click', function(e) {
-            const href = this.getAttribute('href');
-            
-            if (href && href !== '#' && href !== 'javascript:void(0)' && !href.startsWith('javascript:')) {
-                setTimeout(() => {
-                    smartAutoCollapse();
-                }, 150);
-            }
-        });
-    });
-
-    // ================== HOVER BEHAVIOR FOR COLLAPSED SIDEBAR ==================
-    
-    let hoverTimeout;
-    
-    // Show submenu on hover when collapsed (Desktop only)
-    document.querySelectorAll('.has-submenu').forEach(submenuParent => {
-        submenuParent.addEventListener('mouseenter', function() {
-            if (sidebar.classList.contains('collapsed') && window.innerWidth > 768) {
-                clearTimeout(hoverTimeout);
-                
-                // Create floating submenu
-                createFloatingSubmenu(this);
-            }
-        });
-
-        submenuParent.addEventListener('mouseleave', function() {
-            if (sidebar.classList.contains('collapsed') && window.innerWidth > 768) {
-                hoverTimeout = setTimeout(() => {
-                    removeFloatingSubmenu();
-                }, 300);
-            }
-        });
-    });
-
-    function createFloatingSubmenu(parentElement) {
-        // Remove existing floating submenu
-        removeFloatingSubmenu();
-        
-        const submenu = parentElement.querySelector('.submenu');
-        if (!submenu) return;
-
-        const floatingSubmenu = submenu.cloneNode(true);
-        floatingSubmenu.classList.add('floating-submenu');
-        
-        // Position floating submenu
-        const rect = parentElement.getBoundingClientRect();
-        floatingSubmenu.style.position = 'fixed';
-        floatingSubmenu.style.left = rect.right + 10 + 'px';
-        floatingSubmenu.style.top = rect.top + 'px';
-        floatingSubmenu.style.zIndex = '1050';
-        floatingSubmenu.style.background = 'white';
-        floatingSubmenu.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        floatingSubmenu.style.borderRadius = '8px';
-        floatingSubmenu.style.border = '1px solid var(--border-color)';
-        floatingSubmenu.style.minWidth = '200px';
-        floatingSubmenu.style.maxHeight = '300px';
-        floatingSubmenu.style.padding = '8px 0';
-        floatingSubmenu.style.display = 'block';
-        floatingSubmenu.style.opacity = '0';
-        floatingSubmenu.style.transform = 'translateY(-10px)';
-        floatingSubmenu.style.transition = 'all 0.2s ease';
-
-        // Add click handlers to floating submenu links
-        floatingSubmenu.querySelectorAll('.submenu-link').forEach(link => {
-            link.addEventListener('click', function() {
-                removeFloatingSubmenu();
-                smartAutoCollapse();
-            });
-        });
-
-        document.body.appendChild(floatingSubmenu);
-        
-        // Animate in
-        setTimeout(() => {
-            floatingSubmenu.style.opacity = '1';
-            floatingSubmenu.style.transform = 'translateY(0)';
-        }, 10);
-
-        // Handle hover on floating submenu
-        floatingSubmenu.addEventListener('mouseenter', () => {
-            clearTimeout(hoverTimeout);
-        });
-
-        floatingSubmenu.addEventListener('mouseleave', () => {
-            hoverTimeout = setTimeout(() => {
-                removeFloatingSubmenu();
-            }, 300);
-        });
-    }
-
-    function removeFloatingSubmenu() {
-        const existingFloating = document.querySelector('.floating-submenu');
-        if (existingFloating) {
-            existingFloating.style.opacity = '0';
-            existingFloating.style.transform = 'translateY(-10px)';
-            setTimeout(() => {
-                if (existingFloating.parentNode) {
-                    existingFloating.parentNode.removeChild(existingFloating);
-                }
-            }, 200);
-        }
-    }
-
     // Prevent sidebar close when clicking inside sidebar
     sidebar.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -1333,11 +1157,6 @@ document.addEventListener('DOMContentLoaded', function() {
             sidebar.classList.remove('mobile-open');
             sidebarOverlay.classList.remove('active');
         }
-        
-        // Also remove floating submenu when clicking outside
-        if (!sidebar.contains(e.target)) {
-            removeFloatingSubmenu();
-        }
     });
 
     // Keyboard shortcuts
@@ -1348,9 +1167,8 @@ document.addEventListener('DOMContentLoaded', function() {
             toggleSidebar(e);
         }
         
-        // Escape: Close floating submenu or mobile sidebar
+        // Escape: Close mobile sidebar
         if (e.key === 'Escape') {
-            removeFloatingSubmenu();
             if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open')) {
                 sidebar.classList.remove('mobile-open');
                 sidebarOverlay.classList.remove('active');
@@ -1358,21 +1176,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ================== PAGE VISIBILITY CHANGE HANDLER ==================
-    
-    // Auto-collapse when user switches tabs/windows (optional)
-    document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            // User switched away from tab - optionally auto-collapse
-            // Uncomment below if you want this behavior:
-            // setTimeout(() => {
-            //     if (!userManuallyExpanded) {
-            //         autoCollapseSidebar();
-            //     }
-            // }, 2000); // 2 second delay
-        }
-    });
-
-    console.log('🎯 Enhanced Sidebar with Kelola Mutasi Menu initialized successfully!');
+    console.log('🎯 Enhanced Sidebar without Settings & Profile Menu initialized successfully!');
 });
 </script>

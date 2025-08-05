@@ -39,12 +39,67 @@
                             @elseif(request()->routeIs('abk.export*'))
                                 <li class="breadcrumb-item active">
                                     <i class="bi bi-chevron-right"></i>
-                                    <span>Export ABK</span>
+                                    <span>Export & Import</span>
                                 </li>
                             @elseif(request()->routeIs('abk.index'))
                                 <li class="breadcrumb-item active">
                                     <i class="bi bi-chevron-right"></i>
                                     <span>Data ABK</span>
+                                </li>
+                            @endif
+                            
+                        @elseif(request()->routeIs('mutasi.*'))
+                            <li class="breadcrumb-item">
+                                <i class="bi bi-chevron-right"></i>
+                                <span>Kelola Mutasi</span>
+                            </li>
+                            @if(request()->routeIs('mutasi.create'))
+                                <li class="breadcrumb-item active">
+                                    <i class="bi bi-chevron-right"></i>
+                                    <span>Tambah Mutasi</span>
+                                </li>
+                            @elseif(request()->routeIs('mutasi.edit'))
+                                <li class="breadcrumb-item active">
+                                    <i class="bi bi-chevron-right"></i>
+                                    <span>Edit Mutasi</span>
+                                </li>
+                            @elseif(request()->routeIs('mutasi.show'))
+                                <li class="breadcrumb-item active">
+                                    <i class="bi bi-chevron-right"></i>
+                                    <span>Detail Mutasi</span>
+                                </li>
+                            @elseif(request()->routeIs('mutasi.index'))
+                                <li class="breadcrumb-item active">
+                                    <i class="bi bi-chevron-right"></i>
+                                    <span>Data Mutasi</span>
+                                </li>
+                            @endif
+                            
+
+                        @elseif(request()->routeIs('kapal.*'))
+                            <li class="breadcrumb-item">
+                                <i class="bi bi-chevron-right"></i>
+                                <span>Data Kapal</span>
+                            </li>
+                            @if(request()->routeIs('kapal.create'))
+                                <li class="breadcrumb-item active">
+                                    <i class="bi bi-chevron-right"></i>
+                                    <span>Tambah Kapal</span>
+                                </li>
+                            @elseif(request()->routeIs('kapal.edit'))
+                                <li class="breadcrumb-item active">
+                                    <i class="bi bi-chevron-right"></i>
+                                    <span>Edit Kapal</span>
+                                </li>
+                            @elseif(request()->routeIs('kapal.show'))
+                                <li class="breadcrumb-item active">
+                                    <i class="bi bi-chevron-right"></i>
+                                    <span>Detail Kapal</span>
+                                </li>
+                            @elseif(request()->routeIs('kapal.index'))
+                                <li class="breadcrumb-item active">
+                                    <i class="bi bi-chevron-right"></i>
+                                    <span>Data Kapal</span>
                                 </li>
                             @endif
                             
@@ -56,7 +111,12 @@
                             @if(request()->routeIs('monitoring.sertijab*'))
                                 <li class="breadcrumb-item active">
                                     <i class="bi bi-chevron-right"></i>
-                                    <span>Monitoring Sertijab</span>
+                                    <span>Dokumen Sertijab</span>
+                                </li>
+                            @elseif(request()->routeIs('monitoring.documents*'))
+                                <li class="breadcrumb-item active">
+                                    <i class="bi bi-chevron-right"></i>
+                                    <span>Verifikasi Dokumen</span>
                                 </li>
                             @elseif(request()->routeIs('monitoring.index'))
                                 <li class="breadcrumb-item active">
@@ -101,18 +161,6 @@
                                     <span>Data Arsip</span>
                                 </li>
                             @endif
-                            
-                        @elseif(request()->routeIs('settings.*'))
-                            <li class="breadcrumb-item active">
-                                <i class="bi bi-chevron-right"></i>
-                                <span>Pengaturan</span>
-                            </li>
-                            
-                        @elseif(request()->routeIs('profile.*'))
-                            <li class="breadcrumb-item active">
-                                <i class="bi bi-chevron-right"></i>
-                                <span>Profil Admin</span>
-                            </li>
                         @endif
                     </ol>
                 </nav>
@@ -185,7 +233,7 @@
                     <i class="bi bi-chevron-down profile-arrow"></i>
                 </button>
 
-                <!-- Profile Dropdown -->
+                <!-- Profile Dropdown - SIMPLIFIED -->
                 <div class="profile-dropdown" id="profileDropdown">
                     <div class="profile-dropdown-header">
                         <div class="profile-avatar-large">
@@ -197,15 +245,7 @@
                         </div>
                     </div>
                     <div class="profile-dropdown-menu">
-                        <a href="{{ route('profile.index') }}" class="dropdown-item">
-                            <i class="bi bi-person"></i>
-                            <span>Profil Saya</span>
-                        </a>
-                        <a href="{{ route('settings.index') }}" class="dropdown-item">
-                            <i class="bi bi-gear"></i>
-                            <span>Pengaturan</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
+                        <!-- ONLY LOGOUT ITEM - REMOVED PROFILE & SETTINGS -->
                         <a href="{{ route('logout') }}" class="dropdown-item logout-item" 
                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                             <i class="bi bi-box-arrow-right"></i>
@@ -719,11 +759,12 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 18px;
+    padding: 12px 18px; /* INCREASED PADDING for single logout item */
     color: var(--text-dark);
     text-decoration: none;
-    font-size: 13px;
+    font-size: 14px; /* INCREASED FONT SIZE */
     transition: var(--transition);
+    justify-content: center; /* CENTER the logout item */
 }
 
 .dropdown-item:hover {
@@ -732,24 +773,25 @@
 }
 
 .dropdown-item i {
-    width: 16px;
-    font-size: 14px;
+    width: 18px; /* INCREASED ICON SIZE */
+    font-size: 16px; /* INCREASED ICON SIZE */
     text-align: center;
 }
 
 .dropdown-item.logout-item {
     color: #ef4444;
+    font-weight: 600; /* MAKE LOGOUT MORE PROMINENT */
 }
 
 .dropdown-item.logout-item:hover {
     background: rgba(239, 68, 68, 0.1);
     color: #dc2626;
+    transform: translateY(-1px); /* SUBTLE HOVER EFFECT */
 }
 
+/* Remove dropdown divider styles since not needed */
 .dropdown-divider {
-    height: 1px;
-    background: var(--border-color);
-    margin: 6px 0;
+    display: none;
 }
 
 /* Mobile Menu Toggle */
