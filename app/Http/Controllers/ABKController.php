@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\Models\ABKNew;
 use App\Models\Jabatan;
 use App\Models\Kapal;
+use App\Models\Mutasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -24,7 +25,7 @@ class ABKController extends Controller
     public function index()
     {
         try {
-            // Data statistik ABK saja
+            // Data statistik ABK
             $totalStatistik = [
                 'total_abk' => ABKNew::count(),
                 'abk_aktif' => ABKNew::where('status_abk', '!=', 'Pensiun')->count(),
@@ -33,77 +34,63 @@ class ABKController extends Controller
                 'abk_pensiun' => ABKNew::where('status_abk', 'Pensiun')->count()
             ];
 
-            // Data ABK per kapal (dummy data untuk sementara)
-            $abkPerKapal = collect([
-                [
-                    'id' => 1,
-                    'nama_kapal' => 'KM Sirimau',
-                    'total_abk' => 25,
-                    'abk_aktif' => 20,
-                    'abk_tidak_aktif' => 5
-                ],
-                [
-                    'id' => 2,
-                    'nama_kapal' => 'KM Tatamailau',
-                    'total_abk' => 30,
-                    'abk_aktif' => 28,
-                    'abk_tidak_aktif' => 2
-                ],
-                [
-                    'id' => 3,
-                    'nama_kapal' => 'KM Dorolonda',
-                    'total_abk' => 22,
-                    'abk_aktif' => 22,
-                    'abk_tidak_aktif' => 0
-                ],
-                [
-                    'id' => 4,
-                    'nama_kapal' => 'KM Pangrango',
-                    'total_abk' => 35,
-                    'abk_aktif' => 32,
-                    'abk_tidak_aktif' => 3
-                ]
-            ]);
+            // Data ABK per kapal - DARI TABEL MUTASI
+            $abkPerKapal = Mutasi::with('kapal')
+                ->select('id_kapal', 'nama_kapal')
+                ->selectRaw('COUNT(DISTINCT id_abk_naik) as total_abk_naik')
+                ->selectRaw('COUNT(DISTINCT id_abk_turun) as total_abk_turun')
+                ->selectRaw('COUNT(CASE WHEN status_mutasi = "Selesai" THEN 1 END) as mutasi_selesai')
+                ->selectRaw('COUNT(CASE WHEN status_mutasi IN ("Draft", "Disetujui") THEN 1 END) as mutasi_proses')
+                ->groupBy('id_kapal', 'nama_kapal')
+                ->orderByDesc('total_abk_naik')
+                ->limit(6)
+                ->get()
+                ->map(function($item) {
+                    return [
+                        'id' => $item->id_kapal,
+                        'nama_kapal' => $item->nama_kapal,
+                        'total_abk' => $item->total_abk_naik + $item->total_abk_turun,
+                        'abk_aktif' => $item->mutasi_selesai,
+                        'abk_tidak_aktif' => $item->mutasi_proses
+                    ];
+                });
 
-            // Data mutasi terbaru (dummy data untuk sementara)
-            $mutasiTerbaru = collect([
-                [
-                    'id' => 1,
-                    'abkTurun' => ['nama_abk' => 'Ahmad Syafiq'],
-                    'kapalTurun' => ['nama_kapal' => 'KM Sirimau'],
-                    'kapalNaik' => ['nama_kapal' => 'KM Tatamailau'],
-                    'status_mutasi' => 'Proses',
-                    'created_at' => now()->subDays(2)
-                ],
-                [
-                    'id' => 2,
-                    'abkTurun' => ['nama_abk' => 'Budi Santoso'],
-                    'kapalTurun' => ['nama_kapal' => 'KM Dorolonda'],
-                    'kapalNaik' => ['nama_kapal' => 'KM Pangrango'],
-                    'status_mutasi' => 'Selesai',
-                    'created_at' => now()->subDays(5)
-                ],
-                [
-                    'id' => 3,
-                    'abkTurun' => ['nama_abk' => 'Citra Dewi'],
-                    'kapalTurun' => ['nama_kapal' => 'KM Tatamailau'],
-                    'kapalNaik' => ['nama_kapal' => 'KM Sirimau'],
-                    'status_mutasi' => 'Pending',
-                    'created_at' => now()->subWeek()
-                ]
-            ]);
+            // Data mutasi terbaru - DARI TABEL MUTASI
+            $mutasiTerbaru = Mutasi::with(['kapal', 'abkNaik', 'abkTurun'])
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get()
+                ->map(function($mutasi) {
+                    return [
+                        'id' => $mutasi->id,
+                        'abkTurun' => [
+                            'nama_abk' => $mutasi->nama_lengkap_naik // ABK yang naik ke kapal
+                        ],
+                        'kapalTurun' => [
+                            'nama_kapal' => 'From Previous Ship' // Kapal asal (bisa ditambahkan field nanti)
+                        ],
+                        'kapalNaik' => [
+                            'nama_kapal' => $mutasi->nama_kapal // Kapal tujuan
+                        ],
+                        'status_mutasi' => $mutasi->status_mutasi,
+                        'created_at' => $mutasi->created_at,
+                        'jenis_mutasi' => $mutasi->jenis_mutasi,
+                        'periode' => $mutasi->TMT ? $mutasi->TMT->format('d/m/Y') : 'N/A'
+                    ];
+                });
 
-            // Data ABK list terbaru dengan relasi yang benar
+            // Data ABK list terbaru
             $abkList = ABKNew::with(['jabatanTetap', 'kapalAktif'])
                 ->orderBy('created_at', 'desc')
-                ->take(20) // Ubah dari 10 menjadi 20 untuk lebih banyak data search
+                ->take(20)
                 ->get();
 
-            // Debug data untuk memastikan query bekerja
-            Log::info('ABK List Count: ' . $abkList->count());
-            if ($abkList->count() > 0) {
-                Log::info('Sample ABK: ', $abkList->first()->toArray());
-            }
+            Log::info('ABK data loaded successfully', [
+                'total_abk' => $totalStatistik['total_abk'],
+                'kapal_count' => $abkPerKapal->count(),
+                'mutasi_count' => $mutasiTerbaru->count(),
+                'abk_list_count' => $abkList->count()
+            ]);
                 
             return view('kelolaABK.index', compact(
                 'abkList',
@@ -127,7 +114,7 @@ class ABKController extends Controller
             
             $abkPerKapal = collect();
             $mutasiTerbaru = collect();
-            $abkList = collect(); // Empty collection
+            $abkList = collect();
             
             return view('kelolaABK.index', compact(
                 'abkList',

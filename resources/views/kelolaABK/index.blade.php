@@ -145,13 +145,13 @@
 
     <!-- Main Content Row -->
     <div class="row">
-        <!-- ABK per Kapal Cards -->
+        <!-- ABK per Kapal Cards - UPDATE INI -->
         <div class="col-xl-8 col-lg-7 mb-4">
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
                         <i class="bi bi-ship"></i>
-                        Data ABK per Kapal
+                        Data Mutasi per Kapal
                     </h5>
                 </div>
                 <div class="card-body">
@@ -162,17 +162,19 @@
                                     <div class="kapal-card">
                                         <div class="kapal-header">
                                             <div class="kapal-info">
-                                                {{-- Gunakan array syntax, bukan object --}}
                                                 <h6 class="kapal-name">{{ $data['nama_kapal'] ?? 'Kapal Tidak Ditemukan' }}</h6>
+                                                <small class="kapal-id text-muted">ID: {{ $data['id'] }}</small>
                                             </div>
                                             <div class="kapal-actions">
-                                                {{-- <a href="{{ route('abk.kapal', $data['id'] ?? 0) }}" 
-                                                   class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-eye"></i>
-                                                </a> --}}
-                                                <a href="{{ route('mutasi.create', ['abk_id' => $data['id'] ?? 0]) }}" 
-                                                   class="btn btn-sm btn-outline-success">
+                                                <a href="{{ route('mutasi.create', ['kapal_id' => $data['id']]) }}" 
+                                                   class="btn btn-sm btn-outline-success"
+                                                   title="Buat Mutasi">
                                                     <i class="bi bi-arrow-repeat"></i>
+                                                </a>
+                                                <a href="{{ route('monitoring.index') }}?kapal={{ $data['id'] }}" 
+                                                   class="btn btn-sm btn-outline-primary"
+                                                   title="Monitor Mutasi">
+                                                    <i class="bi bi-graph-up-arrow"></i>
                                                 </a>
                                             </div>
                                         </div>
@@ -180,15 +182,15 @@
                                         <div class="kapal-stats">
                                             <div class="stat-item">
                                                 <span class="stat-value text-primary">{{ $data['total_abk'] ?? 0 }}</span>
-                                                <span class="stat-label">Total ABK</span>
+                                                <span class="stat-label">Total Mutasi</span>
                                             </div>
                                             <div class="stat-item">
                                                 <span class="stat-value text-success">{{ $data['abk_aktif'] ?? 0 }}</span>
-                                                <span class="stat-label">Aktif</span>
+                                                <span class="stat-label">Selesai</span>
                                             </div>
                                             <div class="stat-item">
                                                 <span class="stat-value text-warning">{{ $data['abk_tidak_aktif'] ?? 0 }}</span>
-                                                <span class="stat-label">Non-Aktif</span>
+                                                <span class="stat-label">Proses</span>
                                             </div>
                                         </div>
                                         
@@ -200,10 +202,24 @@
                                                     </div>
                                                 </div>
                                                 <small class="text-muted">
-                                                    {{ number_format((($data['abk_aktif'] ?? 0) / ($data['total_abk'] ?? 1)) * 100, 1) }}% ABK Aktif
+                                                    {{ number_format((($data['abk_aktif'] ?? 0) / ($data['total_abk'] ?? 1)) * 100, 1) }}% Mutasi Selesai
                                                 </small>
                                             </div>
                                         @endif
+                                        
+                                        <!-- Tambahan info kapal -->
+                                        <div class="kapal-footer mt-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-calendar-event"></i>
+                                                    Aktivitas Terakhir
+                                                </small>
+                                                <a href="{{ route('mutasi.index') }}?kapal={{ $data['id'] }}" 
+                                                   class="btn btn-xs btn-link text-primary">
+                                                    Lihat Detail <i class="bi bi-arrow-right"></i>
+                                                </a>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
@@ -211,15 +227,19 @@
                     @else
                         <div class="empty-state">
                             <i class="bi bi-ship"></i>
-                            <h6>Belum Ada Data Kapal</h6>
-                            <p>Silakan tambahkan data kapal terlebih dahulu</p>
+                            <h6>Belum Ada Data Mutasi</h6>
+                            <p>Data akan muncul setelah ada mutasi ABK pada kapal</p>
+                            <a href="{{ route('mutasi.create') }}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-arrow-repeat"></i>
+                                Buat Mutasi Pertama
+                            </a>
                         </div>
                     @endif
                 </div>
             </div>
         </div>
 
-        <!-- Recent Mutations -->
+        <!-- Recent Mutations - UPDATE INI -->
         <div class="col-xl-4 col-lg-5 mb-4">
             <div class="card">
                 <div class="card-header">
@@ -234,28 +254,59 @@
                             @foreach($mutasiTerbaru as $mutasi)
                                 <div class="mutation-item">
                                     <div class="mutation-info">
-                                        {{-- Gunakan array syntax --}}
                                         <h6 class="mutation-abk">{{ $mutasi['abkTurun']['nama_abk'] ?? 'N/A' }}</h6>
                                         <div class="mutation-route">
-                                            <span class="from-kapal">{{ $mutasi['kapalTurun']['nama_kapal'] ?? 'N/A' }}</span>
-                                            <i class="bi bi-arrow-right"></i>
-                                            <span class="to-kapal">{{ $mutasi['kapalNaik']['nama_kapal'] ?? 'N/A' }}</span>
+                                            <span class="from-kapal">
+                                                <i class="bi bi-arrow-right-circle text-muted"></i>
+                                                {{ $mutasi['kapalNaik']['nama_kapal'] ?? 'N/A' }}
+                                            </span>
                                         </div>
-                                        <small class="mutation-date text-muted">
-                                            {{ $mutasi['created_at']->diffForHumans() }}
-                                        </small>
+                                        <div class="mutation-details mt-1">
+                                            <small class="text-info">
+                                                <i class="bi bi-calendar"></i>
+                                                TMT: {{ $mutasi['periode'] }}
+                                            </small>
+                                            <small class="text-muted ms-2">
+                                                <i class="bi bi-clock"></i>
+                                                {{ $mutasi['created_at']->diffForHumans() }}
+                                            </small>
+                                        </div>
                                     </div>
                                     <div class="mutation-status">
-                                        <span class="badge bg-{{ $mutasi['status_mutasi'] == 'Selesai' ? 'success' : ($mutasi['status_mutasi'] == 'Proses' ? 'warning' : 'secondary') }}">
-                                            {{ $mutasi['status_mutasi'] ?? 'Pending' }}
-                                        </span>
+                                        @php
+                                            $statusClass = match($mutasi['status_mutasi']) {
+                                                'Selesai' => 'bg-success',
+                                                'Disetujui' => 'bg-primary',
+                                                'Draft' => 'bg-secondary',
+                                                'Ditolak' => 'bg-danger',
+                                                default => 'bg-warning'
+                                            };
+                                            
+                                            $jenisClass = match($mutasi['jenis_mutasi'] ?? '') {
+                                                'Definitif' => 'text-success',
+                                                'Sementara' => 'text-info',
+                                                default => 'text-muted'
+                                            };
+                                        @endphp
+                                        <div class="d-flex flex-column align-items-end">
+                                            <span class="badge {{ $statusClass }} mb-1">
+                                                {{ $mutasi['status_mutasi'] ?? 'Pending' }}
+                                            </span>
+                                            @if(!empty($mutasi['jenis_mutasi']))
+                                                <small class="{{ $jenisClass }}">
+                                                    <i class="bi bi-tag"></i>
+                                                    {{ $mutasi['jenis_mutasi'] }}
+                                                </small>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                         
                         <div class="text-center mt-3">
-                            <a href="{{ route('monitoring.sertijab') }}" class="btn btn-sm btn-outline-primary">
+                            <a href="{{ route('mutasi.index') }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
                                 Lihat Semua Mutasi
                             </a>
                         </div>
@@ -263,7 +314,11 @@
                         <div class="empty-state">
                             <i class="bi bi-arrow-repeat"></i>
                             <h6>Belum Ada Mutasi</h6>
-                            <p>Mutasi akan muncul di sini</p>
+                            <p>Mutasi akan muncul di sini setelah dibuat</p>
+                            <a href="{{ route('mutasi.create') }}" class="btn btn-success btn-sm">
+                                <i class="bi bi-plus-circle"></i>
+                                Buat Mutasi
+                            </a>
                         </div>
                     @endif
                 </div>
