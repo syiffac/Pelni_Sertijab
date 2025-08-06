@@ -43,7 +43,7 @@ class Sertijab extends Model
      */
     public function mutasi(): BelongsTo
     {
-        return $this->belongsTo(Mutasi::class, 'id_mutasi', 'id');
+        return $this->belongsTo(Mutasi::class, 'id_mutasi');
     }
     
     /**

@@ -39,11 +39,6 @@ class Mutasi extends Model
         'TMT_turun',
         'TAT_turun',
         
-        // Dokumen
-        'dokumen_sertijab',
-        'dokumen_familisasi',
-        'dokumen_lampiran',
-        
         // Status dan flags
         'status_mutasi',
         'catatan',
@@ -476,7 +471,7 @@ class Mutasi extends Model
      */
     public function sertijab()
     {
-        return $this->hasOne(Sertijab::class, 'id_mutasi', 'id');
+        return $this->hasOne(Sertijab::class, 'id_mutasi');
     }
 
     /**
@@ -519,6 +514,55 @@ class Mutasi extends Model
         return $this->submitted_by_puk && 
                $this->sertijab && 
                $this->sertijab->hasAllRequiredDocuments();
+    }
+
+    public function adminVerifikator(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'verified_by_admin_nrp', 'NRP_admin');
+    }
+    
+    // Helper untuk menghitung progress verifikasi
+    public function getVerificationProgressAttribute()
+    {
+        $total = 1; // Minimal sertijab
+        $verified = 0;
+        
+        if ($this->status_sertijab === 'final') {
+            $verified++;
+        }
+        
+        // Add familisasi to count if exists
+        if ($this->dokumen_familisasi_path) {
+            $total++;
+            if ($this->status_familisasi === 'final') {
+                $verified++;
+            }
+        }
+        
+        // Add lampiran to count if exists
+        if ($this->dokumen_lampiran_path) {
+            $total++;
+            if ($this->status_lampiran === 'final') {
+                $verified++;
+            }
+        }
+        
+        return round(($verified / $total) * 100);
+    }
+    
+    // Getter untuk status text yang lebih deskriptif
+    public function getStatusTextAttribute()
+    {
+        switch ($this->status_dokumen) {
+            case 'final':
+                return 'Terverifikasi';
+            case 'partial':
+                return 'Verifikasi Sebagian';
+            case 'draft':
+                return 'Belum Terverifikasi';
+            default:
+                return ucfirst($this->status_dokumen);
+        }
     }
 
     /**

@@ -3,12 +3,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Mutasi;
-use App\Models\ABKNew;
 use App\Models\Kapal;
+use App\Models\ABKNew;
+use App\Models\Mutasi;
 use App\Models\Jabatan;
+use App\Models\Sertijab;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -132,133 +134,148 @@ class MutasiController extends Controller
      * Store a newly created mutation
      */
     public function store(Request $request)
-    {
-        $request->validate([
-            'id_kapal' => 'required|integer|exists:kapal,id',
-            'nrp_naik' => 'required|string|max:255',
-            'nama_naik' => 'required|string|max:255',
-            'jabatan_naik' => 'required|exists:jabatan,id',
-            'id_jabatan_mutasi' => 'required|exists:jabatan,id',
-            'nama_mutasi' => 'required|string|max:255',
-            'jenis_mutasi' => 'required|in:Sementara,Definitif',
-            'TMT' => 'required|date',
-            'TAT' => 'required|date|after:TMT',
-            'ada_abk_turun' => 'nullable|in:0,1',  // Accept both 0 and 1 as valid values
-            'nrp_turun' => 'nullable|string|max:255|required_if:ada_abk_turun,1',
-            'nama_turun' => 'nullable|string|max:255|required_if:ada_abk_turun,1',
-            'jabatan_turun' => 'nullable|exists:jabatan,id|required_if:ada_abk_turun,1',
-            'id_jabatan_mutasi_turun' => 'nullable|exists:jabatan,id|required_if:ada_abk_turun,1',
-            'nama_mutasi_turun' => 'nullable|string|max:255|required_if:ada_abk_turun,1',
-            'jenis_mutasi_turun' => 'nullable|in:Sementara,Definitif|required_if:ada_abk_turun,1',
-            'TMT_turun' => 'nullable|date|required_if:ada_abk_turun,1',
-            'TAT_turun' => 'nullable|date|after:TMT_turun|required_if:ada_abk_turun,1',
-            'keterangan_turun' => 'nullable|string|max:1000',
-            'catatan' => 'nullable|string',
-            'perlu_sertijab' => 'boolean'
-        ]);
+{
+    $request->validate([
+        'id_kapal' => 'required|integer|exists:kapal,id',
+        'nrp_naik' => 'required|string|max:255',
+        'nama_naik' => 'required|string|max:255',
+        'jabatan_naik' => 'required|exists:jabatan,id',
+        'id_jabatan_mutasi' => 'required|exists:jabatan,id',
+        'nama_mutasi' => 'required|string|max:255',
+        'jenis_mutasi' => 'required|in:Sementara,Definitif',
+        'TMT' => 'required|date',
+        'TAT' => 'required|date|after:TMT',
+        'ada_abk_turun' => 'nullable|in:0,1',
+        'nrp_turun' => 'nullable|string|max:255|required_if:ada_abk_turun,1',
+        'nama_turun' => 'nullable|string|max:255|required_if:ada_abk_turun,1',
+        'jabatan_turun' => 'nullable|exists:jabatan,id|required_if:ada_abk_turun,1',
+        'id_jabatan_mutasi_turun' => 'nullable|exists:jabatan,id|required_if:ada_abk_turun,1',
+        'nama_mutasi_turun' => 'nullable|string|max:255|required_if:ada_abk_turun,1',
+        'jenis_mutasi_turun' => 'nullable|in:Sementara,Definitif|required_if:ada_abk_turun,1',
+        'TMT_turun' => 'nullable|date|required_if:ada_abk_turun,1',
+        'TAT_turun' => 'nullable|date|after:TMT_turun|required_if:ada_abk_turun,1',
+        'keterangan_turun' => 'nullable|string|max:1000',
+        'catatan' => 'nullable|string',
+        'perlu_sertijab' => 'boolean'
+    ]);
 
-        try {
-            DB::beginTransaction();
+    try {
+        DB::beginTransaction();
 
-            $kapal = Kapal::findOrFail($request->id_kapal);
+        $kapal = Kapal::findOrFail($request->id_kapal);
 
-            $abkNaik = ABKNew::where('id', $request->nrp_naik)->first();
-            if (!$abkNaik) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ABK naik dengan NRP ' . $request->nrp_naik . ' tidak ditemukan'
-                ], 404);
-            }
-
-            // Fix: Gunakan filter_var untuk lebih aman
-            $adaAbkTurun = filter_var($request->input('ada_abk_turun'), FILTER_VALIDATE_BOOLEAN);
-            $abkTurun = null;
-            
-            if ($adaAbkTurun && $request->filled('nrp_turun')) {
-                $abkTurun = ABKNew::where('id', $request->nrp_turun)->first();
-                if (!$abkTurun) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'ABK turun dengan NRP ' . $request->nrp_turun . ' tidak ditemukan'
-                    ], 404);
-                }
-            }
-
-            $mutasiData = [
-                'id_kapal' => (int) $kapal->id,
-                'nama_kapal' => $kapal->nama_kapal,
-                'id_abk_naik' => $abkNaik->id,
-                'nama_lengkap_naik' => $abkNaik->nama_abk,
-                'jabatan_tetap_naik' => (int) $abkNaik->id_jabatan_tetap,
-                'id_jabatan_mutasi' => (int) $request->id_jabatan_mutasi,
-                'nama_mutasi' => $request->nama_mutasi,
-                'jenis_mutasi' => $request->jenis_mutasi,
-                'TMT' => $request->TMT,
-                'TAT' => $request->TAT,
-                'ada_abk_turun' => $adaAbkTurun,
-                'status_mutasi' => 'Draft',
-                'catatan' => $request->catatan,
-                'perlu_sertijab' => $request->boolean('perlu_sertijab', true)
-            ];
-
-            // Fix: Pastikan field data ABK turun disi jika adaAbkTurun
-            if ($adaAbkTurun) {
-                if ($abkTurun) {
-                    $mutasiData['id_abk_turun'] = $abkTurun->id;
-                    $mutasiData['nama_lengkap_turun'] = $abkTurun->nama_abk;
-                    $mutasiData['jabatan_tetap_turun'] = (int) $abkTurun->id_jabatan_tetap;
-                }
-                
-                // Fix: Pastikan data mutasi turun diisi dari request
-                $mutasiData['id_jabatan_mutasi_turun'] = (int) $request->id_jabatan_mutasi_turun;
-                $mutasiData['nama_mutasi_turun'] = $request->nama_mutasi_turun;
-                $mutasiData['jenis_mutasi_turun'] = $request->jenis_mutasi_turun;
-                $mutasiData['TMT_turun'] = $request->TMT_turun;
-                $mutasiData['TAT_turun'] = $request->TAT_turun;
-                $mutasiData['keterangan_turun'] = $request->keterangan_turun;
-            }
-
-            // Debug sebelum create
-            \Log::info('Mutasi Data to be created:', $mutasiData);
-
-            $mutasi = Mutasi::create($mutasiData);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Data mutasi berhasil ditambahkan',
-                'mutasi_id' => $mutasi->id,
-                'kapal_info' => [
-                    'id' => $kapal->id,
-                    'nama' => $kapal->nama_kapal
-                ],
-                'abk_info' => [
-                    'naik' => [
-                        'id' => $abkNaik->id,
-                        'nama' => $abkNaik->nama_abk
-                    ],
-                    'turun' => $abkTurun ? [
-                        'id' => $abkTurun->id,
-                        'nama' => $abkTurun->nama_abk
-                    ] : null
-                ],
-                'ada_abk_turun' => $adaAbkTurun
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            \Log::error('Error saving mutation: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
-            
+        $abkNaik = ABKNew::where('id', $request->nrp_naik)->first();
+        if (!$abkNaik) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menambahkan data mutasi: ' . $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ], 500);
+                'message' => 'ABK naik dengan NRP ' . $request->nrp_naik . ' tidak ditemukan'
+            ], 404);
         }
+
+        // Fix: Gunakan filter_var untuk lebih aman
+        $adaAbkTurun = filter_var($request->input('ada_abk_turun'), FILTER_VALIDATE_BOOLEAN);
+        $abkTurun = null;
+        
+        if ($adaAbkTurun && $request->filled('nrp_turun')) {
+            $abkTurun = ABKNew::where('id', $request->nrp_turun)->first();
+            if (!$abkTurun) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ABK turun dengan NRP ' . $request->nrp_turun . ' tidak ditemukan'
+                ], 404);
+            }
+        }
+
+        $perluSertijab = $request->boolean('perlu_sertijab', true);
+
+        $mutasiData = [
+            'id_kapal' => (int) $kapal->id,
+            'nama_kapal' => $kapal->nama_kapal,
+            'id_abk_naik' => $abkNaik->id,
+            'nama_lengkap_naik' => $abkNaik->nama_abk,
+            'jabatan_tetap_naik' => (int) $abkNaik->id_jabatan_tetap,
+            'id_jabatan_mutasi' => (int) $request->id_jabatan_mutasi,
+            'nama_mutasi' => $request->nama_mutasi,
+            'jenis_mutasi' => $request->jenis_mutasi,
+            'TMT' => $request->TMT,
+            'TAT' => $request->TAT,
+            'ada_abk_turun' => $adaAbkTurun,
+            'status_mutasi' => 'Draft',
+            'catatan' => $request->catatan,
+            'perlu_sertijab' => $perluSertijab
+        ];
+
+        // Fix: Pastikan field data ABK turun diisi jika adaAbkTurun
+        if ($adaAbkTurun) {
+            if ($abkTurun) {
+                $mutasiData['id_abk_turun'] = $abkTurun->id;
+                $mutasiData['nama_lengkap_turun'] = $abkTurun->nama_abk;
+                $mutasiData['jabatan_tetap_turun'] = (int) $abkTurun->id_jabatan_tetap;
+            }
+            
+            // Fix: Pastikan data mutasi turun diisi dari request
+            $mutasiData['id_jabatan_mutasi_turun'] = (int) $request->id_jabatan_mutasi_turun;
+            $mutasiData['nama_mutasi_turun'] = $request->nama_mutasi_turun;
+            $mutasiData['jenis_mutasi_turun'] = $request->jenis_mutasi_turun;
+            $mutasiData['TMT_turun'] = $request->TMT_turun;
+            $mutasiData['TAT_turun'] = $request->TAT_turun;
+            $mutasiData['keterangan_turun'] = $request->keterangan_turun;
+        }
+
+        // Debug sebelum create
+        Log::info('Mutasi Data to be created:', $mutasiData);
+
+        $mutasi = Mutasi::create($mutasiData);
+
+        // PERBAIKAN: Otomatis membuat record sertijab jika perlu_sertijab bernilai true
+        if ($perluSertijab) {
+            Sertijab::create([
+                'id_mutasi' => $mutasi->id,
+                'status_dokumen' => 'draft',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            
+            Log::info('Sertijab record otomatis dibuat untuk mutasi ID: ' . $mutasi->id);
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data mutasi berhasil ditambahkan' . ($perluSertijab ? ' dan record sertijab otomatis dibuat' : ''),
+            'mutasi_id' => $mutasi->id,
+            'kapal_info' => [
+                'id' => $kapal->id,
+                'nama' => $kapal->nama_kapal
+            ],
+            'abk_info' => [
+                'naik' => [
+                    'id' => $abkNaik->id,
+                    'nama' => $abkNaik->nama_abk
+                ],
+                'turun' => $abkTurun ? [
+                    'id' => $abkTurun->id,
+                    'nama' => $abkTurun->nama_abk
+                ] : null
+            ],
+            'ada_abk_turun' => $adaAbkTurun,
+            'perlu_sertijab' => $perluSertijab
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        Log::error('Error saving mutation: ' . $e->getMessage());
+        Log::error($e->getTraceAsString());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal menambahkan data mutasi: ' . $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ], 500);
     }
+}
 
     /**
      * Remove the specified mutation from storage
@@ -299,8 +316,8 @@ class MutasiController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            \Log::error('Error deleting mutation: ' . $e->getMessage());
-            
+            Log::error('Error deleting mutation: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus mutasi: ' . $e->getMessage()
