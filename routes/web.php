@@ -10,6 +10,7 @@ use App\Http\Controllers\ArsipController;
 use App\Http\Controllers\RoleSelectionController;
 use App\Http\Controllers\PUKController;
 use App\Http\Controllers\MutasiController;
+use App\Http\Controllers\NotificationController;
 
 
 // Root redirect - arahkan ke role selection
@@ -185,4 +186,26 @@ Route::middleware(['auth'])->group(function () {
     // Specific template routes
     Route::get('abk/template/excel', [ABKController::class, 'downloadTemplate'])->defaults('type', 'excel')->name('abk.template.excel');
     Route::get('abk/template/pdf', [ABKController::class, 'downloadTemplate'])->defaults('type', 'pdf')->name('abk.template.pdf');
+});
+
+// API endpoint for notifications
+Route::middleware(['auth'])->group(function() {
+    Route::get('/api/notifications', function() {
+        $notifications = \App\Models\Notification::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json([
+            'notifications' => $notifications
+        ]);
+    })->name('api.notifications');
+});
+
+// Notification routes
+Route::prefix('notifications')->name('notifications.')->middleware(['auth'])->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::get('/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
+    Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
+    Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-as-read');
+    Route::delete('/destroy-all', [NotificationController::class, 'destroyAll'])->name('destroy-all');
 });

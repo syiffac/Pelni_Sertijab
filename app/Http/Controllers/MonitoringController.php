@@ -21,7 +21,7 @@ class MonitoringController extends Controller
         // Ambil data kapal untuk ditampilkan di dashboard
         $kapalList = Kapal::withCount(['abk'])->get();
         
-        // FIXED: Sesuaikan dengan field di migration sertijab_new
+        // UPDATED: Stats dengan data yang lebih akurat
         $stats = [
             'total_abk' => ABK::count(),
             'total_mutasi' => Mutasi::where('perlu_sertijab', true)->count(),
@@ -29,10 +29,11 @@ class MonitoringController extends Controller
             'sertijab_verified' => Sertijab::where('status_dokumen', 'final')->count(),
             'sertijab_pending' => Sertijab::where('status_dokumen', 'draft')->count(),
             'sertijab_partial' => Sertijab::where('status_dokumen', 'partial')->count(),
+            'sertijab_rejected' => Sertijab::where('status_dokumen', 'rejected')->count(),
         ];
         
-        // FIXED: Add missing sertijab_rejected stat
-        $stats['sertijab_rejected'] = 0; // Temporary - bisa diupdate jika ada field rejected
+        // Calculate not submitted
+        $stats['sertijab_not_submitted'] = $stats['total_mutasi'] - $stats['sertijab_submitted'];
         
         // Hitung persentase progress verifikasi
         $stats['verification_progress'] = $stats['total_mutasi'] > 0 
@@ -43,11 +44,134 @@ class MonitoringController extends Controller
         $stats['submission_progress'] = $stats['total_mutasi'] > 0 
             ? round(($stats['sertijab_submitted'] / $stats['total_mutasi']) * 100) 
             : 0;
+    
+        // NEW: Data untuk pie chart
+        $chartData = $this->getVerificationChartData();
+        
+        // NEW: Data aktivitas terbaru
+        $recentActivities = $this->getRecentActivities();
             
         // UPDATED: Ambil data monitoring per kapal dengan pagination
         $monitoringData = $this->getMonitoringOverviewPaginated($request);
         
-        return view('monitoring.index', compact('kapalList', 'stats', 'monitoringData'));
+        return view('monitoring.index', compact(
+            'kapalList', 
+            'stats', 
+            'monitoringData', 
+            'chartData', 
+            'recentActivities'
+        ));
+    }
+
+    /**
+     * NEW: Get data for verification status pie chart
+     */
+    private function getVerificationChartData()
+    {
+        try {
+            $data = [
+                'verified' => Sertijab::where('status_dokumen', 'final')->count(),
+                'pending' => Sertijab::where('status_dokumen', 'draft')->count(),
+                'partial' => Sertijab::where('status_dokumen', 'partial')->count(),
+                'rejected' => Sertijab::where('status_dokumen', 'rejected')->count(),
+                'not_submitted' => Mutasi::where('perlu_sertijab', true)
+                    ->whereDoesntHave('sertijab', function($query) {
+                        $query->whereNotNull('submitted_at');
+                    })->count(),
+            ];
+            
+            return [
+                'labels' => ['Terverifikasi', 'Menunggu Verifikasi', 'Sebagian Verified', 'Ditolak', 'Belum Dikumpulkan'],
+                'values' => [$data['verified'], $data['pending'], $data['partial'], $data['rejected'], $data['not_submitted']],
+                'colors' => ['#10b981', '#f59e0b', '#06b6d4', '#ef4444', '#6b7280'],
+                'total' => array_sum($data)
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Error getting chart data: ' . $e->getMessage());
+            
+            return [
+                'labels' => ['Tidak Ada Data'],
+                'values' => [1],
+                'colors' => ['#6b7280'],
+                'total' => 0
+            ];
+        }
+    }
+
+    /**
+     * NEW: Get recent activities data
+     */
+    private function getRecentActivities()
+    {
+        try {
+            $activities = collect();
+            
+            // Recent sertijab submissions
+            $recentSubmissions = Sertijab::with(['mutasi.kapal', 'mutasi.abkNaik'])
+                ->whereNotNull('submitted_at')
+                ->orderBy('submitted_at', 'desc')
+                ->limit(5)
+                ->get();
+                
+            foreach ($recentSubmissions as $sertijab) {
+                $activities->push([
+                    'type' => 'submission',
+                    'title' => 'Dokumen Sertijab Baru',
+                    'description' => ($sertijab->mutasi->abkNaik->nama_abk ?? 'ABK') . ' - ' . ($sertijab->mutasi->kapal->nama_kapal ?? 'Kapal'),
+                    'time' => $sertijab->submitted_at,
+                    'icon' => 'bi-file-earmark-arrow-up',
+                    'color' => 'primary',
+                    'url' => route('monitoring.show', $sertijab->id)
+                ]);
+            }
+            
+            // Recent verifications
+            $recentVerifications = Sertijab::with(['mutasi.kapal', 'mutasi.abkNaik'])
+                ->whereNotNull('verified_at')
+                ->where('status_dokumen', 'final')
+                ->orderBy('verified_at', 'desc')
+                ->limit(3)
+                ->get();
+                
+            foreach ($recentVerifications as $sertijab) {
+                $activities->push([
+                    'type' => 'verification',
+                    'title' => 'Dokumen Diverifikasi',
+                    'description' => ($sertijab->mutasi->abkNaik->nama_abk ?? 'ABK') . ' - ' . ($sertijab->mutasi->kapal->nama_kapal ?? 'Kapal'),
+                    'time' => $sertijab->verified_at,
+                    'icon' => 'bi-check-circle',
+                    'color' => 'success',
+                    'url' => route('monitoring.show', $sertijab->id)
+                ]);
+            }
+            
+            // Recent mutasi
+            $recentMutasi = Mutasi::with(['kapal', 'abkNaik'])
+                ->where('perlu_sertijab', true)
+                ->orderBy('created_at', 'desc')
+                ->limit(3)
+                ->get();
+                
+            foreach ($recentMutasi as $mutasi) {
+                $activities->push([
+                    'type' => 'mutasi',
+                    'title' => 'Mutasi Baru Memerlukan Sertijab',
+                    'description' => ($mutasi->abkNaik->nama_abk ?? $mutasi->nama_lengkap_naik) . ' ke ' . ($mutasi->kapal->nama_kapal ?? $mutasi->nama_kapal),
+                    'time' => $mutasi->created_at,
+                    'icon' => 'bi-arrow-repeat',
+                    'color' => 'info',
+                    'url' => route('mutasi.show', $mutasi->id)
+                ]);
+            }
+            
+            // Sort by time and limit to 8 most recent
+            return $activities->sortByDesc('time')->take(8)->values();
+            
+        } catch (\Exception $e) {
+            Log::error('Error getting recent activities: ' . $e->getMessage());
+            return collect([]);
+        }
     }
     
     /**

@@ -28,13 +28,17 @@
             </div>
             <div class="header-actions">
                 <div class="action-buttons">
-                    <a href="{{ route('arsip.search') }}" class="btn btn-primary">
-                        <i class="bi bi-search me-2"></i>
-                        Pencarian Arsip
+                    <a href="{{ route('arsip.laporan') }}" class="btn btn-info">
+                        <i class="bi bi-file-text me-2"></i>
+                        Laporan
                     </a>
-                    <a href="{{ route('arsip.create') }}" class="btn btn-outline-secondary">
+                    <a href="{{ route('arsip.search') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-search me-2"></i>
+                        Pencarian
+                    </a>
+                    <a href="{{ route('arsip.create') }}" class="btn btn-primary">
                         <i class="bi bi-plus-circle me-2"></i>
-                        Tambah Arsip Manual
+                        Tambah Arsip
                     </a>
                 </div>
             </div>

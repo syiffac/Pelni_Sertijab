@@ -32,10 +32,6 @@
                                 <i class="bi bi-plus-circle me-2"></i>
                                 Tambah Mutasi
                             </a>
-                            <button class="btn btn-outline-secondary" onclick="exportData()">
-                                <i class="bi bi-download me-2"></i>
-                                Export Data
-                            </button>
                         </div>
                     </div>
                 </div>
