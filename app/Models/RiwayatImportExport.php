@@ -7,7 +7,7 @@ use Carbon\Carbon;
 
 class RiwayatImportExport extends Model
 {
-    protected $table = 'riwayat_import_export';
+    protected $table = 'riwayat_import_exports';
 
     protected $fillable = [
         'nama_file',

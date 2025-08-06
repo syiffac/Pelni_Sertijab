@@ -148,6 +148,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/sertijab/detail/{id}', [MonitoringController::class, 'sertijabDetail'])->name('sertijab.detail');
         Route::put('/sertijab/verify/{id}', [MonitoringController::class, 'verifySertijab'])->name('verify');
         Route::get('/sertijab/export', [MonitoringController::class, 'exportSertijab'])->name('sertijab.export');
+        
+        // Detail route - TAMBAHAN ROUTE BARU
+        Route::get('/detail/{id}', [MonitoringController::class, 'detail'])->name('detail');
     });
     
     // Arsip routes - UPDATE dengan routes yang missing
@@ -248,3 +251,9 @@ Route::prefix('notifications')->name('notifications.')->middleware(['auth'])->gr
     Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-as-read');
     Route::delete('/destroy-all', [NotificationController::class, 'destroyAll'])->name('destroy-all');
 });
+
+// Pastikan route untuk mutasi menggunakan resource lengkap
+Route::resource('mutasi', MutasiController::class);
+
+// Atau jika ingin lebih spesifik, tambahkan route delete:
+Route::delete('/mutasi/{id}', [MutasiController::class, 'destroy'])->name('mutasi.destroy');

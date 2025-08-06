@@ -997,12 +997,18 @@ function initializeFormValidation() {
     });
 }
 
-// Submit form - Disederhanakan
+// Submit form - Diperbaiki untuk debugging
 function submitForm() {
     const form = document.getElementById('editMutasiForm');
     const submitBtn = document.getElementById('submitBtn');
     const btnText = submitBtn.querySelector('.btn-text');
     const loadingOverlay = document.getElementById('loadingOverlay');
+    
+    // PERBAIKAN: Validasi form sebelum submit
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
     
     // Set loading state
     submitBtn.disabled = true;
@@ -1012,19 +1018,13 @@ function submitForm() {
     
     const formData = new FormData(form);
     
+    // PERBAIKAN: Debug form data
+    console.log('Form data being sent:');
+    for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+    }
+    
     fetch(form.action, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Data mutasi berhasil diupdate!', 'success');
             
             // Redirect after success
             setTimeout(() => {

@@ -1306,5 +1306,101 @@ function exportData() {
     const params = new URLSearchParams(window.location.search);
     window.open(`{{ route('mutasi.export') }}?${params.toString()}`, '_blank');
 }
+
+// TAMBAHAN: Aktivasi filter form submission
+document.addEventListener('DOMContentLoaded', function() {
+    // PERBAIKAN: Tambahkan event listener untuk filter form
+    const filterForm = document.querySelector('.filter-form');
+    if (filterForm) {
+        // Auto-submit ketika filter berubah
+        const filterInputs = filterForm.querySelectorAll('input, select');
+        
+        filterInputs.forEach(input => {
+            if (input.type === 'text') {
+                // Untuk search input, gunakan debounce
+                let searchTimeout;
+                input.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        filterForm.submit();
+                    }, 500); // 500ms delay
+                });
+            } else {
+                // Untuk select dan date, submit langsung
+                input.addEventListener('change', function() {
+                    filterForm.submit();
+                });
+            }
+        });
+        
+        // Handle reset button
+        const resetButton = filterForm.querySelector('a[href*="mutasi.index"]');
+        if (resetButton) {
+            resetButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Clear all inputs
+                filterInputs.forEach(input => {
+                    if (input.type === 'text' || input.type === 'month') {
+                        input.value = '';
+                    } else if (input.tagName === 'SELECT') {
+                        input.selectedIndex = 0;
+                    }
+                });
+                // Submit form untuk reload tanpa filter
+                window.location.href = '{{ route("mutasi.index") }}';
+            });
+        }
+    }
+    
+    // PERBAIKAN: Update info hasil filter
+    updateFilterInfo();
+});
+
+// Function untuk update info filter
+function updateFilterInfo() {
+    const tableInfo = document.querySelector('.table-info');
+    if (tableInfo) {
+        // Tambahkan indikator jika ada filter aktif
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeFilters = [];
+        
+        if (urlParams.get('search')) activeFilters.push('Pencarian');
+        if (urlParams.get('status')) activeFilters.push('Status');
+        if (urlParams.get('jenis')) activeFilters.push('Jenis');
+        if (urlParams.get('periode')) activeFilters.push('Periode');
+        
+        if (activeFilters.length > 0) {
+            const filterBadge = document.createElement('small');
+            filterBadge.className = 'ms-2 badge bg-primary';
+            filterBadge.textContent = `${activeFilters.length} filter aktif`;
+            tableInfo.appendChild(filterBadge);
+        }
+    }
+}
+
+// PERBAIKAN: Highlight search terms
+function highlightSearchTerms() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchTerm = urlParams.get('search');
+    
+    if (searchTerm) {
+        const tableRows = document.querySelectorAll('.table-data tbody tr');
+        tableRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            cells.forEach(cell => {
+                const content = cell.innerHTML;
+                if (content.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    const regex = new RegExp(`(${searchTerm})`, 'gi');
+                    cell.innerHTML = content.replace(regex, '<mark>$1</mark>');
+                }
+            });
+        });
+    }
+}
+
+// Call highlight function on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(highlightSearchTerms, 100);
+});
 </script>
 @endpush

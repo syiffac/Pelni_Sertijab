@@ -62,6 +62,13 @@ class MonitoringController extends Controller
             'recentActivities'
         ));
     }
+    
+// Di MonitoringController, tambahkan method ini jika belum ada:
+public function detail($id)
+{
+    $mutasi = Mutasi::with(['kapal', 'sertijab'])->findOrFail($id);
+    return view('monitoring.detail', compact('mutasi'));
+}
 
     /**
      * NEW: Get data for verification status pie chart

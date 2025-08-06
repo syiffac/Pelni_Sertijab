@@ -300,73 +300,74 @@ class PUKController extends Controller
      * Submit dokumen tunggal
      */
     public function submitDokumen(Request $request)
-{
-    $request->validate([
-        'mutasi_id' => 'required|exists:mutasi_new,id'
-    ]);
-
-    try {
-        DB::beginTransaction();
-
-        $mutasi = Mutasi::findOrFail($request->mutasi_id);
-
-        // Cari record sertijab
-        $sertijab = Sertijab::where('id_mutasi', $mutasi->id)->first();
-        
-        if (!$sertijab) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak ada dokumen untuk disubmit'
-            ], 400);
-        }
-
-        // PERUBAHAN: Cek setidaknya ada minimal 1 dokumen yang diupload
-        if (empty($sertijab->dokumen_sertijab_path) && 
-            empty($sertijab->dokumen_familisasi_path) && 
-            empty($sertijab->dokumen_lampiran_path)) {
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Minimal harus ada satu dokumen yang diupload sebelum submit.'
-            ], 400);
-        }
-
-        // Update status dokumen
-        $sertijab->submitted_at = now();
-        $sertijab->status_dokumen = 'draft';
-        $sertijab->save();
-
-        // Update status mutasi menjadi 'Selesai' setelah submit
-        $mutasi->status_mutasi = 'Selesai';
-        $mutasi->save();
-
-        DB::commit();
-
-        // Buat notifikasi untuk admin jika ada
-        try {
-            if (class_exists('App\Services\NotificationService')) {
-                NotificationService::createSubmitNotification($mutasi);
-                NotificationService::createUnverifiedNotification($mutasi);
-            }
-        } catch (\Exception $e) {
-            Log::error("Error creating notification: " . $e->getMessage());
-            // Lanjutkan proses meskipun notifikasi gagal
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Dokumen berhasil disubmit dan status mutasi diperbarui menjadi Selesai'
+    {
+        $request->validate([
+            'mutasi_id' => 'required|exists:mutasi_new,id'
         ]);
 
-    } catch (\Exception $e) {
-        DB::rollback();
-        Log::error("Error submitting document: " . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal submit dokumen: ' . $e->getMessage()
-        ], 500);
+        try {
+            DB::beginTransaction();
+
+            $mutasi = Mutasi::findOrFail($request->mutasi_id);
+
+            // Cari record sertijab
+            $sertijab = Sertijab::where('id_mutasi', $mutasi->id)->first();
+            
+            if (!$sertijab) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada dokumen untuk disubmit'
+                ], 400);
+            }
+
+            // PERUBAHAN: Cek setidaknya ada minimal 1 dokumen yang diupload
+            if (empty($sertijab->dokumen_sertijab_path) && 
+                empty($sertijab->dokumen_familisasi_path) && 
+                empty($sertijab->dokumen_lampiran_path)) {
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Minimal harus ada satu dokumen yang diupload sebelum submit.'
+                ], 400);
+            }
+
+            // Update status dokumen
+            $sertijab->submitted_at = now();
+            $sertijab->status_dokumen = 'draft';
+            $sertijab->save();
+
+            // Update status mutasi menjadi 'Selesai' setelah submit
+            $mutasi->status_mutasi = 'Selesai';
+            $mutasi->save();
+
+            DB::commit();
+
+            // PERBAIKAN: Panggil NotificationService tanpa pengecekan class_exists
+            try {
+                Log::info('Creating notifications for mutasi ID: ' . $mutasi->id);
+                NotificationService::createSubmitNotification($mutasi);
+                Log::info('Submit notification created successfully');
+            } catch (\Exception $e) {
+                Log::error("Error creating notification: " . $e->getMessage());
+                Log::error("Stack trace: " . $e->getTraceAsString());
+                // Lanjutkan proses meskipun notifikasi gagal
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dokumen berhasil disubmit dan status mutasi diperbarui menjadi Selesai'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error("Error submitting document: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal submit dokumen: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}
+
 
 /**
  * Batch submit dokumen
