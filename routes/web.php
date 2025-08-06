@@ -65,7 +65,12 @@ Route::middleware(['auth'])->group(function () {
         // Template routes
         Route::get('/template/excel', [ABKController::class, 'downloadExcelTemplate'])->name('template.excel');
         Route::get('/template/pdf', [ABKController::class, 'downloadPdfTemplate'])->name('template.pdf');
+        Route::get('/export/page', [ABKController::class, 'exportPage'])->name('export.page');
+        Route::get('/export/{format?}', [ABKController::class, 'export'])->name('export');
         Route::post('/import', [ABKController::class, 'import'])->name('import');
+        
+        // Riwayat Routes
+        Route::get('/riwayat/{id}', [ABKController::class, 'viewRiwayatDetail'])->name('riwayat.detail');
         
         // AJAX routes - DILETAKKAN SEBELUM ROUTE DENGAN PARAMETER
         Route::get('/ajax/kapal', [ABKController::class, 'getKapalList'])->name('ajax.kapal');
@@ -172,20 +177,54 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/arsip/get-mutasi-by-kapal', [ArsipController::class, 'getMutasiByKapal'])->name('arsip.get-mutasi-by-kapal');
 
 // ABK export-import routes
-Route::middleware(['auth'])->group(function () {
-    // ABK routes
-    Route::resource('abk', ABKController::class);
-    Route::get('abk/check-nrp', [ABKController::class, 'checkNRP'])->name('abk.check-nrp');
+// Route::middleware(['auth'])->group(function () {
+//     // ABK routes
+//     Route::resource('abk', ABKController::class);
+//     Route::get('abk/check-nrp', [ABKController::class, 'checkNRP'])->name('abk.check-nrp');
     
-    // Export & Import routes - ADD THESE
-    Route::get('abk-export-import', [ABKController::class, 'exportImport'])->name('abk.export-import');
-    Route::get('abk/export/{format?}', [ABKController::class, 'export'])->name('abk.export');
-    Route::post('abk/import', [ABKController::class, 'import'])->name('abk.import');
-    Route::get('abk/template/{type}', [ABKController::class, 'downloadTemplate'])->name('abk.template');
+//     // Export & Import routes - ADD THESE
+//     Route::get('abk-export-import', [ABKController::class, 'exportImport'])->name('abk.export-import');
+//     Route::get('abk/export/{format?}', [ABKController::class, 'export'])->name('abk.export');
+//     Route::post('abk/import', [ABKController::class, 'import'])->name('abk.import');
+//     Route::get('abk/template/{type}', [ABKController::class, 'downloadTemplate'])->name('abk.template');
     
-    // Specific template routes
-    Route::get('abk/template/excel', [ABKController::class, 'downloadTemplate'])->defaults('type', 'excel')->name('abk.template.excel');
-    Route::get('abk/template/pdf', [ABKController::class, 'downloadTemplate'])->defaults('type', 'pdf')->name('abk.template.pdf');
+//     // Specific template routes
+//     Route::get('abk/template/excel', [ABKController::class, 'downloadTemplate'])->defaults('type', 'excel')->name('abk.template.excel');
+//     Route::get('abk/template/pdf', [ABKController::class, 'downloadTemplate'])->defaults('type', 'pdf')->name('abk.template.pdf');
+
+//     // Riwayat Routes - TAMBAH INI
+//     Route::get('/riwayat/history', [ABKController::class, 'getRiwayatHistory'])->name('riwayat.history');
+// });
+
+Route::middleware(['auth'])->prefix('abk')->name('abk.')->group(function () {
+    // Export & Import Routes - HARUS DI ATAS ROUTE DENGAN PARAMETER
+    Route::get('/export/page', [ABKController::class, 'exportPage'])->name('export.page');
+    Route::get('/export/{format?}', [ABKController::class, 'export'])->name('export');
+    Route::post('/import', [ABKController::class, 'import'])->name('import');
+    
+    // Template Routes
+    Route::get('/template/excel', [ABKController::class, 'downloadTemplate'])->name('template.excel');
+    Route::get('/template/pdf', [ABKController::class, 'downloadTemplate'])->defaults('type', 'pdf')->name('template.pdf');
+    
+    // Riwayat Routes
+    Route::get('/riwayat/history', [ABKController::class, 'getRiwayatHistory'])->name('riwayat.history');
+    Route::get('/riwayat/{id}', [ABKController::class, 'viewRiwayatDetail'])->name('riwayat.detail');
+    
+    // AJAX routes
+    Route::get('/ajax/kapal', [ABKController::class, 'getKapalList'])->name('ajax.kapal');
+    Route::get('/ajax/jabatan', [ABKController::class, 'getJabatanList'])->name('ajax.jabatan');
+    Route::get('/ajax/abk-by-kapal', [ABKController::class, 'getAbkByKapal'])->name('ajax.abk-by-kapal');
+    Route::get('/kapal/{id_kapal}/abk', [ABKController::class, 'showByKapal'])->name('by-kapal');
+    Route::get('/check-nrp', [ABKController::class, 'checkNRP'])->name('check-nrp');
+    
+    // Basic CRUD - DI BAWAH ROUTE YANG LEBIH SPESIFIK
+    Route::get('/', [ABKController::class, 'index'])->name('index');
+    Route::get('/create', [ABKController::class, 'create'])->name('create');
+    Route::post('/', [ABKController::class, 'store'])->name('store');
+    Route::get('/{id}', [ABKController::class, 'show'])->name('show');
+    Route::get('/{id}/edit', [ABKController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [ABKController::class, 'update'])->name('update');
+    Route::delete('/{id}', [ABKController::class, 'destroy'])->name('destroy');
 });
 
 // API endpoint for notifications

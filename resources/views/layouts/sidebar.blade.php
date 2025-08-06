@@ -70,7 +70,7 @@
                 <ul class="submenu" id="submenu-abk">
                     <li><a href="{{ route('abk.index') }}" class="submenu-link {{ request()->routeIs('abk.index') ? 'active' : '' }}">Data ABK</a></li>
                     <li><a href="{{ route('abk.create') }}" class="submenu-link {{ request()->routeIs('abk.create') ? 'active' : '' }}">Tambah ABK</a></li>
-                    <li><a href="{{ route('abk.export-import') }}" class="submenu-link {{ request()->routeIs('abk.export*') ? 'active' : '' }}">Export & Import</a></li>
+                    <li><a href="{{ route('abk.export.page') }}" class="submenu-link {{ request()->routeIs('abk.export*') ? 'active' : '' }}">Export & Import</a></li>
                 </ul>
             </li>
 
