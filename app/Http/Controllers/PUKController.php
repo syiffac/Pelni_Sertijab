@@ -320,34 +320,37 @@ class PUKController extends Controller
             ], 400);
         }
 
-        // Cek minimal sertijab dan familisasi harus ada
-        if (empty($sertijab->dokumen_sertijab_path) || empty($sertijab->dokumen_familisasi_path)) {
+        // PERUBAHAN: Cek setidaknya ada minimal 1 dokumen yang diupload
+        if (empty($sertijab->dokumen_sertijab_path) && 
+            empty($sertijab->dokumen_familisasi_path) && 
+            empty($sertijab->dokumen_lampiran_path)) {
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Dokumen Serah Terima Jabatan dan Familisasi wajib diupload sebelum submit.'
+                'message' => 'Minimal harus ada satu dokumen yang diupload sebelum submit.'
             ], 400);
         }
 
-        // Update status dokumen - PERBAIKAN: tambahkan submitted_at
+        // Update status dokumen
         $sertijab->submitted_at = now();
         $sertijab->status_dokumen = 'draft';
         $sertijab->save();
 
-        // PERBAIKAN: Update status mutasi menjadi 'Selesai' setelah submit
+        // Update status mutasi menjadi 'Selesai' setelah submit
         $mutasi->status_mutasi = 'Selesai';
         $mutasi->save();
 
         DB::commit();
 
         // Buat notifikasi untuk admin jika ada
-        if (class_exists('App\Services\NotificationService')) {
-            try {
+        try {
+            if (class_exists('App\Services\NotificationService')) {
                 NotificationService::createSubmitNotification($mutasi);
                 NotificationService::createUnverifiedNotification($mutasi);
-            } catch (\Exception $e) {
-                Log::error("Error creating notification: " . $e->getMessage());
-                // Lanjutkan proses meskipun notifikasi gagal
             }
+        } catch (\Exception $e) {
+            Log::error("Error creating notification: " . $e->getMessage());
+            // Lanjutkan proses meskipun notifikasi gagal
         }
 
         return response()->json([
@@ -394,19 +397,22 @@ public function batchSubmitDokumen(Request $request)
                     continue;
                 }
 
-                // Cek kelengkapan dokumen
-                if (empty($sertijab->dokumen_sertijab_path) || empty($sertijab->dokumen_familisasi_path)) {
-                    $errors[] = "Mutasi ID {$mutasiId}: Dokumen Sertijab dan Familisasi wajib ada.";
+                // PERUBAHAN: Cek setidaknya ada minimal 1 dokumen yang diupload
+                if (empty($sertijab->dokumen_sertijab_path) && 
+                    empty($sertijab->dokumen_familisasi_path) && 
+                    empty($sertijab->dokumen_lampiran_path)) {
+                    
+                    $errors[] = "Mutasi ID {$mutasiId}: Minimal harus ada satu dokumen yang diupload.";
                     $failedCount++;
                     continue;
                 }
 
-                // Update status dokumen - PERBAIKAN: tambahkan submitted_at
+                // Update status dokumen
                 $sertijab->submitted_at = now();
                 $sertijab->status_dokumen = 'draft';
                 $sertijab->save();
 
-                // PERBAIKAN: Update status mutasi menjadi 'Selesai' setelah submit
+                // Update status mutasi menjadi 'Selesai' setelah submit
                 $mutasi = Mutasi::find($mutasiId);
                 if ($mutasi) {
                     $mutasi->status_mutasi = 'Selesai';
@@ -429,6 +435,7 @@ public function batchSubmitDokumen(Request $request)
         foreach ($mutasiList as $mutasi) {
             try {
                 if (class_exists('App\Services\NotificationService')) {
+                    NotificationService::createSubmitNotification($mutasi);
                     NotificationService::createUnverifiedNotification($mutasi);
                 }
             } catch (\Exception $e) {

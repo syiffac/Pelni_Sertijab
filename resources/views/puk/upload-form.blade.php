@@ -948,6 +948,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
 });
 
+
+
 function setupEventListeners() {
     // Kapal selection
     $('#id_kapal').on('change', function() {
@@ -1182,15 +1184,22 @@ function createTableRow(mutasi) {
     return tr;
 }
 
+// UBAH: Ubah fungsi getDocumentStatus agar tetap "Partial" ketika ada dokumen apapun
 function getDocumentStatus(dokumen) {
-    if (dokumen.sertijab && dokumen.familisasi) {
-        return { class: 'complete', icon: 'check-circle-fill', text: 'Lengkap' };
-    } else if (dokumen.sertijab || dokumen.familisasi) {
-        return { class: 'partial', icon: 'exclamation-triangle-fill', text: 'Sebagian' };
+    // Ada dokumen apapun
+    if (dokumen.sertijab || dokumen.familisasi || dokumen.lampiran) {
+        // Jika punya semua
+        if (dokumen.sertijab && dokumen.familisasi && dokumen.lampiran) {
+            return { class: 'complete', icon: 'check-circle-fill', text: 'Lengkap' };
+        } else {
+            return { class: 'partial', icon: 'exclamation-triangle-fill', text: 'Sebagian' };
+        }
     } else {
+        // Tidak ada dokumen sama sekali
         return { class: 'incomplete', icon: 'x-circle-fill', text: 'Belum Lengkap' };
     }
 }
+
 
 function updateBatchSubmitBtn() {
     const checkedBoxes = document.querySelectorAll('.mutasi-checkbox:checked');
@@ -1239,19 +1248,30 @@ window.openUploadModal = function(mutasiId) {
     const modal = new bootstrap.Modal(document.getElementById('uploadModal'));
     modal.show();
     
-    // Setup file input listeners
-    ['sertijab', 'familisasi', 'lampiran'].forEach(jenis => {
-        const fileInput = document.getElementById(`file-${jenis}-${mutasi.id}`);
-        if (fileInput) {
-            fileInput.addEventListener('change', function() {
-                if (this.files[0]) {
-                    uploadFile(mutasi.id, jenis, this.files[0]);
-                }
-            });
-        }
-    });
+    // PENTING: Tunggu hingga modal selesai ditampilkan sebelum memasang event listeners
+    setTimeout(() => {
+        ['sertijab', 'familisasi', 'lampiran'].forEach(jenis => {
+            const fileInput = document.getElementById(`file-${jenis}-${mutasi.id}`);
+            if (fileInput) {
+                console.log(`Setting up listener for ${jenis} file input`);
+                
+                // Hapus event listener lama jika ada dan buat ulang elemen
+                const newFileInput = fileInput.cloneNode(true);
+                fileInput.parentNode.replaceChild(newFileInput, fileInput);
+                
+                // Pasang event listener baru
+                newFileInput.addEventListener('change', function(event) {
+                    console.log(`File selected for ${jenis}:`, this.files[0]?.name);
+                    if (this.files[0]) {
+                        uploadFile(mutasi.id, jenis, this.files[0]);
+                    }
+                });
+            }
+        });
+    }, 300);
 };
 
+// Perbaiki fungsi createUploadCard
 function createUploadCard(mutasiId, jenis, label, hasFile, fileUrl) {
     if (hasFile) {
         return `
@@ -1270,12 +1290,14 @@ function createUploadCard(mutasiId, jenis, label, hasFile, fileUrl) {
             </div>
         `;
     } else {
+        // PERBAIKAN: Tambahkan class upload-trigger dan cursor:pointer
         return `
             <div class="card-body text-center">
                 <input type="file" id="file-${jenis}-${mutasiId}" class="d-none" 
                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                 
-                <div onclick="document.getElementById('file-${jenis}-${mutasiId}').click()" style="cursor: pointer;">
+                <div class="upload-trigger" style="cursor: pointer;" 
+                     onclick="document.getElementById('file-${jenis}-${mutasiId}').click()">
                     <i class="bi bi-cloud-upload text-primary" style="font-size: 2rem;"></i>
                     <h6 class="mt-2">${label}</h6>
                     <p class="text-muted small">Klik untuk upload</p>
@@ -1288,15 +1310,23 @@ function createUploadCard(mutasiId, jenis, label, hasFile, fileUrl) {
     }
 }
 
-// File upload
+// Perbaiki fungsi uploadFile untuk menangani error dengan lebih baik
 function uploadFile(mutasiId, jenis, file) {
+    console.log(`Uploading file for ${jenis}:`, file.name);
+    
     const formData = new FormData();
     formData.append('id_mutasi', mutasiId);
     formData.append('jenis_dokumen', jenis);
     formData.append('file', file);
     
+    // Tambahkan CSRF token
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+    
     const uploadCard = document.getElementById(`upload-${jenis}-${mutasiId}`);
-    if (!uploadCard) return;
+    if (!uploadCard) {
+        console.error(`Upload card for ${jenis}-${mutasiId} not found`);
+        return;
+    }
     
     // Show loading
     uploadCard.innerHTML = `
@@ -1313,12 +1343,20 @@ function uploadFile(mutasiId, jenis, file) {
         },
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log(`Upload response status: ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log(`Upload response:`, data);
         if (data.success) {
             // Update data mutasi di array currentMutasis
             const mutasiIndex = currentMutasis.findIndex(m => m.id == mutasiId);
             if (mutasiIndex !== -1) {
+                // Update dokumen status
                 currentMutasis[mutasiIndex].dokumen[jenis] = true;
                 currentMutasis[mutasiIndex].dokumen_urls[jenis] = data.file_info.url;
                 
@@ -1332,7 +1370,7 @@ function uploadFile(mutasiId, jenis, file) {
                     data.file_info.url
                 );
                 
-                // PERBAIKAN: Update baris tabel secara real-time tanpa reload seluruh tabel
+                // Update baris tabel secara real-time
                 updateTableRow(mutasiId, currentMutasis[mutasiIndex]);
                 
                 // Update batch submit button status
@@ -1341,8 +1379,16 @@ function uploadFile(mutasiId, jenis, file) {
             
             showAlert('Dokumen berhasil diunggah', 'success');
         } else {
-            showAlert(data.message || 'Gagal mengunggah dokumen', 'error');
-            // Restore original card
+            throw new Error(data.message || 'Gagal mengunggah dokumen');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showAlert(`Gagal mengunggah dokumen: ${error.message}`, 'error');
+        
+        // Restore original card
+        const mutasi = currentMutasis.find(m => m.id == mutasiId);
+        if (mutasi) {
             uploadCard.innerHTML = createUploadCard(
                 mutasiId, 
                 jenis, 
@@ -1351,157 +1397,335 @@ function uploadFile(mutasiId, jenis, file) {
                 false, 
                 null
             );
+            
+            // PENTING: Setup listener lagi karena card telah diganti
+            setTimeout(() => {
+                const fileInput = document.getElementById(`file-${jenis}-${mutasiId}`);
+                if (fileInput) {
+                    fileInput.addEventListener('change', function() {
+                        console.log(`File re-selected for ${jenis}:`, this.files[0]?.name);
+                        if (this.files[0]) {
+                            uploadFile(mutasiId, jenis, this.files[0]);
+                        }
+                    });
+                }
+            }, 100);
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('Gagal mengunggah dokumen', 'error');
-        // Restore original card
-        uploadCard.innerHTML = createUploadCard(
-            mutasiId, 
-            jenis, 
-            jenis === 'sertijab' ? 'Sertijab' : 
-            jenis === 'familisasi' ? 'Familisasi' : 'Lampiran', 
-            false, 
-            null
-        );
     });
 }
 
-// TAMBAHAN: Fungsi untuk update baris tabel secara real-time
+// Perbaiki fungsi openUploadModal dan setup event listener pada file input
+window.openUploadModal = function(mutasiId) {
+    const mutasi = currentMutasis.find(m => m.id === mutasiId);
+    if (!mutasi) return;
+    
+    document.getElementById('uploadModalLabel').textContent = `Upload Dokumen - MUT-${String(mutasiId).padStart(4, '0')}`;
+    document.getElementById('uploadModalContent').innerHTML = `
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <div class="alert alert-info">
+                    <strong>ABK Naik:</strong> ${mutasi.abk_naik.nama} 
+                    (${mutasi.abk_naik.jabatan_tetap} → ${mutasi.abk_naik.jabatan_mutasi})
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100" id="upload-sertijab-${mutasi.id}">
+                    ${createUploadCard(mutasi.id, 'sertijab', 'Sertijab', mutasi.dokumen.sertijab, mutasi.dokumen_urls.sertijab)}
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100" id="upload-familisasi-${mutasi.id}">
+                    ${createUploadCard(mutasi.id, 'familisasi', 'Familisasi', mutasi.dokumen.familisasi, mutasi.dokumen_urls.familisasi)}
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100" id="upload-lampiran-${mutasi.id}">
+                    ${createUploadCard(mutasi.id, 'lampiran', 'Lampiran', mutasi.dokumen.lampiran, mutasi.dokumen_urls.lampiran)}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('uploadModal'));
+    modal.show();
+    
+    // PENTING: Tunggu hingga modal selesai ditampilkan sebelum memasang event listeners
+    setTimeout(() => {
+        ['sertijab', 'familisasi', 'lampiran'].forEach(jenis => {
+            const fileInput = document.getElementById(`file-${jenis}-${mutasi.id}`);
+            if (fileInput) {
+                console.log(`Setting up listener for ${jenis} file input`);
+                
+                // Hapus event listener lama jika ada dan buat ulang elemen
+                const newFileInput = fileInput.cloneNode(true);
+                fileInput.parentNode.replaceChild(newFileInput, fileInput);
+                
+                // Pasang event listener baru
+                newFileInput.addEventListener('change', function(event) {
+                    console.log(`File selected for ${jenis}:`, this.files[0]?.name);
+                    if (this.files[0]) {
+                        uploadFile(mutasi.id, jenis, this.files[0]);
+                    }
+                });
+            }
+        });
+    }, 300);
+};
+
+// Tambahkan fungsi updateTableRow yang hilang
 function updateTableRow(mutasiId, updatedMutasi) {
     if (!dataTable) return;
     
     // Cari baris yang akan diupdate
-    const rowIndex = dataTable.rows().eq(0).filter(function(rowIdx) {
-        const checkbox = dataTable.cell(rowIdx, 0).node().querySelector('.mutasi-checkbox');
-        return checkbox && checkbox.value == mutasiId;
+    let rowIndex = -1;
+    dataTable.rows().every(function(index) {
+        const checkbox = this.node().querySelector('.mutasi-checkbox');
+        if (checkbox && checkbox.value == mutasiId) {
+            rowIndex = index;
+            return false; // break the loop
+        }
+        return true;
     });
     
-    if (rowIndex.length > 0) {
-        const rowData = createTableRowData(updatedMutasi);
+    if (rowIndex >= 0) {
+        // Recreate the row HTML
+        const tr = document.createElement('tr');
+        const docStatus = getDocumentStatus(updatedMutasi.dokumen);
+        const isSubmitted = updatedMutasi.submitted_by_puk;
+        const hasAnyDocument = updatedMutasi.dokumen.sertijab || 
+                              updatedMutasi.dokumen.familisasi || 
+                              updatedMutasi.dokumen.lampiran;
         
-        // Update data di DataTable
-        dataTable.row(rowIndex[0]).data(rowData).draw(false);
+        if (isSubmitted) {
+            tr.classList.add('submitted');
+        }
         
-        // Re-attach event listeners untuk checkbox
-        const newCheckbox = dataTable.cell(rowIndex[0], 0).node().querySelector('.mutasi-checkbox');
-        if (newCheckbox) {
-            newCheckbox.addEventListener('change', function() {
+        tr.innerHTML = `
+            <td>
+                <input type="checkbox" class="form-check-input mutasi-checkbox" 
+                    value="${updatedMutasi.id}" ${isSubmitted || !hasAnyDocument ? 'disabled' : ''}>
+            </td>
+            <td>
+                <strong>MUT-${String(updatedMutasi.id).padStart(4, '0')}</strong>
+                ${isSubmitted ? '<br><small class="badge bg-success">Submitted</small>' : ''}
+            </td>
+            <td>
+                <div>${updatedMutasi.periode || '-'}</div>
+                <small class="text-muted">${updatedMutasi.jenis_mutasi || 'Definitif'}</small>
+            </td>
+            <td>
+                <div class="fw-bold">${updatedMutasi.abk_naik.nama}</div>
+                <small class="text-muted">
+                    ${updatedMutasi.abk_naik.jabatan_tetap} → ${updatedMutasi.abk_naik.jabatan_mutasi}
+                </small>
+            </td>
+            <td>
+                ${updatedMutasi.abk_turun ? `
+                    <div class="fw-bold">${updatedMutasi.abk_turun.nama}</div>
+                    <small class="text-muted">
+                        ${updatedMutasi.abk_turun.jabatan_tetap} → ${updatedMutasi.abk_turun.jabatan_mutasi}
+                    </small>
+                ` : `
+                    <span class="text-muted">-</span>
+                `}
+            </td>
+            <td>
+                <span class="status-badge status-${updatedMutasi.status_mutasi.toLowerCase()}">
+                    ${updatedMutasi.status_mutasi}
+                </span>
+            </td>
+            <td>
+                <div class="doc-status ${docStatus.class}">
+                    <i class="bi bi-${docStatus.icon}"></i>
+                    ${docStatus.text}
+                </div>
+                <div class="mt-1">
+                    <small class="text-muted">
+                        ${updatedMutasi.dokumen.sertijab ? '✓' : '✗'} Sertijab |
+                        ${updatedMutasi.dokumen.familisasi ? '✓' : '✗'} Familisasi |
+                        ${updatedMutasi.dokumen.lampiran ? '✓' : '✗'} Lampiran
+                    </small>
+                </div>
+            </td>
+            <td>
+                <div class="d-grid gap-1">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openUploadModal(${updatedMutasi.id})">
+                        <i class="bi bi-upload"></i> Upload
+                    </button>
+                    ${docStatus.class === 'complete' && !isSubmitted ? `
+                        <button type="button" class="btn btn-success btn-sm" onclick="submitSingle(${updatedMutasi.id})">
+                            <i class="bi bi-send"></i> Submit
+                        </button>
+                    ` : ''}
+                </div>
+            </td>
+        `;
+        
+        // Dapatkan data dari tr untuk update
+        const data = [];
+        tr.querySelectorAll('td').forEach(td => {
+            data.push(td.innerHTML);
+        });
+        
+        // Update baris
+        dataTable.row(rowIndex).data(data).draw(false);
+        
+        // Re-attach event handlers untuk checkbox
+        const updatedRow = dataTable.row(rowIndex).node();
+        const checkbox = updatedRow.querySelector('.mutasi-checkbox');
+        if (checkbox) {
+            checkbox.addEventListener('change', function() {
                 updateBatchSubmitBtn();
             });
         }
     }
 }
 
-// TAMBAHAN: Fungsi untuk membuat data baris tabel (untuk DataTable)
-function createTableRowData(mutasi) {
-    const docStatus = getDocumentStatus(mutasi.dokumen);
-    const isComplete = docStatus.class === 'complete';
-    const isSubmitted = mutasi.submitted_by_puk;
-    
-    return [
-        // Checkbox column
-        `<input type="checkbox" class="form-check-input mutasi-checkbox" 
-            value="${mutasi.id}" ${isSubmitted || !isComplete ? 'disabled' : ''}>`,
-        
-        // ID Mutasi column
-        `<strong>MUT-${String(mutasi.id).padStart(4, '0')}</strong>
-         ${isSubmitted ? '<br><small class="badge bg-success">Submitted</small>' : ''}`,
-        
-        // Periode column
-        `<div>${mutasi.periode || '-'}</div>
-         <small class="text-muted">${mutasi.jenis_mutasi || 'Definitif'}</small>`,
-        
-        // ABK Naik column
-        `<div class="fw-bold">${mutasi.abk_naik.nama}</div>
-         <small class="text-muted">
-             ${mutasi.abk_naik.jabatan_tetap} → ${mutasi.abk_naik.jabatan_mutasi}
-         </small>`,
-        
-        // ABK Turun column
-        mutasi.abk_turun ? 
-            `<div class="fw-bold">${mutasi.abk_turun.nama}</div>
-             <small class="text-muted">
-                 ${mutasi.abk_turun.jabatan_tetap} → ${mutasi.abk_turun.jabatan_mutasi}
-             </small>` : 
-            `<span class="text-muted">-</span>`,
-        
-        // Status column
-        `<span class="status-badge status-${mutasi.status_mutasi.toLowerCase()}">
-             ${mutasi.status_mutasi}
-         </span>`,
-        
-        // Status Dokumen column
-        `<div class="doc-status ${docStatus.class}">
-             <i class="bi bi-${docStatus.icon}"></i>
-             ${docStatus.text}
-         </div>
-         <div class="mt-1">
-             <small class="text-muted">
-                 ${mutasi.dokumen.sertijab ? '✓' : '✗'} Sertijab |
-                 ${mutasi.dokumen.familisasi ? '✓' : '✗'} Familisasi |
-                 ${mutasi.dokumen.lampiran ? '✓' : '✗'} Lampiran
-             </small>
-         </div>`,
-        
-        // Aksi column
-        `<div class="d-grid gap-1">
-             <button type="button" class="btn btn-primary btn-sm" onclick="openUploadModal(${mutasi.id})">
-                 <i class="bi bi-upload"></i> Upload
-             </button>
-             ${isComplete && !isSubmitted ? `
-                 <button type="button" class="btn btn-success btn-sm" onclick="submitSingle(${mutasi.id})">
-                     <i class="bi bi-send"></i> Submit
-                 </button>
-             ` : ''}
-         </div>`
-    ];
+
+// Perbaiki fungsi createUploadCard
+function createUploadCard(mutasiId, jenis, label, hasFile, fileUrl) {
+    if (hasFile) {
+        return `
+            <div class="card-body text-center">
+                <i class="bi bi-file-check text-success" style="font-size: 2rem;"></i>
+                <h6 class="mt-2">${label}</h6>
+                <p class="text-success small">Sudah diunggah</p>
+                <div class="d-grid gap-2">
+                    <a href="${fileUrl}" target="_blank" class="btn btn-success btn-sm">
+                        <i class="bi bi-eye"></i> Lihat
+                    </a>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteDokumen(${mutasiId}, '${jenis}')">
+                        <i class="bi bi-trash"></i> Hapus
+                    </button>
+                </div>
+            </div>
+        `;
+    } else {
+        // PERBAIKAN: Tambahkan class upload-trigger dan cursor:pointer
+        return `
+            <div class="card-body text-center">
+                <input type="file" id="file-${jenis}-${mutasiId}" class="d-none" 
+                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                
+                <div class="upload-trigger" style="cursor: pointer;" 
+                     onclick="document.getElementById('file-${jenis}-${mutasiId}').click()">
+                    <i class="bi bi-cloud-upload text-primary" style="font-size: 2rem;"></i>
+                    <h6 class="mt-2">${label}</h6>
+                    <p class="text-muted small">Klik untuk upload</p>
+                    <button type="button" class="btn btn-primary btn-sm">
+                        <i class="bi bi-upload"></i> Upload
+                    </button>
+                </div>
+            </div>
+        `;
+    }
 }
 
-// PERBAIKAN: Update fungsi showMutasiTable untuk menggunakan DataTable dengan data array
-function showMutasiTable(mutasis) {
-    const tableBody = document.getElementById('mutasiTableBody');
-    tableBody.innerHTML = '';
+// Perbaiki fungsi uploadFile untuk menangani error dengan lebih baik
+function uploadFile(mutasiId, jenis, file) {
+    console.log(`Uploading file for ${jenis}:`, file.name);
     
-    // Prepare data untuk DataTable
-    const tableData = mutasis.map(mutasi => createTableRowData(mutasi));
+    const formData = new FormData();
+    formData.append('id_mutasi', mutasiId);
+    formData.append('jenis_dokumen', jenis);
+    formData.append('file', file);
     
-    document.getElementById('tableContainer').style.display = 'block';
+    // Tambahkan CSRF token
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
     
-    // Initialize DataTable
-    if (dataTable) {
-        dataTable.destroy();
+    const uploadCard = document.getElementById(`upload-${jenis}-${mutasiId}`);
+    if (!uploadCard) {
+        console.error(`Upload card for ${jenis}-${mutasiId} not found`);
+        return;
     }
     
-    dataTable = $('#mutasiTable').DataTable({
-        data: tableData,
-        responsive: true,
-        pageLength: 10,
-        language: {
-            search: "Cari:",
-            lengthMenu: "Tampilkan _MENU_ data",
-            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data"
+    // Show loading
+    uploadCard.innerHTML = `
+        <div class="card-body text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Mengunggah...</p>
+        </div>
+    `;
+    
+    fetch('{{ route("puk.upload-dokumen") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
         },
-        columnDefs: [
-            { orderable: false, targets: [0, 7] },
-            { className: "text-center", targets: [0] }
-        ],
-        order: [[2, 'desc']],
-        drawCallback: function() {
-            // Re-attach event listeners setelah table di-draw
-            document.querySelectorAll('.mutasi-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    updateBatchSubmitBtn();
-                });
-            });
+        body: formData
+    })
+    .then(response => {
+        console.log(`Upload response status: ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(`Upload response:`, data);
+        if (data.success) {
+            // Update data mutasi di array currentMutasis
+            const mutasiIndex = currentMutasis.findIndex(m => m.id == mutasiId);
+            if (mutasiIndex !== -1) {
+                // Update dokumen status
+                currentMutasis[mutasiIndex].dokumen[jenis] = true;
+                currentMutasis[mutasiIndex].dokumen_urls[jenis] = data.file_info.url;
+                
+                // Refresh upload card di modal
+                uploadCard.innerHTML = createUploadCard(
+                    mutasiId, 
+                    jenis, 
+                    jenis === 'sertijab' ? 'Sertijab' : 
+                    jenis === 'familisasi' ? 'Familisasi' : 'Lampiran', 
+                    true, 
+                    data.file_info.url
+                );
+                
+                // Update baris tabel secara real-time
+                updateTableRow(mutasiId, currentMutasis[mutasiIndex]);
+                
+                // Update batch submit button status
+                updateBatchSubmitBtn();
+            }
+            
+            showAlert('Dokumen berhasil diunggah', 'success');
+        } else {
+            throw new Error(data.message || 'Gagal mengunggah dokumen');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showAlert(`Gagal mengunggah dokumen: ${error.message}`, 'error');
+        
+        // Restore original card
+        const mutasi = currentMutasis.find(m => m.id == mutasiId);
+        if (mutasi) {
+            uploadCard.innerHTML = createUploadCard(
+                mutasiId, 
+                jenis, 
+                jenis === 'sertijab' ? 'Sertijab' : 
+                jenis === 'familisasi' ? 'Familisasi' : 'Lampiran', 
+                false, 
+                null
+            );
+            
+            // PENTING: Setup listener lagi karena card telah diganti
+            setTimeout(() => {
+                const fileInput = document.getElementById(`file-${jenis}-${mutasiId}`);
+                if (fileInput) {
+                    fileInput.addEventListener('change', function() {
+                        console.log(`File re-selected for ${jenis}:`, this.files[0]?.name);
+                        if (this.files[0]) {
+                            uploadFile(mutasiId, jenis, this.files[0]);
+                        }
+                    });
+                }
+            }, 100);
         }
     });
-    
-    updateBatchSubmitBtn();
 }
 
-// PERBAIKAN: Update fungsi deleteDokumen dengan logic yang sama
+// UBAH: Update deleteDokumen agar nonaktifkan checkbox jika ini dokumen terakhir
 window.deleteDokumen = function(mutasiId, jenis) {
     if (!confirm('Apakah Anda yakin ingin menghapus dokumen ini?')) return;
     
@@ -1533,6 +1757,12 @@ window.deleteDokumen = function(mutasiId, jenis) {
             // Update data mutasi di array currentMutasis
             const mutasiIndex = currentMutasis.findIndex(m => m.id == mutasiId);
             if (mutasiIndex !== -1) {
+                // PERUBAHAN: Simpan status dokumen saat ini untuk cek apakah ini dokumen terakhir
+                const willBeEmpty = !((jenis !== 'sertijab' && currentMutasis[mutasiIndex].dokumen.sertijab) || 
+                                     (jenis !== 'familisasi' && currentMutasis[mutasiIndex].dokumen.familisasi) || 
+                                     (jenis !== 'lampiran' && currentMutasis[mutasiIndex].dokumen.lampiran));
+                
+                // Update status dokumen
                 currentMutasis[mutasiIndex].dokumen[jenis] = false;
                 currentMutasis[mutasiIndex].dokumen_urls[jenis] = null;
                 
@@ -1556,7 +1786,7 @@ window.deleteDokumen = function(mutasiId, jenis) {
                     });
                 }
                 
-                // PERBAIKAN: Update baris tabel secara real-time
+                // Update baris tabel secara real-time
                 updateTableRow(mutasiId, currentMutasis[mutasiIndex]);
                 
                 // Update batch submit button status
