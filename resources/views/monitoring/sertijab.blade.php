@@ -252,11 +252,6 @@
                                                 <i class="bi bi-check2-circle"></i>
                                             </button>
                                             @endif
-                                            <button class="btn-action btn-info" 
-                                                    onclick="viewMutasi({{ $mutasi->id }})"
-                                                    title="Info Mutasi">
-                                                <i class="bi bi-info-circle"></i>
-                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -1190,7 +1185,7 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.disabled = true;
             if (btnText) btnText.textContent = 'Memverifikasi...';
             
-            fetch(`{{ route('monitoring.documents') }}/${sertijabToVerify}`, {
+            fetch(`{{ route('monitoring.documents.quick-verify', ':id') }}`.replace(':id', sertijabToVerify), {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
