@@ -1,4 +1,3 @@
-{{-- filepath: c:\laragon\www\SertijabPelni\resources\views\arsip\show.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Detail Monitoring dan Verifikasi')
@@ -31,7 +30,7 @@
                     Detail Monitoring Dokumen Sertijab
                 </h1>
                 <p class="page-subtitle">
-                    Lihat detail lengkap dokumen arsip serah terima jabatan
+                    Lihat detail lengkap dokumen sertijab 
                     @if($arsip->mutasi->kapal)
                         - {{ $arsip->mutasi->kapal->nama_kapal }}
                     @endif
@@ -39,11 +38,7 @@
             </div>
             <div class="header-actions">
                 <div class="action-buttons">
-                    {{-- <a href="{{ route('arsip.edit', $arsip->id) }}" class="btn btn-warning">
-                        <i class="bi bi-pencil me-2"></i>
-                        Edit Arsip
-                    </a> --}}
-                    <a href="{{ route('arsip.search') }}" class="btn btn-outline-secondary">
+                    <a href="{{ route('monitoring.sertijab') }}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left me-2"></i>
                         Kembali
                     </a>
@@ -574,38 +569,6 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
-                    Konfirmasi Hapus
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Apakah Anda yakin ingin menghapus arsip dokumen ini?</p>
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Perhatian:</strong> Tindakan ini tidak dapat dibatalkan. 
-                    Semua file dokumen akan dihapus permanen.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash me-1"></i> Hapus Arsip
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('styles')

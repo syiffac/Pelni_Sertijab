@@ -333,6 +333,10 @@ class PUKController extends Controller
         $sertijab->status_dokumen = 'draft';
         $sertijab->save();
 
+        // PERBAIKAN: Update status mutasi menjadi 'Selesai' setelah submit
+        $mutasi->status_mutasi = 'Selesai';
+        $mutasi->save();
+
         DB::commit();
 
         // Buat notifikasi untuk admin jika ada
@@ -348,7 +352,7 @@ class PUKController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Dokumen berhasil disubmit'
+            'message' => 'Dokumen berhasil disubmit dan status mutasi diperbarui menjadi Selesai'
         ]);
 
     } catch (\Exception $e) {
@@ -402,9 +406,11 @@ public function batchSubmitDokumen(Request $request)
                 $sertijab->status_dokumen = 'draft';
                 $sertijab->save();
 
-                // Ambil data mutasi untuk notifikasi
+                // PERBAIKAN: Update status mutasi menjadi 'Selesai' setelah submit
                 $mutasi = Mutasi::find($mutasiId);
                 if ($mutasi) {
+                    $mutasi->status_mutasi = 'Selesai';
+                    $mutasi->save();
                     $mutasiList[] = $mutasi;
                 }
 
@@ -433,7 +439,7 @@ public function batchSubmitDokumen(Request $request)
         // Siapkan response message
         $message = "";
         if ($successCount > 0) {
-            $message .= "{$successCount} dokumen berhasil disubmit";
+            $message .= "{$successCount} dokumen berhasil disubmit dan status mutasi diperbarui menjadi Selesai";
         }
         if ($failedCount > 0) {
             $message .= ($successCount > 0 ? ", {$failedCount} gagal" : "{$failedCount} dokumen gagal disubmit");
