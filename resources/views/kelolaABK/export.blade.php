@@ -224,32 +224,34 @@
                             </div>
 
                             <!-- Import Options -->
-                            <div id="importOptions" class="import-options d-none">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Jenis Import</label>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="import_type" id="import_mutasi" value="mutasi" checked>
-                                        <label class="form-check-label" for="import_mutasi">
-                                            <strong>Data Mutasi ABK</strong>
-                                            <small class="d-block text-muted">Import data mutasi serah terima jabatan</small>
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="import_type" id="import_abk" value="abk">
-                                        <label class="form-check-label" for="import_abk">
-                                            <strong>Data ABK Baru</strong>
-                                            <small class="d-block text-muted">Import data ABK baru ke sistem</small>
-                                        </label>
-                                    </div>
+                        <div id="importOptions" class="import-options d-none">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Jenis Import</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="import_type" id="import_mutasi" value="mutasi" checked>
+                                    <label class="form-check-label" for="import_mutasi">
+                                        <strong>Data Mutasi ABK</strong>
+                                        <small class="d-block text-muted">Import data mutasi serah terima jabatan</small>
+                                    </label>
                                 </div>
-
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="skipDuplicates" name="skip_duplicates" checked>
-                                    <label class="form-check-label" for="skipDuplicates">
-                                        Skip data duplikat (berdasarkan NRP)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="import_type" id="import_abk" value="abk">
+                                    <label class="form-check-label" for="import_abk">
+                                        <strong>Data ABK Baru</strong>
+                                        <small class="d-block text-muted">Import data ABK baru ke sistem</small>
                                     </label>
                                 </div>
                             </div>
+
+                            <!-- PERBAIKAN: Tambahkan hidden input untuk memastikan nilai selalu dikirim -->
+                            <input type="hidden" name="skip_duplicates" value="0">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="skipDuplicates" name="skip_duplicates" value="1" checked>
+                                <label class="form-check-label" for="skipDuplicates">
+                                    Skip data duplikat (berdasarkan NRP)
+                                </label>
+                            </div>
+                        </div>
 
                             <!-- Import Actions -->
                             <div id="importActions" class="import-actions d-none">
@@ -289,109 +291,263 @@
         </div>
     </div>
 
-    <!-- Recent Import History -->
-    <div class="row">
-        <div class="col-12">
-            <div class="history-card">
-                <div class="history-header">
+    <!-- Recent Import Export History -->
+<div class="row">
+    <div class="col-12">
+        <div class="history-card">
+            <div class="history-header">
+                <div class="header-left">
                     <h5 class="history-title">
                         <i class="bi bi-clock-history me-2"></i>
-                        Riwayat Import Terbaru
+                        Riwayat Import & Export Terbaru
                     </h5>
+                    <p class="history-subtitle">10 aktivitas terakhir dalam sistem</p>
+                </div>
+                <div class="header-actions">
                     <button class="btn btn-outline-primary btn-sm" onclick="refreshHistory()">
                         <i class="bi bi-arrow-clockwise"></i>
                         Refresh
                     </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="exportHistory()">
+                        <i class="bi bi-file-earmark-excel"></i>
+                        Export
+                    </button>
                 </div>
-                <div class="history-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Tanggal</th>
-                                    <th>File</th>
-                                    <th>Jenis</th>
-                                    <th>Status</th>
-                                    <th>Data Processed</th>
-                                    <th>Admin</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyTableBody">
-                                @forelse($importHistory ?? [] as $history)
-                                <tr>
-                                    <td>
-                                        <div class="date-info">
-                                            <div class="date-text">{{ $history->created_at->format('d M Y') }}</div>
-                                            <small class="time-text">{{ $history->created_at->format('H:i') }}</small>
+            </div>
+            <div class="history-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="12%">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    Waktu
+                                </th>
+                                <th width="15%">
+                                    <i class="bi bi-file-earmark me-1"></i>
+                                    File
+                                </th>
+                                <th width="10%">
+                                    <i class="bi bi-arrow-repeat me-1"></i>
+                                    Aktivitas
+                                </th>
+                                <th width="10%">
+                                    <i class="bi bi-tag me-1"></i>
+                                    Jenis
+                                </th>
+                                <th width="10%">
+                                    <i class="bi bi-check-square me-1"></i>
+                                    Status
+                                </th>
+                                <th width="15%">
+                                    <i class="bi bi-bar-chart me-1"></i>
+                                    Progress
+                                </th>
+                                <th width="12%">
+                                    <i class="bi bi-person me-1"></i>
+                                    Admin
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            @forelse($importHistory ?? [] as $history)
+                            <tr class="history-row" data-id="{{ $history->id }}">
+                                <!-- Waktu -->
+                                <td>
+                                    <div class="date-info">
+                                        <div class="date-text fw-semibold">
+                                            {{ $history->created_at->format('d M Y') }}
                                         </div>
-                                    </td>
-                                    <td>
-                                        <div class="file-info">
-                                            <i class="bi bi-file-earmark-excel text-success me-2"></i>
-                                            <span class="file-name">{{ $history->file_name }}</span>
+                                        <small class="time-text text-muted">
+                                            {{ $history->created_at->format('H:i:s') }}
+                                        </small>
+                                        <div class="relative-time">
+                                            <small class="text-muted">{{ $history->created_at->diffForHumans() }}</small>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">{{ ucfirst($history->import_type) }}</span>
-                                    </td>
-                                    <td>
-                                        @if($history->status == 'success')
-                                            <span class="badge bg-success">
-                                                <i class="bi bi-check-circle me-1"></i>
-                                                Berhasil
-                                            </span>
-                                        @elseif($history->status == 'failed')
-                                            <span class="badge bg-danger">
-                                                <i class="bi bi-x-circle me-1"></i>
-                                                Gagal
-                                            </span>
-                                        @else
-                                            <span class="badge bg-warning">
-                                                <i class="bi bi-hourglass-split me-1"></i>
-                                                Proses
-                                            </span>
+                                    </div>
+                                </td>
+
+                                <!-- File -->
+                                <td>
+                                    <div class="file-info">
+                                        <div class="file-main d-flex align-items-center">
+                                            <i class="bi {{ $history->tipe === 'import' ? 'bi-file-earmark-arrow-up text-success' : 'bi-file-earmark-arrow-down text-primary' }} me-2 fs-5"></i>
+                                            <div class="file-details">
+                                                <div class="file-name fw-medium text-truncate" title="{{ $history->file_name }}">
+                                                    {{ Str::limit($history->file_name, 20) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Aktivitas -->
+                                <td>
+                                    <div class="activity-info">
+                                        <span class="badge rounded-pill {{ $history->tipe === 'import' ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }}">
+                                            <i class="bi {{ $history->tipe_icon }} me-1"></i>
+                                            {{ ucfirst($history->tipe) }}
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <!-- Jenis -->
+                                <td>
+                                    <span class="badge bg-info-subtle text-info rounded-pill">
+                                        {{ $history->jenis_label }}
+                                    </span>
+                                </td>
+
+                                <!-- Status -->
+                                <td>
+                                    <div class="status-container">
+                                        <span class="badge {{ $history->status_badge_class }} d-flex align-items-center gap-1">
+                                            <i class="bi {{ $history->status_icon }}"></i>
+                                            @switch($history->status)
+                                                @case('success')
+                                                    Berhasil
+                                                    @break
+                                                @case('failed') 
+                                                    Gagal
+                                                    @break
+                                                @case('warning')
+                                                    Peringatan
+                                                    @break
+                                                @case('processing')
+                                                    Proses
+                                                    @break
+                                                @default
+                                                    {{ ucfirst($history->status) }}
+                                            @endswitch
+                                        </span>
+                                        
+                                        @if($history->success_rate > 0)
+                                        <div class="mt-1">
+                                            <small class="text-muted">{{ $history->success_rate }}% berhasil</small>
+                                        </div>
                                         @endif
-                                    </td>
-                                    <td>
-                                        <div class="process-info">
-                                            <div class="process-text">{{ $history->processed_records ?? 0 }} / {{ $history->total_records ?? 0 }}</div>
-                                            @if($history->failed_records > 0)
-                                                <small class="text-danger">{{ $history->failed_records }} gagal</small>
+                                    </div>
+                                </td>
+
+                                <!-- Progress -->
+                                <td>
+                                    <div class="progress-info">
+                                        <div class="progress-stats d-flex justify-content-between mb-1">
+                                            <small class="text-muted">Total: {{ number_format($history->processed_records + $history->failed_records) }}</small>
+                                            @if($history->durasi_proses)
+                                            <small class="text-muted">{{ $history->formatted_duration }}</small>
                                             @endif
                                         </div>
-                                    </td>
-                                    <td>{{ $history->admin_name ?? 'System' }}</td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            @if($history->status == 'success')
-                                                <button class="btn btn-sm btn-outline-primary" onclick="viewImportDetail({{ $history->id }})">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
+                                        
+                                        @if($history->total_records > 0)
+                                        <div class="progress" style="height: 6px;">
+                                            @php 
+                                                $successPercent = ($history->processed_records / $history->total_records) * 100;
+                                                $failedPercent = ($history->failed_records / $history->total_records) * 100;
+                                                $skippedPercent = (($history->jumlah_dilewati ?? 0) / $history->total_records) * 100;
+                                            @endphp
+                                            
+                                            @if($successPercent > 0)
+                                            <div class="progress-bar bg-success" style="width: {{ $successPercent }}%" 
+                                                 title="Berhasil: {{ $history->processed_records }}"></div>
                                             @endif
-                                            @if($history->error_log)
-                                                <button class="btn btn-sm btn-outline-danger" onclick="viewErrorLog({{ $history->id }})">
-                                                    <i class="bi bi-exclamation-triangle"></i>
-                                                </button>
+                                            
+                                            @if($skippedPercent > 0)
+                                            <div class="progress-bar bg-warning" style="width: {{ $skippedPercent }}%" 
+                                                 title="Dilewati: {{ $history->jumlah_dilewati ?? 0 }}"></div>
+                                            @endif
+                                            
+                                            @if($failedPercent > 0)
+                                            <div class="progress-bar bg-danger" style="width: {{ $failedPercent }}%" 
+                                                 title="Gagal: {{ $history->failed_records }}"></div>
                                             @endif
                                         </div>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
-                                        <i class="bi bi-inbox display-6 d-block mb-2"></i>
-                                        Belum ada riwayat import
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                        
+                                        <div class="progress-details mt-1">
+                                            <div class="row text-center g-0">
+                                                <div class="col">
+                                                    <small class="text-success fw-semibold">{{ number_format($history->processed_records) }}</small>
+                                                    <div><small class="text-muted">Berhasil</small></div>
+                                                </div>
+                                                @if(($history->jumlah_dilewati ?? 0) > 0)
+                                                <div class="col">
+                                                    <small class="text-warning fw-semibold">{{ number_format($history->jumlah_dilewati ?? 0) }}</small>
+                                                    <div><small class="text-muted">Dilewati</small></div>
+                                                </div>
+                                                @endif
+                                                @if($history->failed_records > 0)
+                                                <div class="col">
+                                                    <small class="text-danger fw-semibold">{{ number_format($history->failed_records) }}</small>
+                                                    <div><small class="text-muted">Gagal</small></div>
+                                                </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @else
+                                        <div class="text-center py-2">
+                                            <small class="text-muted">Tidak ada data</small>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </td>
+
+                                <!-- Admin -->
+                                <td>
+                                    <div class="admin-info">
+                                        <div class="admin-name fw-medium">{{ $history->admin_name }}</div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="9" class="text-center py-5">
+                                    <div class="empty-state">
+                                        <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+                                        <h6 class="text-muted">Belum ada riwayat aktivitas</h6>
+                                        <p class="text-muted small">Aktivitas import dan export akan muncul di sini</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Summary Stats -->
+                @if($importHistory && $importHistory->count() > 0)
+                <div class="history-summary mt-3 pt-3 border-top">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="summary-item">
+                                <span class="summary-value text-primary">{{ $importHistory->where('tipe', 'import')->count() }}</span>
+                                <small class="summary-label d-block text-muted">Import</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="summary-item">
+                                <span class="summary-value text-success">{{ $importHistory->where('tipe', 'export')->count() }}</span>
+                                <small class="summary-label d-block text-muted">Export</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="summary-item">
+                                <span class="summary-value text-success">{{ $importHistory->where('status', 'success')->count() }}</span>
+                                <small class="summary-label d-block text-muted">Berhasil</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="summary-item">
+                                <span class="summary-value text-danger">{{ $importHistory->where('status', 'failed')->count() }}</span>
+                                <small class="summary-label d-block text-muted">Gagal</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Import Result Modal -->
@@ -1014,6 +1170,242 @@
     .table-responsive {
         font-size: 13px;
     }
+
+    /* History Table Enhancements */
+.history-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    border: 1px solid var(--border-color);
+}
+
+.history-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.header-left .history-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.header-left .history-subtitle {
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+    font-size: 13px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.history-body {
+    padding: 0;
+}
+
+/* Table Enhancements */
+.table th {
+    background: var(--background-light);
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 12px;
+    border: none;
+    padding: 12px 8px;
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 12px 8px;
+    vertical-align: middle;
+    border-color: var(--border-color);
+    font-size: 13px;
+}
+
+.history-row:hover {
+    background-color: rgba(37, 99, 235, 0.02);
+}
+
+/* Date and Time Info */
+.date-info .date-text {
+    font-size: 13px;
+    color: var(--text-dark);
+    line-height: 1.2;
+}
+
+.date-info .time-text {
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.2;
+}
+
+.date-info .relative-time {
+    margin-top: 2px;
+}
+
+/* File Info */
+.file-info .file-main {
+    align-items: center;
+}
+
+.file-details .file-name {
+    font-size: 12px;
+    color: var(--text-dark);
+    line-height: 1.2;
+    max-width: 120px;
+}
+
+.file-details .file-size {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+/* Progress Bars */
+.progress {
+    background-color: #e9ecef;
+    border-radius: 3px;
+}
+
+.progress-details .row .col {
+    padding: 0 2px;
+}
+
+.progress-details small {
+    font-size: 10px;
+    line-height: 1.1;
+}
+
+/* Performance Metrics */
+.performance-metric .metric-value {
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.performance-metric small {
+    font-size: 10px;
+    line-height: 1;
+}
+
+/* Admin Info */
+.admin-info .admin-name {
+    font-size: 12px;
+    color: var(--text-dark);
+    line-height: 1.2;
+}
+
+.admin-info small {
+    font-size: 10px;
+    line-height: 1;
+}
+
+/* Status Badges */
+.badge.rounded-pill {
+    font-size: 10px;
+    padding: 4px 8px;
+}
+
+.badge.bg-success-subtle {
+    background-color: rgba(25, 135, 84, 0.1) !important;
+    color: #198754 !important;
+}
+
+.badge.bg-primary-subtle {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+    color: #0d6efd !important;
+}
+
+.badge.bg-info-subtle {
+    background-color: rgba(13, 202, 240, 0.1) !important;
+    color: #0dcaf0 !important;
+}
+
+/* Empty State */
+.empty-state {
+    padding: 40px 20px;
+}
+
+.empty-state .bi {
+    opacity: 0.3;
+}
+
+/* Summary Stats */
+.history-summary {
+    background: var(--background-light);
+    padding: 16px;
+    margin: 0 -24px -24px -24px;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.summary-item {
+    padding: 8px;
+}
+
+.summary-value {
+    font-size: 18px;
+    font-weight: 700;
+    display: block;
+}
+
+.summary-label {
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+/* Dropdown */
+.dropdown-menu {
+    font-size: 12px;
+    box-shadow: var(--shadow-medium);
+    border: 1px solid var(--border-color);
+}
+
+.dropdown-item {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.dropdown-item:hover {
+    background-color: var(--background-light);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .table th,
+    .table td {
+        padding: 8px 4px;
+        font-size: 11px;
+    }
+    
+    .file-details .file-name {
+        max-width: 80px;
+    }
+}
+
+@media (max-width: 768px) {
+    .history-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .header-actions {
+        justify-content: center;
+    }
+    
+    .table-responsive {
+        font-size: 10px;
+    }
+    
+    .history-summary .row .col-md-3 {
+        margin-bottom: 8px;
+    }
+}
 }
 </style>
 @endpush
@@ -1030,34 +1422,52 @@ document.addEventListener('DOMContentLoaded', function() {
     const importProgress = document.getElementById('importProgress');
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
+    
+    let selectedFile = null; // Store selected file
+    let isProcessing = false; // Flag untuk mencegah multiple processing
 
     // Drag and drop functionality
     uploadArea.addEventListener('dragover', function(e) {
         e.preventDefault();
-        uploadArea.classList.add('dragover');
+        e.stopPropagation();
+        if (!selectedFile && !isProcessing) {
+            uploadArea.classList.add('dragover');
+        }
     });
 
     uploadArea.addEventListener('dragleave', function(e) {
         e.preventDefault();
-        uploadArea.classList.remove('dragover');
+        e.stopPropagation();
+        if (!selectedFile && !isProcessing) {
+            uploadArea.classList.remove('dragover');
+        }
     });
 
     uploadArea.addEventListener('drop', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         uploadArea.classList.remove('dragover');
         
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            handleFileSelection(files[0]);
+        if (!selectedFile && !isProcessing && e.dataTransfer.files.length > 0) {
+            handleFileSelection(e.dataTransfer.files[0]);
         }
     });
 
-    uploadArea.addEventListener('click', function() {
-        importFile.click();
+    // Click to select file
+    uploadArea.addEventListener('click', function(e) {
+        // Jangan trigger jika klik pada button yang sudah ada
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+            return;
+        }
+        
+        if (!selectedFile && !isProcessing) {
+            importFile.click();
+        }
     });
 
+    // File input change
     importFile.addEventListener('change', function(e) {
-        if (e.target.files.length > 0) {
+        if (e.target.files.length > 0 && !selectedFile && !isProcessing) {
             handleFileSelection(e.target.files[0]);
         }
     });
@@ -1069,10 +1479,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function handleFileSelection(file) {
+        // Prevent multiple selections
+        if (selectedFile || isProcessing) {
+            console.log('File already selected or processing, ignoring');
+            return;
+        }
+
         // Validate file
         if (!validateFile(file)) {
             return;
         }
+
+        // Store selected file
+        selectedFile = file;
+        
+        console.log('File selected:', file.name);
 
         // Show file info
         showFileInfo(file);
@@ -1080,6 +1501,41 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show options and actions
         importOptions.classList.remove('d-none');
         importActions.classList.remove('d-none');
+        
+        // Update upload area appearance
+        updateUploadAreaForSelectedFile();
+    }
+
+    function updateUploadAreaForSelectedFile() {
+        uploadArea.classList.add('file-selected');
+        const uploadContent = uploadArea.querySelector('.upload-content');
+        if (uploadContent) {
+            uploadContent.innerHTML = `
+                <i class="bi bi-check-circle-fill text-success upload-icon"></i>
+                <h6 class="upload-text text-success">File Terpilih</h6>
+                <p class="upload-subtitle">File siap untuk diimport</p>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeFile()">
+                    <i class="bi bi-x-circle me-2"></i>
+                    Hapus File
+                </button>
+            `;
+        }
+    }
+
+    function resetUploadArea() {
+        uploadArea.classList.remove('file-selected', 'dragover');
+        const uploadContent = uploadArea.querySelector('.upload-content');
+        if (uploadContent) {
+            uploadContent.innerHTML = `
+                <i class="bi bi-cloud-upload upload-icon"></i>
+                <h6 class="upload-text">Drag & Drop file atau klik untuk browse</h6>
+                <p class="upload-subtitle">Mendukung format: .xlsx, .xls, .pdf (Max: 10MB)</p>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('importFile').click()">
+                    <i class="bi bi-folder2-open me-2"></i>
+                    Pilih File
+                </button>
+            `;
+        }
     }
 
     function validateFile(file) {
@@ -1089,12 +1545,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const maxSize = 10 * 1024 * 1024; // 10MB
 
         if (!allowedTypes.includes(file.type)) {
-            alert('Format file tidak didukung. Gunakan .xlsx, .xls, atau .pdf');
+            showToast('Format file tidak didukung. Gunakan .xlsx, .xls, atau .pdf', 'error');
             return false;
         }
 
         if (file.size > maxSize) {
-            alert('Ukuran file terlalu besar. Maksimal 10MB');
+            showToast('Ukuran file terlalu besar. Maksimal 10MB', 'error');
             return false;
         }
 
@@ -1129,6 +1585,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function submitImport() {
+        if (!selectedFile) {
+            showToast('Silakan pilih file terlebih dahulu', 'error');
+            return;
+        }
+
+        if (isProcessing) {
+            showToast('Import sedang diproses, mohon tunggu', 'warning');
+            return;
+        }
+
+        isProcessing = true;
+
         const submitButton = importForm.querySelector('button[type="submit"]');
         const importText = submitButton.querySelector('.import-text');
         const importSpinner = submitButton.querySelector('.import-spinner');
@@ -1143,7 +1611,34 @@ document.addEventListener('DOMContentLoaded', function() {
         updateProgress(10, 'Mengupload file...');
 
         // Create FormData
-        const formData = new FormData(importForm);
+        const formData = new FormData();
+        formData.append('import_file', selectedFile);
+        
+        // Append form fields
+        const importType = document.querySelector('input[name="import_type"]:checked');
+        if (importType) {
+            formData.append('import_type', importType.value);
+        }
+        
+        // Handle skip_duplicates checkbox
+        const skipDuplicatesCheckbox = document.getElementById('skipDuplicates');
+        if (skipDuplicatesCheckbox) {
+            formData.append('skip_duplicates', skipDuplicatesCheckbox.checked ? '1' : '0');
+        } else {
+            formData.append('skip_duplicates', '1');
+        }
+        
+        // Append CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfToken) {
+            formData.append('_token', csrfToken.content);
+        }
+
+        // Debug: Log form data
+        console.log('Form data being sent:');
+        for (let [key, value] of formData.entries()) {
+            console.log(key + ': ' + (value instanceof File ? value.name : value));
+        }
 
         // Submit via AJAX
         fetch('{{ route("abk.import") }}', {
@@ -1151,32 +1646,92 @@ document.addEventListener('DOMContentLoaded', function() {
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             }
         })
         .then(response => {
+            console.log('Response status:', response.status);
+            
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                return response.text().then(text => {
+                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    try {
+                        const errorData = JSON.parse(text);
+                        errorMessage = errorData.message || errorMessage;
+                    } catch (e) {
+                        if (text.length > 0 && text.length < 200) {
+                            errorMessage = text;
+                        }
+                    }
+                    throw new Error(errorMessage);
+                });
             }
+            
             return response.json();
         })
         .then(data => {
+            console.log('Response data:', data);
+            
             if (data.success) {
-                // Simulate progress
                 simulateProgress(data);
             } else {
                 throw new Error(data.message || 'Import gagal');
             }
         })
         .catch(error => {
-            // Reset form
-            submitButton.disabled = false;
-            importText.textContent = 'Import Data';
-            importSpinner.classList.add('d-none');
-            importProgress.classList.add('d-none');
-
-            alert('Error: ' + error.message);
             console.error('Import error:', error);
+            resetFormState();
+            showErrorModal(error.message, error.message);
         });
+    }
+
+    function resetFormState() {
+        const submitButton = importForm.querySelector('button[type="submit"]');
+        const importText = submitButton.querySelector('.import-text');
+        const importSpinner = submitButton.querySelector('.import-spinner');
+        
+        submitButton.disabled = false;
+        importText.textContent = 'Import Data';
+        importSpinner.classList.add('d-none');
+        importProgress.classList.add('d-none');
+        
+        isProcessing = false;
+    }
+
+    function showErrorModal(userMessage, technicalMessage) {
+        const resultContent = document.getElementById('importResultContent');
+        resultContent.innerHTML = `
+            <div class="import-result">
+                <div class="result-summary mb-3">
+                    <div class="alert alert-danger">
+                        <h6 class="alert-heading mb-2">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Import Gagal
+                        </h6>
+                        <p class="mb-0">${userMessage}</p>
+                    </div>
+                </div>
+                
+                <div class="technical-details">
+                    <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#technicalError">
+                        <i class="bi bi-gear me-2"></i>
+                        Detail Teknis
+                    </button>
+                    <div class="collapse mt-3" id="technicalError">
+                        <div class="alert alert-secondary">
+                            <small><strong>Technical Error:</strong><br>${technicalMessage}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('importResultModal'));
+        document.getElementById('importResultModalLabel').innerHTML = `
+            <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+            Error Import
+        `;
+        modal.show();
     }
 
     function simulateProgress(data) {
@@ -1187,7 +1742,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 progress = 90;
                 clearInterval(interval);
                 
-                // Final check
                 setTimeout(() => {
                     updateProgress(100, 'Import selesai!');
                     showImportResult(data);
@@ -1204,31 +1758,42 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showImportResult(data) {
-        // Hide progress
         importProgress.classList.add('d-none');
-        
-        // Reset form
         resetImport();
         
-        // Show result modal
         const resultContent = document.getElementById('importResultContent');
         resultContent.innerHTML = `
             <div class="import-result">
+                <div class="result-summary mb-3">
+                    <div class="alert alert-${data.success ? 'success' : 'warning'}">
+                        <h6 class="alert-heading mb-2">
+                            <i class="bi bi-${data.success ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                            ${data.message}
+                        </h6>
+                    </div>
+                </div>
+                
                 <div class="result-stats">
                     <div class="row text-center">
-                        <div class="col-4">
+                        <div class="col-3">
                             <div class="stat-box">
                                 <div class="stat-number text-primary">${data.total_records || 0}</div>
                                 <div class="stat-label">Total Data</div>
                             </div>
                         </div>
-                        <div class="col-4">
+                        <div class="col-3">
                             <div class="stat-box">
                                 <div class="stat-number text-success">${data.success_records || 0}</div>
                                 <div class="stat-label">Berhasil</div>
                             </div>
                         </div>
-                        <div class="col-4">
+                        <div class="col-3">
+                            <div class="stat-box">
+                                <div class="stat-number text-info">${data.skipped_records || 0}</div>
+                                <div class="stat-label">Dilewati</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
                             <div class="stat-box">
                                 <div class="stat-number text-danger">${data.failed_records || 0}</div>
                                 <div class="stat-label">Gagal</div>
@@ -1236,11 +1801,24 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 </div>
+                
                 ${data.errors && data.errors.length > 0 ? `
-                    <div class="result-errors mt-3">
-                        <h6>Error Log:</h6>
-                        <div class="error-list">
-                            ${data.errors.map(error => `<div class="error-item">${error}</div>`).join('')}
+                    <div class="result-errors mt-4">
+                        <h6>
+                            <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                            Detail Error (${data.errors.length}):
+                        </h6>
+                        <div class="error-list" style="max-height: 200px; overflow-y: auto;">
+                            ${data.errors.slice(0, 10).map(error => `
+                                <div class="error-item alert alert-danger py-2 px-3 mb-2">
+                                    <small>${error}</small>
+                                </div>
+                            `).join('')}
+                            ${data.errors.length > 10 ? `
+                                <div class="text-muted text-center py-2">
+                                    <small>... dan ${data.errors.length - 10} error lainnya</small>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 ` : ''}
@@ -1250,45 +1828,63 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = new bootstrap.Modal(document.getElementById('importResultModal'));
         modal.show();
         
-        // Refresh history
-        refreshHistory();
+        if (typeof refreshHistory === 'function') {
+            refreshHistory();
+        }
     }
 
+    // Global functions
     window.removeFile = function() {
+        console.log('Removing file...');
+        
+        // Reset everything
+        selectedFile = null;
+        isProcessing = false;
         importFile.value = '';
+        
+        // Hide elements
         fileInfo.classList.add('d-none');
         importOptions.classList.add('d-none');
         importActions.classList.add('d-none');
-        uploadArea.classList.remove('dragover');
+        
+        // Reset upload area
+        resetUploadArea();
+        
+        console.log('File removed successfully');
     };
 
     window.resetImport = function() {
+        console.log('Resetting import...');
         removeFile();
         importProgress.classList.add('d-none');
-        
-        const submitButton = importForm.querySelector('button[type="submit"]');
-        const importText = submitButton.querySelector('.import-text');
-        const importSpinner = submitButton.querySelector('.import-spinner');
-        
-        submitButton.disabled = false;
-        importText.textContent = 'Import Data';
-        importSpinner.classList.add('d-none');
+        resetFormState();
     };
 
     window.refreshHistory = function() {
-        // Implement refresh history functionality
         location.reload();
     };
 
-    window.viewImportDetail = function(id) {
-        // Implement view detail functionality
-        console.log('View detail for import ID:', id);
-    };
-
-    window.viewErrorLog = function(id) {
-        // Implement view error log functionality
-        console.log('View error log for import ID:', id);
-    };
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; animation: slideIn 0.3s ease-out;';
+        toast.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="bi bi-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast && toast.parentNode) {
+                toast.style.animation = 'slideOut 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 3000);
+    }
 });
 
 // Export functionality
@@ -1299,19 +1895,16 @@ function exportData(format) {
     const button = event.target;
     const spinner = button.querySelector('.export-spinner');
     
-    // Show loading
     button.disabled = true;
     spinner.classList.remove('d-none');
     
-    // Build URL with parameters
     const params = new URLSearchParams();
     for (let [key, value] of formData) {
         if (value) params.append(key, value);
     }
     
-    const url = `{{ route('abk.export') }}/${format}?${params.toString()}`;
+    const url = `/abk/export/${format}?${params.toString()}`;
     
-    // Create temporary link and trigger download
     const link = document.createElement('a');
     link.href = url;
     link.download = `abk_export_${format}_${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
@@ -1319,7 +1912,6 @@ function exportData(format) {
     link.click();
     document.body.removeChild(link);
     
-    // Reset button
     setTimeout(() => {
         button.disabled = false;
         spinner.classList.add('d-none');
