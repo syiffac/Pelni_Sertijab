@@ -162,7 +162,7 @@ Route::middleware(['auth'])->group(function () {
         
         // Document verification routes
         Route::post('/{id}/verify-document', [ArsipController::class, 'verifyDocument'])->name('verify-document');
-        Route::post('/{id}/verify-all', [ArsipController::class, 'verifyAllDocuments'])->name('verify-all');
+        Route::post('/{id}/verify-all-documents', [ArsipController::class, 'verifyAllDocuments'])->name('verify-all-documents');
         Route::post('/{id}/update-status', [ArsipController::class, 'updateStatus'])->name('update-status');
         Route::post('/bulk-update-status', [ArsipController::class, 'bulkUpdateStatus'])->name('bulk-update-status');
     });
