@@ -1316,13 +1316,13 @@ function uploadFile(mutasiId, jenis, file) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Update data
+            // Update data mutasi di array currentMutasis
             const mutasiIndex = currentMutasis.findIndex(m => m.id == mutasiId);
             if (mutasiIndex !== -1) {
                 currentMutasis[mutasiIndex].dokumen[jenis] = true;
                 currentMutasis[mutasiIndex].dokumen_urls[jenis] = data.file_info.url;
                 
-                // Refresh modal card
+                // Refresh upload card di modal
                 uploadCard.innerHTML = createUploadCard(
                     mutasiId, 
                     jenis, 
@@ -1332,18 +1332,11 @@ function uploadFile(mutasiId, jenis, file) {
                     data.file_info.url
                 );
                 
-                // Setup file input listener again
-                const fileInput = document.getElementById(`file-${jenis}-${mutasiId}`);
-                if (fileInput) {
-                    fileInput.addEventListener('change', function() {
-                        if (this.files[0]) {
-                            uploadFile(mutasiId, jenis, this.files[0]);
-                        }
-                    });
-                }
+                // PERBAIKAN: Update baris tabel secara real-time tanpa reload seluruh tabel
+                updateTableRow(mutasiId, currentMutasis[mutasiIndex]);
                 
-                // Update table
-                showMutasiTable(currentMutasis);
+                // Update batch submit button status
+                updateBatchSubmitBtn();
             }
             
             showAlert('Dokumen berhasil diunggah', 'success');
@@ -1375,6 +1368,140 @@ function uploadFile(mutasiId, jenis, file) {
     });
 }
 
+// TAMBAHAN: Fungsi untuk update baris tabel secara real-time
+function updateTableRow(mutasiId, updatedMutasi) {
+    if (!dataTable) return;
+    
+    // Cari baris yang akan diupdate
+    const rowIndex = dataTable.rows().eq(0).filter(function(rowIdx) {
+        const checkbox = dataTable.cell(rowIdx, 0).node().querySelector('.mutasi-checkbox');
+        return checkbox && checkbox.value == mutasiId;
+    });
+    
+    if (rowIndex.length > 0) {
+        const rowData = createTableRowData(updatedMutasi);
+        
+        // Update data di DataTable
+        dataTable.row(rowIndex[0]).data(rowData).draw(false);
+        
+        // Re-attach event listeners untuk checkbox
+        const newCheckbox = dataTable.cell(rowIndex[0], 0).node().querySelector('.mutasi-checkbox');
+        if (newCheckbox) {
+            newCheckbox.addEventListener('change', function() {
+                updateBatchSubmitBtn();
+            });
+        }
+    }
+}
+
+// TAMBAHAN: Fungsi untuk membuat data baris tabel (untuk DataTable)
+function createTableRowData(mutasi) {
+    const docStatus = getDocumentStatus(mutasi.dokumen);
+    const isComplete = docStatus.class === 'complete';
+    const isSubmitted = mutasi.submitted_by_puk;
+    
+    return [
+        // Checkbox column
+        `<input type="checkbox" class="form-check-input mutasi-checkbox" 
+            value="${mutasi.id}" ${isSubmitted || !isComplete ? 'disabled' : ''}>`,
+        
+        // ID Mutasi column
+        `<strong>MUT-${String(mutasi.id).padStart(4, '0')}</strong>
+         ${isSubmitted ? '<br><small class="badge bg-success">Submitted</small>' : ''}`,
+        
+        // Periode column
+        `<div>${mutasi.periode || '-'}</div>
+         <small class="text-muted">${mutasi.jenis_mutasi || 'Definitif'}</small>`,
+        
+        // ABK Naik column
+        `<div class="fw-bold">${mutasi.abk_naik.nama}</div>
+         <small class="text-muted">
+             ${mutasi.abk_naik.jabatan_tetap} → ${mutasi.abk_naik.jabatan_mutasi}
+         </small>`,
+        
+        // ABK Turun column
+        mutasi.abk_turun ? 
+            `<div class="fw-bold">${mutasi.abk_turun.nama}</div>
+             <small class="text-muted">
+                 ${mutasi.abk_turun.jabatan_tetap} → ${mutasi.abk_turun.jabatan_mutasi}
+             </small>` : 
+            `<span class="text-muted">-</span>`,
+        
+        // Status column
+        `<span class="status-badge status-${mutasi.status_mutasi.toLowerCase()}">
+             ${mutasi.status_mutasi}
+         </span>`,
+        
+        // Status Dokumen column
+        `<div class="doc-status ${docStatus.class}">
+             <i class="bi bi-${docStatus.icon}"></i>
+             ${docStatus.text}
+         </div>
+         <div class="mt-1">
+             <small class="text-muted">
+                 ${mutasi.dokumen.sertijab ? '✓' : '✗'} Sertijab |
+                 ${mutasi.dokumen.familisasi ? '✓' : '✗'} Familisasi |
+                 ${mutasi.dokumen.lampiran ? '✓' : '✗'} Lampiran
+             </small>
+         </div>`,
+        
+        // Aksi column
+        `<div class="d-grid gap-1">
+             <button type="button" class="btn btn-primary btn-sm" onclick="openUploadModal(${mutasi.id})">
+                 <i class="bi bi-upload"></i> Upload
+             </button>
+             ${isComplete && !isSubmitted ? `
+                 <button type="button" class="btn btn-success btn-sm" onclick="submitSingle(${mutasi.id})">
+                     <i class="bi bi-send"></i> Submit
+                 </button>
+             ` : ''}
+         </div>`
+    ];
+}
+
+// PERBAIKAN: Update fungsi showMutasiTable untuk menggunakan DataTable dengan data array
+function showMutasiTable(mutasis) {
+    const tableBody = document.getElementById('mutasiTableBody');
+    tableBody.innerHTML = '';
+    
+    // Prepare data untuk DataTable
+    const tableData = mutasis.map(mutasi => createTableRowData(mutasi));
+    
+    document.getElementById('tableContainer').style.display = 'block';
+    
+    // Initialize DataTable
+    if (dataTable) {
+        dataTable.destroy();
+    }
+    
+    dataTable = $('#mutasiTable').DataTable({
+        data: tableData,
+        responsive: true,
+        pageLength: 10,
+        language: {
+            search: "Cari:",
+            lengthMenu: "Tampilkan _MENU_ data",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data"
+        },
+        columnDefs: [
+            { orderable: false, targets: [0, 7] },
+            { className: "text-center", targets: [0] }
+        ],
+        order: [[2, 'desc']],
+        drawCallback: function() {
+            // Re-attach event listeners setelah table di-draw
+            document.querySelectorAll('.mutasi-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateBatchSubmitBtn();
+                });
+            });
+        }
+    });
+    
+    updateBatchSubmitBtn();
+}
+
+// PERBAIKAN: Update fungsi deleteDokumen dengan logic yang sama
 window.deleteDokumen = function(mutasiId, jenis) {
     if (!confirm('Apakah Anda yakin ingin menghapus dokumen ini?')) return;
     
@@ -1403,13 +1530,13 @@ window.deleteDokumen = function(mutasiId, jenis) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Update data
+            // Update data mutasi di array currentMutasis
             const mutasiIndex = currentMutasis.findIndex(m => m.id == mutasiId);
             if (mutasiIndex !== -1) {
                 currentMutasis[mutasiIndex].dokumen[jenis] = false;
                 currentMutasis[mutasiIndex].dokumen_urls[jenis] = null;
                 
-                // Refresh modal card
+                // Refresh upload card di modal
                 uploadCard.innerHTML = createUploadCard(
                     mutasiId, 
                     jenis, 
@@ -1429,8 +1556,11 @@ window.deleteDokumen = function(mutasiId, jenis) {
                     });
                 }
                 
-                // Update table
-                showMutasiTable(currentMutasis);
+                // PERBAIKAN: Update baris tabel secara real-time
+                updateTableRow(mutasiId, currentMutasis[mutasiIndex]);
+                
+                // Update batch submit button status
+                updateBatchSubmitBtn();
             }
             
             showAlert('Dokumen berhasil dihapus', 'success');

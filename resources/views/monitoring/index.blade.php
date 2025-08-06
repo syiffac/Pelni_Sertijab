@@ -158,7 +158,7 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-primary bg-opacity-10 text-primary fw-medium">
+                                        <span class="badge bg-primary bg-opacity-10 text-white fw-medium">
                                             {{ $data->total_mutasi }}
                                         </span>
                                     </td>
