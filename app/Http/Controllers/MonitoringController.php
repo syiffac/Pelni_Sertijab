@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Kapal;
-use App\Models\ABK;
+use App\Models\ABKNew; // PERUBAHAN: Menggunakan ABKNew bukan ABK
 use App\Models\Mutasi;
 use App\Models\Sertijab;
 use App\Models\Jabatan;
@@ -17,51 +17,61 @@ class MonitoringController extends Controller
      * Display monitoring dashboard
      */
     public function index(Request $request)
-    {
-        // Ambil data kapal untuk ditampilkan di dashboard
-        $kapalList = Kapal::withCount(['abk'])->get();
-        
-        // UPDATED: Stats dengan data yang lebih akurat
-        $stats = [
-            'total_abk' => ABK::count(),
-            'total_mutasi' => Mutasi::where('perlu_sertijab', true)->count(),
-            'sertijab_submitted' => Sertijab::whereNotNull('submitted_at')->count(),
-            'sertijab_verified' => Sertijab::where('status_dokumen', 'final')->count(),
-            'sertijab_pending' => Sertijab::where('status_dokumen', 'draft')->count(),
-            'sertijab_partial' => Sertijab::where('status_dokumen', 'partial')->count(),
-            'sertijab_rejected' => Sertijab::where('status_dokumen', 'rejected')->count(),
-        ];
-        
-        // Calculate not submitted
-        $stats['sertijab_not_submitted'] = $stats['total_mutasi'] - $stats['sertijab_submitted'];
-        
-        // Hitung persentase progress verifikasi
-        $stats['verification_progress'] = $stats['total_mutasi'] > 0 
-            ? round(($stats['sertijab_verified'] / $stats['total_mutasi']) * 100) 
-            : 0;
+{
+    // FIXED: Ambil data kapal untuk ditampilkan di dashboard dengan relasi yang tepat
+    // Kita tidak bisa menggunakan withCount(['abk']) karena relasi hasManyThrough
+    $kapalList = Kapal::all()->map(function($kapal) {
+        // Hitung jumlah ABK yang aktif di kapal ini melalui mutasi
+        $abkCount = Mutasi::where('id_kapal', $kapal->id)
+            ->where('status_mutasi', 'Aktif')
+            ->distinct('id_abk_naik')
+            ->count('id_abk_naik');
             
-        // Hitung persentase progress submission
-        $stats['submission_progress'] = $stats['total_mutasi'] > 0 
-            ? round(($stats['sertijab_submitted'] / $stats['total_mutasi']) * 100) 
-            : 0;
+        $kapal->abk_count = $abkCount;
+        return $kapal;
+    });
     
-        // NEW: Data untuk pie chart
-        $chartData = $this->getVerificationChartData();
+    // Lanjutkan dengan kode yang ada
+    $stats = [
+        'total_abk' => ABKNew::count(),
+        'total_mutasi' => Mutasi::where('perlu_sertijab', true)->count(),
+        'sertijab_submitted' => Sertijab::whereNotNull('submitted_at')->count(),
+        'sertijab_verified' => Sertijab::where('status_dokumen', 'final')->count(),
+        'sertijab_pending' => Sertijab::where('status_dokumen', 'draft')->count(),
+        'sertijab_partial' => Sertijab::where('status_dokumen', 'partial')->count(),
+        'sertijab_rejected' => Sertijab::where('status_dokumen', 'rejected')->count(),
+    ];
+    
+    // Calculate not submitted
+    $stats['sertijab_not_submitted'] = $stats['total_mutasi'] - $stats['sertijab_submitted'];
+    
+    // Hitung persentase progress verifikasi
+    $stats['verification_progress'] = $stats['total_mutasi'] > 0 
+        ? round(($stats['sertijab_verified'] / $stats['total_mutasi']) * 100) 
+        : 0;
         
-        // NEW: Data aktivitas terbaru
-        $recentActivities = $this->getRecentActivities();
-            
-        // UPDATED: Ambil data monitoring per kapal dengan pagination
-        $monitoringData = $this->getMonitoringOverviewPaginated($request);
+    // Hitung persentase progress submission
+    $stats['submission_progress'] = $stats['total_mutasi'] > 0 
+        ? round(($stats['sertijab_submitted'] / $stats['total_mutasi']) * 100) 
+        : 0;
+
+    // NEW: Data untuk pie chart
+    $chartData = $this->getVerificationChartData();
+    
+    // NEW: Data aktivitas terbaru
+    $recentActivities = $this->getRecentActivities();
         
-        return view('monitoring.index', compact(
-            'kapalList', 
-            'stats', 
-            'monitoringData', 
-            'chartData', 
-            'recentActivities'
-        ));
-    }
+    // UPDATED: Ambil data monitoring per kapal dengan pagination
+    $monitoringData = $this->getMonitoringOverviewPaginated($request);
+    
+    return view('monitoring.index', compact(
+        'kapalList', 
+        'stats', 
+        'monitoringData', 
+        'chartData', 
+        'recentActivities'
+    ));
+}
     
 // Di MonitoringController, tambahkan method ini jika belum ada:
 public function detail($id)
@@ -107,7 +117,7 @@ public function detail($id)
     }
 
     /**
-     * NEW: Get recent activities data
+     * NEW: Get recent activities data - Menggunakan abkNaik dari ABKNew
      */
     private function getRecentActivities()
     {
@@ -285,7 +295,7 @@ public function detail($id)
     }
     
     /**
-     * Alternative method with safer approach
+     * Alternative method with safer approach - Menggunakan ABKNew
      */
     private function getSafeMonitoringOverview()
     {

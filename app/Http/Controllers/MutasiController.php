@@ -399,32 +399,51 @@ public function destroy($id)
      * Show the specified mutation (for modal detail)
      */
     public function show($id)
-    {
-        try {
-            $mutasi = Mutasi::with([
-                'kapal',
-                'abkNaik',
-                'abkTurun',
-                'jabatanTetapNaik',
-                'jabatanTetapTurun',
-                'jabatanMutasi',
-                'jabatanMutasiTurun'
-            ])->findOrFail($id);
+{
+    try {
+        $mutasi = Mutasi::with([
+            'kapal',
+            'abkNaik',
+            'abkTurun',
+            'jabatanTetapNaik',
+            'jabatanTetapTurun',
+            'jabatanMutasi',
+            'jabatanMutasiTurun',
+            'sertijab'
+        ])->findOrFail($id);
 
-            $html = view('mutasi.partials.detail-modal', compact('mutasi'))->render();
+        // Get sertijab data if exists
+        $sertijab = null;
+        if ($mutasi->perlu_sertijab) {
+            $sertijab = Sertijab::where('id_mutasi', $mutasi->id)->first();
+        }
 
+        // If request is AJAX (for progress checking), return JSON
+        if (request()->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'html' => $html
+                'progress' => $sertijab ? $sertijab->verification_progress : 0,
+                'status' => $sertijab ? $sertijab->status_dokumen : 'no_sertijab',
+                'last_updated' => $mutasi->updated_at->toISOString()
             ]);
+        }
 
-        } catch (\Exception $e) {
+        return view('mutasi.show', compact('mutasi', 'sertijab'));
+
+    } catch (\Exception $e) {
+        Log::error('Error showing mutasi detail: ' . $e->getMessage());
+        
+        if (request()->wantsJson()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memuat detail mutasi: ' . $e->getMessage()
+                'message' => 'Gagal memuat detail mutasi'
             ], 500);
         }
+
+        return redirect()->route('mutasi.index')
+            ->with('error', 'Gagal memuat detail mutasi: ' . $e->getMessage());
     }
+}
 
     /**
      * Export mutasi data

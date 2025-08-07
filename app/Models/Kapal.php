@@ -43,7 +43,16 @@ class Kapal extends Model
      */
     public function abk(): HasMany
     {
-        return $this->hasMany(ABK::class, 'id_kapal', 'id');
+        // Kita perlu menghubungkan melalui relasi tidak langsung
+        // Dapatkan semua ABK yang sedang aktif di kapal ini melalui mutasi
+        return $this->hasManyThrough(
+            ABKNew::class,      // Target model
+            Mutasi::class,      // Model perantara
+            'id_kapal',         // Foreign key di model perantara (Mutasi)
+            'id',               // Foreign key di target model (ABKNew)
+            'id',               // Local key di model ini (Kapal)
+            'id_abk_naik'       // Local key di model perantara (Mutasi)
+        )->whereIn('mutasi_new.status_mutasi', ['Aktif', 'Proses']);
     }
 
     /**

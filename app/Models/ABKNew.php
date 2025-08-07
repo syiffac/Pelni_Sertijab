@@ -48,6 +48,35 @@ class ABKNew extends Model
         return $this->belongsTo(Kapal::class, 'id_kapal_aktif', 'id');
     }
 
+    public function getKapalAktif()
+{
+    // Cari mutasi aktif dengan ABK ini
+    $mutasiAktif = Mutasi::where('id_abk_naik', $this->id)
+        ->where('status_mutasi', 'Aktif')
+        ->with('kapal')
+        ->first();
+        
+    return $mutasiAktif ? $mutasiAktif->kapal : null;
+}
+
+/**
+ * Accessor untuk mendapatkan ID kapal aktif
+ */
+public function getIdKapalAktifAttribute()
+{
+    $kapal = $this->getKapalAktif();
+    return $kapal ? $kapal->id : null;
+}
+
+/**
+ * Accessor untuk mendapatkan nama kapal aktif
+ */
+public function getNamaKapalAktifAttribute()
+{
+    $kapal = $this->getKapalAktif();
+    return $kapal ? $kapal->nama_kapal : 'Tidak ada kapal aktif';
+}
+
     // COMMENT OUT relasi mutasi sampai model Mutasi dibuat
     // /**
     //  * Relasi ke Mutasi sebagai ABK naik

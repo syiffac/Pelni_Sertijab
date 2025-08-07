@@ -225,12 +225,17 @@
                                     </td>
                                     <td>
                                         <div class="action-buttons-mini">
+                                            <button class="btn-action btn-view" 
+                                                    onclick="viewMutasi({{ $mutasi->id }})"
+                                                    title="Lihat Detail Mutasi">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            @if($mutasi->status_mutasi == 'Draft')
                                             <button class="btn-action btn-edit" 
                                                     onclick="editMutasi({{ $mutasi->id }})"
                                                     title="Edit Mutasi">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            @if($mutasi->status_mutasi == 'Draft')
                                             <button class="btn-action btn-delete" 
                                                     onclick="deleteMutasi({{ $mutasi->id }}, event)"
                                                     title="Hapus Mutasi">
@@ -959,6 +964,11 @@ document.addEventListener('DOMContentLoaded', function() {
 // Global variable untuk menyimpan ID mutasi yang akan dihapus dan data row
 let mutasiToDelete = null;
 let mutasiRowData = null;
+
+function viewMutasi(id) {
+    // PERBAIKAN: Gunakan route helper yang benar
+    window.location.href = `{{ url('mutasi') }}/${id}`;
+}
 
 function editMutasi(id) {
     // PERBAIKAN: Gunakan route helper yang benar
