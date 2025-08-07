@@ -724,6 +724,35 @@
             opacity: 1;
             visibility: visible;
         }
+
+        /* Tambahkan di bagian <style> yang sudah ada */
+
+        /* Filter periode styling */
+        #filterPeriode .card {
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        #filterPeriode .form-select-sm {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        #filterPeriode .form-select-sm:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        #filterInfo {
+            font-size: 0.75rem;
+            line-height: 1.2;
+        }
+
+        .filter-active {
+            background-color: rgba(37, 99, 235, 0.05);
+            border-color: var(--primary-blue) !important;
+        }
     </style>
 </head>
 <body>
@@ -821,6 +850,58 @@
                                         <i class="bi bi-ship me-1"></i>
                                         <span id="kapalName"></span>
                                     </span>
+                                </div>
+
+                                <!-- TAMBAHAN: Filter Periode -->
+                                <div class="row mb-4" id="filterPeriode" style="display: none;">
+                                    <div class="col-12">
+                                        <div class="card border-primary" style="border-width: 2px;">
+                                            <div class="card-body py-3">
+                                                <div class="row align-items-center">
+                                                    <div class="col-md-3">
+                                                        <label class="form-label mb-1 fw-semibold">
+                                                            <i class="bi bi-calendar-event me-1"></i>
+                                                            Filter Periode TMT:
+                                                        </label>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <select class="form-select form-select-sm" id="filterBulan">
+                                                            <option value="">Semua Bulan</option>
+                                                            <option value="1">Januari</option>
+                                                            <option value="2">Februari</option>
+                                                            <option value="3">Maret</option>
+                                                            <option value="4">April</option>
+                                                            <option value="5">Mei</option>
+                                                            <option value="6">Juni</option>
+                                                            <option value="7">Juli</option>
+                                                            <option value="8">Agustus</option>
+                                                            <option value="9">September</option>
+                                                            <option value="10">Oktober</option>
+                                                            <option value="11">November</option>
+                                                            <option value="12">Desember</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <select class="form-select form-select-sm" id="filterTahun">
+                                                            <option value="">Semua Tahun</option>
+                                                            <!-- Tahun akan diisi dinamis -->
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="d-flex gap-2">
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm" id="resetFilter">
+                                                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                                                Reset
+                                                            </button>
+                                                            <span class="text-muted small align-self-center" id="filterInfo">
+                                                                <!-- Info hasil filter -->
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Loading state -->
@@ -933,6 +1014,10 @@ let dataTable = null;
 let currentMutasis = [];
 let isSubmitting = false;
 
+// Tambahkan variabel global baru
+let allMutasis = []; // Menyimpan semua data mutasi
+let filteredMutasis = []; // Menyimpan data mutasi yang difilter
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize components
     $('#id_kapal').select2({
@@ -1002,6 +1087,14 @@ function setupEventListeners() {
             updateBatchSubmitBtn();
         }
     });
+
+    // TAMBAHAN: Event delegation untuk filter periode
+    document.addEventListener('change', function(e) {
+        if (e.target.matches('.mutasi-checkbox')) {
+            updateBatchSubmitBtn();
+        }
+        // Handle filter periode changes sudah ditangani di setupFilterPeriode
+    });
 }
 
 // Step navigation
@@ -1022,13 +1115,23 @@ function goToStep1() {
     document.getElementById('section2').classList.remove('active');
     document.getElementById('section1').classList.add('active');
     
+    // Reset filter
+    document.getElementById('filterPeriode').style.display = 'none';
+    document.getElementById('filterBulan').value = '';
+    document.getElementById('filterTahun').value = '';
+    
     if (dataTable) {
         dataTable.destroy();
         dataTable = null;
     }
+    
+    // Reset data
+    allMutasis = [];
+    filteredMutasis = [];
+    currentMutasis = [];
 }
 
-// Data handling
+// Perbaikan fungsi loadMutasiData
 function loadMutasiData(kapalId) {
     showLoading(true);
     
@@ -1040,18 +1143,32 @@ function loadMutasiData(kapalId) {
         },
         body: JSON.stringify({ id_kapal: kapalId })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Mutasi data received:', data); // Debug log
         showLoading(false);
         
         if (data.success) {
             document.getElementById('kapalName').textContent = data.kapal.nama_kapal;
+            allMutasis = data.mutasis; // Simpan semua data
             currentMutasis = data.mutasis;
             
             if (data.mutasis.length === 0) {
                 showEmptyState();
             } else {
-                showMutasiTable(data.mutasis);
+                // Setup filter periode
+                setupFilterPeriode(data.mutasis);
+                
+                // Jika tidak ada filter yang diapply, tampilkan semua data
+                if (!filteredMutasis.length) {
+                    filteredMutasis = data.mutasis;
+                    showMutasiTable(filteredMutasis);
+                }
             }
         } else {
             showAlert('Gagal memuat data: ' + data.message, 'error');
@@ -1059,35 +1176,146 @@ function loadMutasiData(kapalId) {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        console.error('Error loading mutasi data:', error);
         showLoading(false);
-        showAlert('Terjadi kesalahan saat memuat data.', 'error');
+        showAlert('Terjadi kesalahan saat memuat data: ' + error.message, 'error');
         showEmptyState();
     });
 }
 
+// Update fungsi showLoading
 function showLoading(show) {
-    document.getElementById('loadingMutasi').style.display = show ? 'block' : 'none';
-    document.getElementById('emptyMutasi').style.display = 'none';
-    document.getElementById('tableContainer').style.display = 'none';
+    const loadingElement = document.getElementById('loadingMutasi');
+    const tableContainer = document.getElementById('tableContainer');
+    const emptyElement = document.getElementById('emptyMutasi');
+    
+    if (show) {
+        loadingElement.style.display = 'block';
+        tableContainer.style.display = 'none';
+        emptyElement.style.display = 'none';
+    } else {
+        loadingElement.style.display = 'none';
+    }
 }
 
+
+// TAMBAHAN: Fungsi setup filter periode yang diperbaiki
+function setupFilterPeriode(mutasis) {
+    const filterPeriode = document.getElementById('filterPeriode');
+    const filterTahun = document.getElementById('filterTahun');
+    const filterBulan = document.getElementById('filterBulan');
+    const resetFilter = document.getElementById('resetFilter');
+    
+    // Ambil tahun unik dari data TMT
+    const tahunSet = new Set();
+    mutasis.forEach(mutasi => {
+        if (mutasi.TMT) {
+            const tahun = new Date(mutasi.TMT).getFullYear();
+            tahunSet.add(tahun);
+        }
+    });
+    
+    // Populate tahun dropdown
+    filterTahun.innerHTML = '<option value="">Semua Tahun</option>';
+    Array.from(tahunSet).sort((a, b) => b - a).forEach(tahun => {
+        filterTahun.innerHTML += `<option value="${tahun}">${tahun}</option>`;
+    });
+    
+    // Set default ke tahun sekarang jika ada
+    const currentYear = new Date().getFullYear();
+    if (tahunSet.has(currentYear)) {
+        filterTahun.value = currentYear;
+        applyFilter(); // Apply filter untuk tahun sekarang
+    } else {
+        // Jika tidak ada data tahun sekarang, tampilkan semua
+        filteredMutasis = mutasis;
+        currentMutasis = mutasis;
+    }
+    
+    // Show filter
+    filterPeriode.style.display = 'block';
+    
+    // Event listeners
+    filterBulan.addEventListener('change', applyFilter);
+    filterTahun.addEventListener('change', applyFilter);
+    resetFilter.addEventListener('click', function() {
+        filterBulan.value = '';
+        filterTahun.value = '';
+        applyFilter();
+    });
+}
+
+
+// TAMBAHAN: Fungsi apply filter yang diperbaiki
+function applyFilter() {
+    const selectedBulan = document.getElementById('filterBulan').value;
+    const selectedTahun = document.getElementById('filterTahun').value;
+    const filterInfo = document.getElementById('filterInfo');
+    const filterCard = document.querySelector('#filterPeriode .card');
+    
+    // Filter data
+    filteredMutasis = allMutasis.filter(mutasi => {
+        if (!mutasi.TMT) return true;
+        
+        const tmtDate = new Date(mutasi.TMT);
+        const bulanMatch = !selectedBulan || (tmtDate.getMonth() + 1) == selectedBulan;
+        const tahunMatch = !selectedTahun || tmtDate.getFullYear() == selectedTahun;
+        
+        return bulanMatch && tahunMatch;
+    });
+    
+    // Update tampilan
+    currentMutasis = filteredMutasis;
+    
+    if (filteredMutasis.length === 0) {
+        showEmptyState();
+        filterInfo.textContent = 'Tidak ada data untuk periode ini';
+    } else {
+        showMutasiTable(filteredMutasis);
+        
+        // Update info filter
+        let infoText = `${filteredMutasis.length} dari ${allMutasis.length} mutasi`;
+        if (selectedBulan || selectedTahun) {
+            const bulanNama = selectedBulan ? document.querySelector(`#filterBulan option[value="${selectedBulan}"]`).textContent : '';
+            const filterDesc = [bulanNama, selectedTahun].filter(Boolean).join(' ');
+            infoText += ` (${filterDesc})`;
+            filterCard.classList.add('filter-active');
+        } else {
+            filterCard.classList.remove('filter-active');
+        }
+        filterInfo.textContent = infoText;
+    }
+}
+
+
+
+// Update fungsi showEmptyState
 function showEmptyState() {
-    document.getElementById('emptyMutasi').style.display = 'block';
+    document.getElementById('loadingMutasi').style.display = 'none';
     document.getElementById('tableContainer').style.display = 'none';
+    document.getElementById('emptyMutasi').style.display = 'block';
+    document.getElementById('filterPeriode').style.display = 'none';
 }
 
+
+// Update fungsi showMutasiTable untuk handle filtered data
 function showMutasiTable(mutasis) {
     const tableBody = document.getElementById('mutasiTableBody');
     tableBody.innerHTML = '';
     
+    // Hide loading and empty states
+    document.getElementById('loadingMutasi').style.display = 'none';
+    document.getElementById('emptyMutasi').style.display = 'none';
+    
+    // Populate table
     mutasis.forEach(mutasi => {
         tableBody.appendChild(createTableRow(mutasi));
     });
     
+    // Show table container
     document.getElementById('tableContainer').style.display = 'block';
     
-    // Initialize DataTable
+    // Initialize or reinitialize DataTable
     if (dataTable) {
         dataTable.destroy();
     }
@@ -1098,23 +1326,63 @@ function showMutasiTable(mutasis) {
         language: {
             search: "Cari:",
             lengthMenu: "Tampilkan _MENU_ data",
-            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data"
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            emptyTable: "Tidak ada data mutasi untuk periode ini",
+            zeroRecords: "Tidak ada data yang sesuai pencarian",
+            paginate: {
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
+            }
         },
         columnDefs: [
             { orderable: false, targets: [0, 7] }
         ],
-        order: [[2, 'desc']]
+        order: [[1, 'desc']]
     });
     
     updateBatchSubmitBtn();
 }
 
-// Table creation
+
+// Perbaikan fungsi createTableRow dengan format data yang benar
 function createTableRow(mutasi) {
     const tr = document.createElement('tr');
-    const docStatus = getDocumentStatus(mutasi.dokumen);
+    
+    // Parse dokumen data jika berupa string
+    let dokumen = mutasi.dokumen;
+    if (typeof dokumen === 'string') {
+        try {
+            dokumen = JSON.parse(dokumen);
+        } catch (e) {
+            dokumen = { sertijab: false, familisasi: false, lampiran: false };
+        }
+    }
+    
+    // Parse dokumen_urls jika berupa string
+    let dokumenUrls = mutasi.dokumen_urls || {};
+    if (typeof dokumenUrls === 'string') {
+        try {
+            dokumenUrls = JSON.parse(dokumenUrls);
+        } catch (e) {
+            dokumenUrls = {};
+        }
+    }
+    
+    // Update mutasi object untuk konsistensi
+    mutasi.dokumen = dokumen;
+    mutasi.dokumen_urls = dokumenUrls;
+    
+    const docStatus = getDocumentStatus(dokumen);
     const isComplete = docStatus.class === 'complete';
     const isSubmitted = mutasi.submitted_by_puk;
+    
+    // Format periode dari TMT dan TAT
+    let periode = '-';
+    if (mutasi.TMT && mutasi.TAT) {
+        const tmtDate = new Date(mutasi.TMT);
+        const tatDate = new Date(mutasi.TAT);
+        periode = `${tmtDate.toLocaleDateString('id-ID')} - ${tatDate.toLocaleDateString('id-ID')}`;
+    }
     
     if (isSubmitted) {
         tr.classList.add('submitted');
@@ -1130,20 +1398,20 @@ function createTableRow(mutasi) {
             ${isSubmitted ? '<br><small class="badge bg-success">Submitted</small>' : ''}
         </td>
         <td>
-            <div>${mutasi.periode || '-'}</div>
+            <div>${periode}</div>
             <small class="text-muted">${mutasi.jenis_mutasi || 'Definitif'}</small>
         </td>
         <td>
-            <div class="fw-bold">${mutasi.abk_naik.nama}</div>
+            <div class="fw-bold">${mutasi.nama_lengkap_naik || mutasi.abk_naik?.nama || '-'}</div>
             <small class="text-muted">
-                ${mutasi.abk_naik.jabatan_tetap} → ${mutasi.abk_naik.jabatan_mutasi}
+                ${mutasi.jabatan_tetap_naik_nama || mutasi.abk_naik?.jabatan_tetap || '-'} → ${mutasi.jabatan_mutasi_nama || mutasi.abk_naik?.jabatan_mutasi || '-'}
             </small>
         </td>
         <td>
-            ${mutasi.abk_turun ? `
-                <div class="fw-bold">${mutasi.abk_turun.nama}</div>
+            ${mutasi.nama_lengkap_turun ? `
+                <div class="fw-bold">${mutasi.nama_lengkap_turun}</div>
                 <small class="text-muted">
-                    ${mutasi.abk_turun.jabatan_tetap} → ${mutasi.abk_turun.jabatan_mutasi}
+                    ${mutasi.jabatan_tetap_turun_nama || '-'} → ${mutasi.jabatan_mutasi_turun_nama || '-'}
                 </small>
             ` : `
                 <span class="text-muted">-</span>
@@ -1161,9 +1429,9 @@ function createTableRow(mutasi) {
             </div>
             <div class="mt-1">
                 <small class="text-muted">
-                    ${mutasi.dokumen.sertijab ? '✓' : '✗'} Sertijab |
-                    ${mutasi.dokumen.familisasi ? '✓' : '✗'} Familisasi |
-                    ${mutasi.dokumen.lampiran ? '✓' : '✗'} Lampiran
+                    ${dokumen.sertijab ? '✓' : '✗'} Sertijab |
+                    ${dokumen.familisasi ? '✓' : '✗'} Familisasi |
+                    ${dokumen.lampiran ? '✓' : '✗'} Lampiran
                 </small>
             </div>
         </td>
@@ -1183,6 +1451,7 @@ function createTableRow(mutasi) {
     
     return tr;
 }
+
 
 // UBAH: Ubah fungsi getDocumentStatus agar tetap "Partial" ketika ada dokumen apapun
 function getDocumentStatus(dokumen) {
@@ -1213,18 +1482,29 @@ function updateBatchSubmitBtn() {
     }
 }
 
-// Upload modal
+// Perbaikan untuk openUploadModal
 window.openUploadModal = function(mutasiId) {
     const mutasi = currentMutasis.find(m => m.id === mutasiId);
-    if (!mutasi) return;
+    if (!mutasi) {
+        console.error('Mutasi not found:', mutasiId);
+        showAlert('Data mutasi tidak ditemukan', 'error');
+        return;
+    }
+    
+    // Pastikan objek abk_naik tersedia
+    const abkNaik = mutasi.abk_naik || {
+        nama: mutasi.nama_lengkap_naik || 'N/A',
+        jabatan_tetap: mutasi.jabatan_tetap_naik_nama || 'N/A',
+        jabatan_mutasi: mutasi.jabatan_mutasi_nama || 'N/A'
+    };
     
     document.getElementById('uploadModalLabel').textContent = `Upload Dokumen - MUT-${String(mutasiId).padStart(4, '0')}`;
     document.getElementById('uploadModalContent').innerHTML = `
         <div class="row">
             <div class="col-md-12 mb-3">
                 <div class="alert alert-info">
-                    <strong>ABK Naik:</strong> ${mutasi.abk_naik.nama} 
-                    (${mutasi.abk_naik.jabatan_tetap} → ${mutasi.abk_naik.jabatan_mutasi})
+                    <strong>ABK Naik:</strong> ${abkNaik.nama} 
+                    (${abkNaik.jabatan_tetap} → ${abkNaik.jabatan_mutasi})
                 </div>
             </div>
             <div class="col-md-4 mb-3">
@@ -1248,20 +1528,15 @@ window.openUploadModal = function(mutasiId) {
     const modal = new bootstrap.Modal(document.getElementById('uploadModal'));
     modal.show();
     
-    // PENTING: Tunggu hingga modal selesai ditampilkan sebelum memasang event listeners
+    // Setup file input listeners after modal is shown
     setTimeout(() => {
         ['sertijab', 'familisasi', 'lampiran'].forEach(jenis => {
             const fileInput = document.getElementById(`file-${jenis}-${mutasi.id}`);
             if (fileInput) {
-                console.log(`Setting up listener for ${jenis} file input`);
-                
-                // Hapus event listener lama jika ada dan buat ulang elemen
                 const newFileInput = fileInput.cloneNode(true);
                 fileInput.parentNode.replaceChild(newFileInput, fileInput);
                 
-                // Pasang event listener baru
                 newFileInput.addEventListener('change', function(event) {
-                    console.log(`File selected for ${jenis}:`, this.files[0]?.name);
                     if (this.files[0]) {
                         uploadFile(mutasi.id, jenis, this.files[0]);
                     }
@@ -1760,7 +2035,7 @@ window.deleteDokumen = function(mutasiId, jenis) {
                 // PERUBAHAN: Simpan status dokumen saat ini untuk cek apakah ini dokumen terakhir
                 const willBeEmpty = !((jenis !== 'sertijab' && currentMutasis[mutasiIndex].dokumen.sertijab) || 
                                      (jenis !== 'familisasi' && currentMutasis[mutasiIndex].dokumen.familisasi) || 
-                                     (jenis !== 'lampiran' && currentMutasis[mutasiIndex].dokumen.lampiran));
+                                     (jenis !== 'lampiran' && currentMutasi[mutasiIndex].dokumen.lampiran));
                 
                 // Update status dokumen
                 currentMutasis[mutasiIndex].dokumen[jenis] = false;
