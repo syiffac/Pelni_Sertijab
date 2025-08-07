@@ -186,11 +186,6 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
-                                    <button class="dropdown-item" type="button" id="markAllAsReadBtn">
-                                        <i class="bi bi-check-all me-2"></i> Tandai semua telah dibaca
-                                    </button>
-                                </li>
-                                <li>
                                     <button class="dropdown-item" type="button" id="clearAllNotificationsBtn">
                                         <i class="bi bi-trash me-2"></i> Hapus semua notifikasi
                                     </button>
@@ -1017,6 +1012,9 @@
 }
 </style>
 
+<!-- filepath: resources/views/layouts/navbar.blade.php -->
+<!-- Hapus bagian JavaScript yang duplikat dan conflicting -->
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const notificationBtn = document.getElementById('notificationBtn');
@@ -1074,30 +1072,6 @@ document.addEventListener('DOMContentLoaded', function() {
         adjustNavbar(); // Initial check
     }
 
-    // Mark notifications as read when clicked
-    const notificationItems = document.querySelectorAll('.notification-item');
-    notificationItems.forEach(item => {
-        item.addEventListener('click', function() {
-            this.classList.remove('unread');
-            // Update notification count
-            const badge = document.querySelector('.notification-badge');
-            const count = document.querySelector('.notification-count');
-            if (badge && count) {
-                let currentCount = parseInt(badge.textContent);
-                if (currentCount > 0) {
-                    currentCount--;
-                    badge.textContent = currentCount;
-                    count.textContent = currentCount + ' baru';
-                    
-                    if (currentCount === 0) {
-                        badge.style.display = 'none';
-                        count.textContent = 'Tidak ada notifikasi baru';
-                    }
-                }
-            }
-        });
-    });
-
     // Handle mobile menu toggle
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     if (mobileMenuToggle && sidebar) {
@@ -1126,62 +1100,54 @@ document.addEventListener('DOMContentLoaded', function() {
         profileBtn.classList.remove('active');
     });
 
-    // New notification functionality - START EDIT
+    // NOTIFICATION FUNCTIONALITY - SIMPLIFIED VERSION
     const notificationBadge = document.getElementById('notificationBadge');
     const notificationList = document.getElementById('notificationList');
-    const markAllAsReadBtn = document.getElementById('markAllAsReadBtn');
     const clearAllNotificationsBtn = document.getElementById('clearAllNotificationsBtn');
-    let notifications = [];
-    let lastSeenNotifications = [];
+    
+    // Session storage untuk tracking dismissed notifications
+    const dismissedNotifications = JSON.parse(sessionStorage.getItem('dismissedNotifications') || '[]');
 
     // Initial load
-    fetchNotifications();
+    loadNotifications();
 
     // Set interval to periodically check for new notifications (every 30 seconds)
-    setInterval(fetchNotifications, 30000);
+    setInterval(loadNotifications, 30000);
 
-    // Fetch notifications
-    function fetchNotifications() {
-        fetch('{{ route("api.notifications") }}')
+    // Load notifications function
+    function loadNotifications() {
+        fetch('/api/notifications')
             .then(response => response.json())
             .then(data => {
-                notifications = data.notifications;
-                updateNotificationBadge();
-                renderNotificationDropdown();
-                
-                // Check for new notifications
-                const newNotifications = checkForNewNotifications(data.notifications);
-                if (newNotifications.length > 0) {
-                    newNotifications.forEach(notification => {
-                        showToastNotification(notification);
-                    });
+                if (data.success) {
+                    updateNotificationBadge(data.unread_count);
+                    updateNotificationDropdown(data.notifications);
+                    
+                    // Show pop-up for new unread notifications (excluding dismissed ones)
+                    const newUnreadNotifications = data.notifications.filter(n => 
+                        !n.read && !dismissedNotifications.includes(n.id)
+                    );
+                    
+                    if (newUnreadNotifications.length > 0) {
+                        showNotificationPopup(newUnreadNotifications[0]); // Show first new notification
+                    }
                 }
             })
-            .catch(error => console.error('Error fetching notifications:', error));
+            .catch(error => {
+                console.error('Error loading notifications:', error);
+            });
     }
 
-    // Check for new notifications
-    function checkForNewNotifications(currentNotifications) {
-        const currentIds = currentNotifications.map(n => n.id);
-        const newNotifications = currentNotifications.filter(n => !lastSeenNotifications.includes(n.id));
-        lastSeenNotifications = currentIds;
-        return newNotifications;
-    }
-
-    // Update notification badge
-    function updateNotificationBadge() {
-        const unreadCount = notifications.filter(n => !n.read).length;
-        
-        if (unreadCount > 0) {
-            notificationBadge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+    function updateNotificationBadge(count) {
+        if (count > 0) {
+            notificationBadge.textContent = count > 9 ? '9+' : count;
             notificationBadge.style.display = 'flex';
         } else {
             notificationBadge.style.display = 'none';
         }
     }
 
-    // Render notification dropdown
-    function renderNotificationDropdown() {
+    function updateNotificationDropdown(notifications) {
         if (notifications.length === 0) {
             notificationList.innerHTML = `
                 <div class="empty-notification text-center py-4">
@@ -1194,169 +1160,244 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let html = '';
         notifications.slice(0, 5).forEach(notification => {
-            html += createNotificationItemHTML(notification);
+            // PERBAIKAN: Sesuaikan icon CSS dengan jenis notifikasi
+            let iconClass = 'bg-primary'; // default
+            if (notification.type === 'info') iconClass = 'bg-primary';
+            else if (notification.type === 'warning') iconClass = 'bg-warning';
+            else if (notification.type === 'success') iconClass = 'bg-success';
+            else if (notification.type === 'danger') iconClass = 'bg-danger';
+            
+            html += `
+                <div class="notification-item ${!notification.read ? 'unread' : ''}" data-id="${notification.id}">
+                    <div class="notification-icon ${iconClass}">
+                        <i class="bi bi-${notification.icon}"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-text">${notification.message}</div>
+                        <div class="notification-time">${notification.created_at}</div>
+                        <div class="notification-actions">
+                            <button class="notification-delete-btn" data-id="${notification.id}">
+                                <i class="bi bi-trash"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
         });
 
         notificationList.innerHTML = html;
 
-        // Attach event listeners to notification items
-        document.querySelectorAll('.mark-as-read-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const notificationId = this.dataset.id;
-                markAsRead(notificationId);
-            });
-        });
-
+        // Attach event listeners for delete buttons
         document.querySelectorAll('.notification-delete-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 const notificationId = this.dataset.id;
-                deleteNotification(notificationId);
+                deleteNotificationFromDropdown(notificationId);
             });
         });
         
+        // Add click handlers for notification items
         document.querySelectorAll('.notification-item').forEach(item => {
             item.addEventListener('click', function() {
-                const link = this.dataset.link;
-                if (link) {
+                const link = notifications.find(n => n.id == this.dataset.id)?.link;
+                if (link && link !== '#') {
                     window.location.href = link;
                 }
             });
         });
     }
 
-    // Create HTML for notification item
-    function createNotificationItemHTML(notification) {
-        return `
-            <div class="notification-item ${!notification.read ? 'unread' : ''}" 
-                 id="notification-${notification.id}" 
-                 data-link="${notification.link || ''}">
-                <div class="notification-icon ${notification.type}">
-                    <i class="bi bi-${notification.icon}"></i>
-                </div>
-                <div class="notification-content">
-                    <div class="notification-title">${notification.title}</div>
-                    <div class="notification-text">${notification.message}</div>
-                    <div class="notification-time">${formatDate(notification.created_at)}</div>
-                    <div class="notification-actions">
-                        ${!notification.read ? 
-                            `<button class="mark-as-read-btn" data-id="${notification.id}">
-                                <i class="bi bi-check2"></i> Tandai dibaca
-                            </button>` : ''}
+    // Di navbar.blade.php, ganti function showNotificationPopup:
 
-                        <button class="notification-delete-btn" data-id="${notification.id}">
-                            <i class="bi bi-trash"></i> Hapus
-                        </button>
-                    </div>
-                </div>
-            </div>
+function showNotificationPopup(notification) {
+    // Create popup HTML
+    const popup = document.createElement('div');
+    popup.className = 'notification-popup position-fixed';
+    popup.id = `popup-${notification.id}`;
+    popup.style.cssText = `
+        top: 20px;
+        right: 20px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-width: 300px;
+        z-index: 9999;
+        animation: slideInRight 0.3s ease;
+    `;
+    
+    popup.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6 class="mb-0">${notification.title}</h6>
+            <button type="button" class="btn-close popup-close-btn" data-id="${notification.id}" style="font-size: 0.8rem;"></button>
+        </div>
+        <p class="small mb-2">${notification.message}</p>
+        <div class="d-flex gap-2">
+            ${notification.link && notification.link !== '#' ? 
+                `<a href="${notification.link}" class="btn btn-sm btn-primary popup-view-btn">
+                    <i class="bi bi-eye"></i> Lihat
+                </a>` : ''
+            }
+            <button class="btn btn-sm btn-outline-danger popup-delete-btn" data-id="${notification.id}">
+                <i class="bi bi-trash"></i> Hapus
+            </button>
+        </div>
+    `;
+    
+    // Add CSS animation if not exists
+    if (!document.getElementById('notification-popup-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-popup-styles';
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+            .notification-popup .btn-close {
+                background: none;
+                border: none;
+                font-size: 1rem;
+                cursor: pointer;
+                opacity: 0.5;
+                transition: opacity 0.3s;
+            }
+            .notification-popup .btn-close:hover {
+                opacity: 1;
+            }
+            .notification-popup .btn-close::before {
+                content: '×';
+                font-size: 1.5rem;
+                font-weight: bold;
+            }
         `;
+        document.head.appendChild(style);
     }
+    
+    document.body.appendChild(popup);
+    
+    // PERBAIKAN: Add event listeners dengan method yang benar
+    // Close button
+    const closeBtn = popup.querySelector('.popup-close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dismissNotificationPopup(notification.id, popup);
+        });
+    }
+    
+    // Delete button
+    const deleteBtn = popup.querySelector('.popup-delete-btn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            deleteNotificationFromPopup(notification.id, popup);
+        });
+    }
+    
+    // View button (jika ada)
+    const viewBtn = popup.querySelector('.popup-view-btn');
+    if (viewBtn) {
+        viewBtn.addEventListener('click', function(e) {
+            // Let the link work normally, but also dismiss popup
+            dismissNotificationPopup(notification.id, popup);
+        });
+    }
+    
+    // Auto close after 10 seconds
+    setTimeout(() => {
+        if (popup.parentNode) {
+            dismissNotificationPopup(notification.id, popup);
+        }
+    }, 10000);
+}
 
-    // Show toast notification
-    function showToastNotification(notification) {
-        // Create toast container if not exists
-        let toastContainer = document.querySelector('.toast-container');
-        if (!toastContainer) {
-            toastContainer = document.createElement('div');
-            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-            toastContainer.style.zIndex = '1080';
-            document.body.appendChild(toastContainer);
+    // Ganti function dismissNotificationPopup:
+
+function dismissNotificationPopup(notificationId, popup) {
+    // Add to dismissed list
+    if (!dismissedNotifications.includes(notificationId)) {
+        dismissedNotifications.push(notificationId);
+        sessionStorage.setItem('dismissedNotifications', JSON.stringify(dismissedNotifications));
+    }
+    
+    // Remove popup with animation
+    if (popup && popup.parentNode) {
+        popup.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            if (popup.parentNode) {
+                popup.remove();
+            }
+        }, 300);
+    }
+}
+
+    // Ganti function deleteNotificationFromPopup:
+
+function deleteNotificationFromPopup(notificationId, popup) {
+    if (!confirm('Hapus notifikasi ini?')) {
+        return;
+    }
+    
+    fetch(`/notifications/${notificationId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add to dismissed list
+            if (!dismissedNotifications.includes(notificationId)) {
+                dismissedNotifications.push(notificationId);
+                sessionStorage.setItem('dismissedNotifications', JSON.stringify(dismissedNotifications));
+            }
+            
+            // Remove popup with animation
+            if (popup && popup.parentNode) {
+                popup.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    if (popup.parentNode) {
+                        popup.remove();
+                    }
+                }, 300);
+            }
+            
+            // Reload notifications to update badge and dropdown
+            loadNotifications();
+            
+            // Show success message
+            showToast('Notifikasi berhasil dihapus', 'success');
+        } else {
+            showToast('Gagal menghapus notifikasi', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting notification:', error);
+        showToast('Terjadi kesalahan saat menghapus notifikasi', 'error');
+    });
+}
+
+    function deleteNotificationFromDropdown(notificationId) {
+        if (!confirm('Hapus notifikasi ini?')) {
+            return;
         }
         
-        // Create toast
-        const toastId = `toast-${Date.now()}`;
-        const toast = document.createElement('div');
-        toast.className = 'toast show';
-        toast.id = toastId;
-        toast.setAttribute('role', 'alert');
-        toast.setAttribute('aria-live', 'assertive');
-        toast.setAttribute('aria-atomic', 'true');
-        toast.innerHTML = `
-            <div class="toast-header">
-                <div class="notification-icon ${notification.type} me-2" style="width: 20px; height: 20px;">
-                    <i class="bi bi-${notification.icon}" style="font-size: 10px;"></i>
-                </div>
-                <strong class="me-auto">${notification.title}</strong>
-                <small>${formatDate(notification.created_at)}</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body">
-                <p class="mb-2">${notification.message}</p>
-                ${notification.link ? 
-                    `<div class="mt-2 pt-2 border-top">
-                        <a href="${notification.link}" class="btn btn-primary btn-sm">Lihat detail</a>
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">
-                            Tutup
-                        </button>
-                    </div>` : 
-                    `<div class="mt-2 pt-2 border-top">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">
-                            Tutup
-                        </button>
-                    </div>`
-                }
-            </div>
-        `;
-        
-        toastContainer.appendChild(toast);
-        
-        // Handle close button
-        toast.querySelector('.btn-close, .btn-secondary').addEventListener('click', function() {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        });
-        
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }, 5000);
-    }
-
-    // Mark notification as read
-    function markAsRead(notificationId) {
-        fetch(`{{ url('/notifications') }}/${notificationId}/mark-as-read`, {
-            method: 'GET',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update local notifications data
-                const index = notifications.findIndex(n => n.id == notificationId);
-                if (index !== -1) {
-                    notifications[index].read = true;
-                    
-                    // Update UI
-                    const notificationItem = document.getElementById(`notification-${notificationId}`);
-                    if (notificationItem) {
-                        notificationItem.classList.remove('unread');
-                        const markAsReadBtn = notificationItem.querySelector('.mark-as-read-btn');
-                        if (markAsReadBtn) markAsReadBtn.remove();
-                    }
-                    
-                    // Update badge
-                    updateNotificationBadge();
-                }
-            }
-        })
-        .catch(error => console.error('Error marking notification as read:', error));
-    }
-
-    // Delete notification
-    function deleteNotification(notificationId) {
-        fetch(`{{ url('/notifications') }}/${notificationId}`, {
+        fetch(`/notifications/${notificationId}`, {
             method: 'DELETE',
             headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
@@ -1364,109 +1405,20 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Update local notifications data
-                notifications = notifications.filter(n => n.id != notificationId);
+                // Show success toast
+                showToast('Notifikasi berhasil dihapus', 'success');
                 
-                // Update UI with animation
-                const notificationItem = document.getElementById(`notification-${notificationId}`);
-                if (notificationItem) {
-                    notificationItem.style.height = notificationItem.offsetHeight + 'px';
-                    notificationItem.style.opacity = '0';
-                    notificationItem.style.transform = 'translateX(100%)';
-                    
-                    setTimeout(() => {
-                        notificationItem.style.height = '0';
-                        notificationItem.style.padding = '0';
-                        notificationItem.style.margin = '0';
-                        notificationItem.style.borderWidth = '0';
-                        
-                        setTimeout(() => {
-                            notificationItem.remove();
-                            
-                            // If no more notifications, show empty state
-                            if (notifications.length === 0) {
-                                renderNotificationDropdown();
-                            }
-                        }, 300);
-                    }, 300);
-                }
-                
-                // Update badge
-                updateNotificationBadge();
+                // Reload notifications to update badge and dropdown
+                loadNotifications();
+            } else {
+                showToast(data.message || 'Gagal menghapus notifikasi', 'error');
             }
         })
-        .catch(error => console.error('Error deleting notification:', error));
+        .catch(error => {
+            console.error('Error deleting notification:', error);
+            showToast('Terjadi kesalahan saat menghapus notifikasi', 'error');
+        });
     }
-
-    // Format date for display
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffTime = Math.abs(now - date);
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 0) {
-            // Today
-            return 'Hari ini ' + date.toLocaleTimeString('id-ID', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } else if (diffDays === 1) {
-            // Yesterday
-            return 'Kemarin ' + date.toLocaleTimeString('id-ID', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } else if (diffDays < 7) {
-            // This week
-            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-            return days[date.getDay()] + ' ' + date.toLocaleTimeString('id-ID', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } else {
-            // Older
-            return date.toLocaleDateString('id-ID', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            });
-        }
-    }
-
-    // Mark all as read
-    markAllAsReadBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        
-        fetch('{{ route("notifications.mark-all-as-read") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update local notifications data
-                notifications.forEach(notification => {
-                    notification.read = true;
-                });
-                
-                // Update UI
-                document.querySelectorAll('.notification-item.unread').forEach(item => {
-                    item.classList.remove('unread');
-                    const markAsReadBtn = item.querySelector('.mark-as-read-btn');
-                    if (markAsReadBtn) markAsReadBtn.remove();
-                });
-                
-                // Update badge
-                updateNotificationBadge();
-            }
-        })
-        .catch(error => console.error('Error marking all notifications as read:', error));
-    });
 
     // Clear all notifications
     clearAllNotificationsBtn.addEventListener('click', function(e) {
@@ -1474,10 +1426,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!confirm('Apakah Anda yakin ingin menghapus semua notifikasi?')) return;
         
-        fetch('{{ route("notifications.destroy-all") }}', {
+        fetch('/notifications/destroy-all', {
             method: 'DELETE',
             headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
@@ -1485,17 +1437,76 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Update local notifications data
-                notifications = [];
-                
-                // Update UI
-                renderNotificationDropdown();
-                
-                // Update badge
-                updateNotificationBadge();
+                showToast(data.message || 'Semua notifikasi berhasil dihapus', 'success');
+                // Reload notifications
+                loadNotifications();
+            } else {
+                showToast(data.message || 'Gagal menghapus semua notifikasi', 'error');
             }
         })
-        .catch(error => console.error('Error clearing all notifications:', error));
+        .catch(error => {
+            console.error('Error clearing all notifications:', error);
+            showToast('Terjadi kesalahan saat menghapus notifikasi', 'error');
+        });
     });
+
+    // Tambahkan function showToast di akhir script navbar:
+
+// Show toast message for user feedback
+function showToast(message, type = 'info') {
+    // Remove existing toasts
+    const existingToasts = document.querySelectorAll('.custom-toast');
+    existingToasts.forEach(toast => toast.remove());
+    
+    const toast = document.createElement('div');
+    toast.className = 'custom-toast position-fixed';
+    toast.style.cssText = `
+        top: 80px;
+        right: 20px;
+        background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
+        color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
+        border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
+        border-radius: 6px;
+        padding: 12px 16px;
+        max-width: 300px;
+        z-index: 9999;
+        animation: slideInRight 0.3s ease;
+        font-size: 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    `;
+    
+    toast.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+            <span>${message}</span>
+            <button type="button" class="btn-close ms-2" style="font-size: 0.8rem; opacity: 0.7;"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Close button
+    const closeBtn = toast.querySelector('.btn-close');
+    closeBtn.addEventListener('click', function() {
+        toast.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 300);
+    });
+    
+    // Auto close after 3 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 300);
+        }
+    }, 3000);
+}
+
 });
 </script>

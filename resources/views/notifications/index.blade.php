@@ -11,9 +11,6 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Notifikasi</h5>
                     <div class="btn-group">
-                        <button type="button" class="btn btn-outline-primary" id="markAllAsReadBtn">
-                            <i class="bi bi-check-all me-1"></i> Tandai semua telah dibaca
-                        </button>
                         <button type="button" class="btn btn-outline-danger" id="clearAllNotificationsBtn">
                             <i class="bi bi-trash me-1"></i> Hapus semua
                         </button>
@@ -48,12 +45,6 @@
                                                     <a href="{{ $notification->link }}" class="btn btn-sm btn-primary">
                                                         <i class="bi bi-eye"></i> Lihat detail
                                                     </a>
-                                                @endif
-                                                
-                                                @if(!$notification->read)
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary mark-as-read-btn" data-id="{{ $notification->id }}">
-                                                        <i class="bi bi-check2"></i> Tandai telah dibaca
-                                                    </button>
                                                 @endif
                                                 
                                                 <button type="button" class="btn btn-sm btn-outline-danger notification-delete-btn" data-id="{{ $notification->id }}">
@@ -195,52 +186,12 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Mark as read functionality
-    document.querySelectorAll('.mark-as-read-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const notificationId = this.dataset.id;
-            markAsRead(notificationId);
-        });
-    });
-
     // Delete notification functionality
     document.querySelectorAll('.notification-delete-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const notificationId = this.dataset.id;
+            if (!confirm('Hapus notifikasi ini?')) return;
             deleteNotification(notificationId);
-        });
-    });
-
-    // Mark all as read
-    document.getElementById('markAllAsReadBtn').addEventListener('click', function() {
-        fetch('{{ route("notifications.mark-all-as-read") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update UI
-                document.querySelectorAll('.notification-item-full.unread').forEach(item => {
-                    item.classList.remove('unread');
-                    const unreadIndicator = item.querySelector('.unread-indicator');
-                    if (unreadIndicator) unreadIndicator.remove();
-                    
-                    const markAsReadBtn = item.querySelector('.mark-as-read-btn');
-                    if (markAsReadBtn) markAsReadBtn.closest('.btn').remove();
-                });
-                
-                // Show success message
-                showAlert('Semua notifikasi ditandai sebagai telah dibaca', 'success');
-            }
-        })
-        .catch(error => {
-            console.error('Error marking all as read:', error);
-            showAlert('Terjadi kesalahan saat menandai notifikasi', 'danger');
         });
     });
 
@@ -259,8 +210,13 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Reload page
-                location.reload();
+                showAlert('Semua notifikasi berhasil dihapus', 'success');
+                // Reload page after short delay
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showAlert('Gagal menghapus semua notifikasi', 'danger');
             }
         })
         .catch(error => {
@@ -269,41 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Mark notification as read
-    function markAsRead(notificationId) {
-        fetch(`{{ url('/notifications') }}/${notificationId}/mark-as-read`, {
-            method: 'GET',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update UI
-                const notificationItem = document.getElementById(`notification-${notificationId}`);
-                if (notificationItem) {
-                    notificationItem.classList.remove('unread');
-                    const unreadIndicator = notificationItem.querySelector('.unread-indicator');
-                    if (unreadIndicator) unreadIndicator.remove();
-                    
-                    const markAsReadBtn = notificationItem.querySelector('.mark-as-read-btn');
-                    if (markAsReadBtn) markAsReadBtn.closest('.btn').remove();
-                }
-                
-                // Show success message
-                showAlert('Notifikasi ditandai sebagai telah dibaca', 'success');
-            }
-        })
-        .catch(error => {
-            console.error('Error marking as read:', error);
-            showAlert('Terjadi kesalahan saat menandai notifikasi', 'danger');
-        });
-    }
-
-    // Delete notification
+    // Delete individual notification
     function deleteNotification(notificationId) {
         fetch(`{{ url('/notifications') }}/${notificationId}`, {
             method: 'DELETE',
@@ -319,29 +241,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Update UI with animation
                 const notificationItem = document.getElementById(`notification-${notificationId}`);
                 if (notificationItem) {
+                    // Set fixed height untuk smooth animation
                     notificationItem.style.height = notificationItem.offsetHeight + 'px';
-                    notificationItem.style.opacity = '0';
-                    notificationItem.style.transform = 'translateX(100%)';
+                    notificationItem.style.overflow = 'hidden';
+                    notificationItem.style.transition = 'all 0.3s ease';
                     
+                    // Start fade out
                     setTimeout(() => {
+                        notificationItem.style.opacity = '0';
+                        notificationItem.style.transform = 'translateX(100%)';
                         notificationItem.style.height = '0';
                         notificationItem.style.padding = '0';
                         notificationItem.style.margin = '0';
                         notificationItem.style.borderWidth = '0';
+                    }, 10);
+                    
+                    // Remove element after animation
+                    setTimeout(() => {
+                        notificationItem.remove();
                         
-                        setTimeout(() => {
-                            notificationItem.remove();
-                            
-                            // If no more notifications, reload page
-                            if (document.querySelectorAll('.notification-item-full').length === 0) {
+                        // Check if no more notifications
+                        const remainingNotifications = document.querySelectorAll('.notification-item-full');
+                        if (remainingNotifications.length === 0) {
+                            // Show empty state
+                            setTimeout(() => {
                                 location.reload();
-                            }
-                        }, 300);
-                    }, 300);
+                            }, 500);
+                        }
+                    }, 350);
                 }
                 
                 // Show success message
                 showAlert('Notifikasi berhasil dihapus', 'success');
+            } else {
+                showAlert('Gagal menghapus notifikasi', 'danger');
             }
         })
         .catch(error => {
@@ -350,31 +283,59 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Show alert message
+    // Show alert message with better styling
     function showAlert(message, type) {
-        const alertPlaceholder = document.createElement('div');
-        alertPlaceholder.className = 'position-fixed bottom-0 end-0 p-3';
-        alertPlaceholder.style.zIndex = '5';
-        document.body.appendChild(alertPlaceholder);
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.custom-alert-notification');
+        existingAlerts.forEach(alert => alert.remove());
         
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = `
-            <div class="alert alert-${type} alert-dismissible" role="alert">
+        const alertPlaceholder = document.createElement('div');
+        alertPlaceholder.className = 'custom-alert-notification position-fixed top-0 end-0 p-3';
+        alertPlaceholder.style.zIndex = '9999';
+        alertPlaceholder.style.marginTop = '20px';
+        
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const iconClass = type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle';
+        
+        alertPlaceholder.innerHTML = `
+            <div class="alert ${alertClass} alert-dismissible d-flex align-items-center" role="alert" style="min-width: 300px; animation: slideInFromRight 0.3s ease;">
+                <i class="bi ${iconClass} me-2"></i>
                 <div>${message}</div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close ms-auto" onclick="this.closest('.custom-alert-notification').remove()"></button>
             </div>
         `;
         
-        alertPlaceholder.append(wrapper);
+        // Add CSS for animation
+        if (!document.getElementById('alert-animation-styles')) {
+            const style = document.createElement('style');
+            style.id = 'alert-animation-styles';
+            style.textContent = `
+                @keyframes slideInFromRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOutToRight {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
         
-        // Auto close after 5 seconds
+        document.body.appendChild(alertPlaceholder);
+        
+        // Auto close after 4 seconds
         setTimeout(() => {
-            const alert = wrapper.querySelector('.alert');
-            if (alert) {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
+            if (alertPlaceholder.parentNode) {
+                const alert = alertPlaceholder.querySelector('.alert');
+                alert.style.animation = 'slideOutToRight 0.3s ease';
+                setTimeout(() => {
+                    if (alertPlaceholder.parentNode) {
+                        alertPlaceholder.remove();
+                    }
+                }, 300);
             }
-        }, 5000);
+        }, 4000);
     }
 });
 </script>
