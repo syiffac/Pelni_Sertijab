@@ -27,7 +27,7 @@ class ABKController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
             // Data statistik ABK
@@ -60,7 +60,7 @@ class ABKController extends Controller
                     ];
                 });
 
-            // Data mutasi terbaru - DARI TABEL MUTASI
+            // Data mutasi terbaru
             $mutasiTerbaru = Mutasi::with(['kapal', 'abkNaik', 'abkTurun'])
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
@@ -69,13 +69,13 @@ class ABKController extends Controller
                     return [
                         'id' => $mutasi->id,
                         'abkTurun' => [
-                            'nama_abk' => $mutasi->nama_lengkap_naik // ABK yang naik ke kapal
+                            'nama_abk' => $mutasi->nama_lengkap_naik
                         ],
                         'kapalTurun' => [
-                            'nama_kapal' => 'From Previous Ship' // Kapal asal (bisa ditambahkan field nanti)
+                            'nama_kapal' => 'From Previous Ship'
                         ],
                         'kapalNaik' => [
-                            'nama_kapal' => $mutasi->nama_kapal // Kapal tujuan
+                            'nama_kapal' => $mutasi->nama_kapal
                         ],
                         'status_mutasi' => $mutasi->status_mutasi,
                         'created_at' => $mutasi->created_at,
@@ -84,29 +84,90 @@ class ABKController extends Controller
                     ];
                 });
 
-            // Data ABK list terbaru
-            $abkList = ABKNew::with(['jabatanTetap', 'kapalAktif'])
-                ->orderBy('created_at', 'desc')
-                ->take(20)
-                ->get();
+            // PERBAIKAN: ABK list dengan pagination dan search
+            $search = $request->get('search', '');
+            $perPage = (int) $request->get('per_page', 10);
+            
+            // Validasi per_page
+            if (!in_array($perPage, [10, 25, 50, 100])) {
+                $perPage = 10;
+            }
+            
+            $abkQuery = ABKNew::with(['jabatanTetap']);
+            
+            // Apply search filter
+            if (!empty($search)) {
+                $searchTerm = '%' . $search . '%';
+                $abkQuery->where(function($q) use ($searchTerm) {
+                    $q->where('id', 'LIKE', $searchTerm)
+                      ->orWhere('nama_abk', 'LIKE', $searchTerm)
+                      ->orWhereHas('jabatanTetap', function($jq) use ($searchTerm) {
+                          $jq->where('nama_jabatan', 'LIKE', $searchTerm);
+                      })
+                      ->orWhere('status_abk', 'LIKE', $searchTerm);
+                });
+            }
+            
+            $abkList = $abkQuery->orderBy('created_at', 'desc')
+                ->paginate($perPage)
+                ->withQueryString(); // Maintain search parameters in pagination links
+                
+            // PERBAIKAN: Jika request AJAX (untuk live search)
+            if ($request->ajax()) {
+                try {
+                    $tableHtml = view('kelolaABK.partials.abk-table', compact('abkList', 'search'))->render();
+                    $paginationHtml = view('kelolaABK.partials.pagination', compact('abkList', 'search'))->render();
+                    
+                    return response()->json([
+                        'success' => true,
+                        'html' => $tableHtml,
+                        'pagination' => $paginationHtml,
+                        'total' => $abkList->total(),
+                        'current_page' => $abkList->currentPage(),
+                        'last_page' => $abkList->lastPage(),
+                        'per_page' => $abkList->perPage(),
+                        'from' => $abkList->firstItem(),
+                        'to' => $abkList->lastItem(),
+                        'search' => $search
+                    ], 200, ['Content-Type' => 'application/json']);
+                    
+                } catch (\Exception $e) {
+                    Log::error('AJAX Error in ABK index: ' . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Terjadi kesalahan saat memuat data',
+                        'error' => $e->getMessage()
+                    ], 500, ['Content-Type' => 'application/json']);
+                }
+            }
 
             Log::info('ABK data loaded successfully', [
                 'total_abk' => $totalStatistik['total_abk'],
                 'kapal_count' => $abkPerKapal->count(),
                 'mutasi_count' => $mutasiTerbaru->count(),
-                'abk_list_count' => $abkList->count()
+                'abk_list_count' => $abkList->total(),
+                'search' => $search
             ]);
                 
             return view('kelolaABK.index', compact(
                 'abkList',
                 'totalStatistik', 
                 'abkPerKapal', 
-                'mutasiTerbaru'
+                'mutasiTerbaru',
+                'search'
             ));
             
         } catch (\Exception $e) {
             Log::error('Error loading ABK index: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            // Jika AJAX request, return JSON error
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat memuat data: ' . $e->getMessage()
+                ], 500, ['Content-Type' => 'application/json']);
+            }
             
             // Fallback data jika error
             $totalStatistik = [
@@ -119,13 +180,15 @@ class ABKController extends Controller
             
             $abkPerKapal = collect();
             $mutasiTerbaru = collect();
-            $abkList = collect();
+            $abkList = ABKNew::paginate(10);
+            $search = '';
             
             return view('kelolaABK.index', compact(
                 'abkList',
                 'totalStatistik', 
                 'abkPerKapal', 
-                'mutasiTerbaru'
+                'mutasiTerbaru',
+                'search'
             ))->with('error', 'Terjadi kesalahan saat memuat data: ' . $e->getMessage());
         }
     }
@@ -296,11 +359,134 @@ class ABKController extends Controller
     public function show($id)
     {
         try {
-            $abk = ABKNew::with('jabatanTetap')->findOrFail($id);
-            return view('kelolaABK.show', compact('abk'));
+            // Load ABK dengan relasi yang diperlukan
+            $abk = ABKNew::with([
+                'jabatanTetap',
+                'kapalAktif'
+            ])->findOrFail($id);
+
+            // Get mutasi data untuk ABK ini (baik sebagai naik maupun turun)
+            $mutasiSebagaiNaik = Mutasi::with([
+                'kapal', 
+                'jabatanMutasi', 
+                'abkTurun', 
+                'jabatanTetapTurun',
+                'sertijab' // Load sertijab relation
+            ])
+            ->where('id_abk_naik', $id)
+            ->orderBy('TMT', 'desc')
+            ->get();
+
+            $mutasiSebagaiTurun = Mutasi::with([
+                'kapal', 
+                'abkNaik', 
+                'jabatanTetapNaik',
+                'jabatanMutasiTurun',
+                'sertijab'
+            ])
+            ->where('id_abk_turun', $id)
+            ->orderBy('TMT_turun', 'desc')
+            ->get();
+
+            // Gabungkan semua mutasi dan urutkan berdasarkan tanggal
+            $semuaMutasi = collect();
+            
+            // Add mutasi sebagai naik
+            foreach ($mutasiSebagaiNaik as $mutasi) {
+                $semuaMutasi->push([
+                    'id' => $mutasi->id,
+                    'type' => 'naik',
+                    'tanggal' => $mutasi->TMT,
+                    'tanggal_akhir' => $mutasi->TAT,
+                    'kapal' => $mutasi->kapal->nama_kapal ?? $mutasi->nama_kapal,
+                    'jabatan' => $mutasi->nama_mutasi ?: ($mutasi->jabatanMutasi->nama_jabatan ?? 'N/A'),
+                    'jenis_mutasi' => $mutasi->jenis_mutasi,
+                    'status' => $mutasi->status_mutasi,
+                    'catatan' => $mutasi->catatan,
+                    'abk_pasangan' => $mutasi->abkTurun ? [
+                        'id' => $mutasi->abkTurun->id,
+                        'nama' => $mutasi->nama_lengkap_turun ?: $mutasi->abkTurun->nama_abk,
+                        'jabatan' => $mutasi->nama_mutasi_turun ?: ($mutasi->jabatanMutasiTurun->nama_jabatan ?? 'N/A')
+                    ] : null,
+                    'sertijab' => $mutasi->sertijab,
+                    'raw_mutasi' => $mutasi
+                ]);
+            }
+
+            // Add mutasi sebagai turun
+            foreach ($mutasiSebagaiTurun as $mutasi) {
+                $semuaMutasi->push([
+                    'id' => $mutasi->id,
+                    'type' => 'turun',
+                    'tanggal' => $mutasi->TMT_turun ?: $mutasi->TMT,
+                    'tanggal_akhir' => $mutasi->TAT_turun ?: $mutasi->TAT,
+                    'kapal' => $mutasi->kapal->nama_kapal ?? $mutasi->nama_kapal,
+                    'jabatan' => $mutasi->nama_mutasi_turun ?: ($mutasi->jabatanMutasiTurun->nama_jabatan ?? 'N/A'),
+                    'jenis_mutasi' => $mutasi->jenis_mutasi_turun ?: $mutasi->jenis_mutasi,
+                    'status' => $mutasi->status_mutasi,
+                    'catatan' => $mutasi->keterangan_turun ?: $mutasi->catatan,
+                    'abk_pasangan' => [
+                        'id' => $mutasi->abkNaik->id,
+                        'nama' => $mutasi->nama_lengkap_naik ?: $mutasi->abkNaik->nama_abk,
+                        'jabatan' => $mutasi->nama_mutasi ?: ($mutasi->jabatanMutasi->nama_jabatan ?? 'N/A')
+                    ],
+                    'sertijab' => $mutasi->sertijab,
+                    'raw_mutasi' => $mutasi
+                ]);
+            }
+
+            // Sort by tanggal descending
+            $riwayatMutasi = $semuaMutasi->sortByDesc('tanggal')->values();
+
+            // Get current assignment (mutasi aktif/terbaru)
+            $mutasiAktif = $riwayatMutasi->where('status', '!=', 'Selesai')->first() 
+                        ?? $riwayatMutasi->first();
+
+            // Statistics
+            $statistik = [
+                'total_mutasi' => $riwayatMutasi->count(),
+                'mutasi_naik' => $riwayatMutasi->where('type', 'naik')->count(),
+                'mutasi_turun' => $riwayatMutasi->where('type', 'turun')->count(),
+                'mutasi_aktif' => $riwayatMutasi->where('status', '!=', 'Selesai')->count(),
+                'mutasi_selesai' => $riwayatMutasi->where('status', 'Selesai')->count(),
+                'sertijab_count' => $riwayatMutasi->whereNotNull('sertijab')->count(),
+                'kapal_berbeda' => $riwayatMutasi->pluck('kapal')->unique()->count()
+            ];
+
+            // Recent sertijab documents
+            $dokumenSertijab = collect();
+            foreach ($riwayatMutasi->whereNotNull('sertijab') as $mutasi) {
+                if ($mutasi['sertijab']) {
+                    $dokumenSertijab->push([
+                        'mutasi_id' => $mutasi['id'],
+                        'kapal' => $mutasi['kapal'],
+                        'tanggal' => $mutasi['tanggal'],
+                        'sertijab' => $mutasi['sertijab'],
+                        'type' => $mutasi['type']
+                    ]);
+                }
+            }
+
+            Log::info('ABK show data loaded', [
+                'abk_id' => $id,
+                'mutasi_count' => $riwayatMutasi->count(),
+                'sertijab_count' => $dokumenSertijab->count()
+            ]);
+
+            return view('kelolaABK.show', compact(
+                'abk', 
+                'riwayatMutasi', 
+                'mutasiAktif',
+                'statistik',
+                'dokumenSertijab'
+            ));
+
         } catch (\Exception $e) {
-            Log::error('Error showing ABK: ' . $e->getMessage());
-            return redirect()->route('abk.index')->with('error', 'ABK tidak ditemukan');
+            Log::error('Error showing ABK: ' . $e->getMessage(), [
+                'abk_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->route('abk.index')->with('error', 'ABK tidak ditemukan atau terjadi kesalahan');
         }
     }
 
