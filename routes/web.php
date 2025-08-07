@@ -207,7 +207,6 @@ Route::middleware(['auth'])->prefix('abk')->name('abk.')->group(function () {
     
     // Template Routes
     Route::get('/template/excel', [ABKController::class, 'downloadTemplate'])->name('template.excel');
-    Route::get('/template/pdf', [ABKController::class, 'downloadTemplate'])->defaults('type', 'pdf')->name('template.pdf');
     
     // Riwayat Routes
     Route::get('/riwayat/history', [ABKController::class, 'getRiwayatHistory'])->name('riwayat.history');

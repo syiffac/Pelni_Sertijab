@@ -170,15 +170,11 @@
                             <i class="bi bi-file-earmark-text me-2"></i>
                             Download Template
                         </h6>
-                        <p class="template-description">Download template terlebih dahulu untuk format yang sesuai</p>
+                        <p class="template-description">Download template Excel untuk format yang sesuai</p>
                         <div class="template-actions">
                             <a href="{{ route('abk.template.excel') }}" class="btn btn-outline-success btn-sm">
                                 <i class="bi bi-file-excel me-2"></i>
                                 Template Excel
-                            </a>
-                            <a href="{{ route('abk.template.pdf') }}" class="btn btn-outline-danger btn-sm">
-                                <i class="bi bi-file-pdf me-2"></i>
-                                Template PDF
                             </a>
                         </div>
                     </div>
@@ -1828,9 +1824,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = new bootstrap.Modal(document.getElementById('importResultModal'));
         modal.show();
         
-        if (typeof refreshHistory === 'function') {
-            refreshHistory();
-        }
+        // if (typeof refreshHistory === 'function') {
+        //     refreshHistory();
+        // }
     }
 
     // Global functions

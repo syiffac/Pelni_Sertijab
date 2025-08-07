@@ -155,7 +155,8 @@ class ABKNew extends Model
                     // Cek berbagai kemungkinan nama kolom
                     if (Schema::hasColumn('mutasi', 'id_abk_naik')) {
                         $query->where('id_abk_naik', $this->id);
-                    } elseif (Schema::hasColumn('mutasi', 'nrp_naik')) {
+                    } elseif (Schema::hasColumn('mutasi', '
+                    _naik')) {
                         $query->where('nrp_naik', $this->id);
                     }
                 })

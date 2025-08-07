@@ -9,17 +9,18 @@ use App\Models\Mutasi;
 use App\Models\Jabatan;
 use App\Imports\AbkImport;
 use Illuminate\Http\Request;
+use App\Imports\MutasiImport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use App\Models\RiwayatImportExport;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth; // TAMBAH INI
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth; // TAMBAH INI
 
 class ABKController extends Controller
 {
@@ -649,112 +650,296 @@ class ABKController extends Controller
     }
 
     /**
-     * Download Excel template
+     * Download Excel template - UPDATE: Perbaiki error instruksi
      */
     public function downloadTemplate($type = 'excel')
-{
-    try {
-        if ($type === 'excel') {
-            $spreadsheet = new Spreadsheet();
-            $sheet = $spreadsheet->getActiveSheet();
-            
-            // Template headers untuk data ABK
-            $headers = [
-                'A1' => 'ID',
-                'B1' => 'Nama ABK', 
-                'C1' => 'Jabatan Tetap',
-                'D1' => 'Status ABK'
-            ];
-            
-            foreach ($headers as $cell => $value) {
-                $sheet->setCellValue($cell, $value);
+    {
+        try {
+            // Hanya support Excel
+            if ($type !== 'excel') {
+                return response()->json(['error' => 'Format tidak didukung. Hanya Excel yang tersedia.'], 400);
             }
             
+            $spreadsheet = new Spreadsheet();
+            
+            // Create Mutasi Template Sheet (Sheet utama)
+            $mutasiSheet = $spreadsheet->getActiveSheet();
+            $mutasiSheet->setTitle('Template Mutasi');
+            
+            // Headers sesuai dengan MutasiImport.php
+            $mutasiHeaders = [
+                'A1' => 'nama_kapal',
+                'B1' => 'id_abk_naik',
+                'C1' => 'id_jabatan_mutasi',
+                'D1' => 'nama_mutasi',
+                'E1' => 'jenis_mutasi',
+                'F1' => 'tmt',
+                'G1' => 'tat',
+                'H1' => 'id_abk_turun',
+                'I1' => 'nama_mutasi_turun',
+                'J1' => 'jenis_mutasi_turun',
+                'K1' => 'id_jabatan_mutasi_turun',
+                'L1' => 'tmt_turun',
+                'M1' => 'tat_turun',
+                'N1' => 'catatan'
+            ];
+
+            foreach ($mutasiHeaders as $cell => $value) {
+                $mutasiSheet->setCellValue($cell, $value);
+            }
+
             // Style headers
-            $sheet->getStyle('A1:D1')->getFont()->setBold(true);
-            $sheet->getStyle('A1:D1')->getFill()
+            $mutasiSheet->getStyle('A1:N1')->getFont()->setBold(true);
+            $mutasiSheet->getStyle('A1:N1')->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('E3F2FD');
+            $mutasiSheet->getStyle('A1:N1')->getBorders()->getAllBorders()
+                ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+            // Add Mutasi example data
+            $mutasiExampleData = [
+                [
+                    'KM KELIMUTU',   // nama_kapal
+                    '12345',                    // id_abk_naik
+                    '1',                        // id_jabatan_mutasi
+                    'PC',                  // nama_mutasi
+                    'Sementara',               // jenis_mutasi
+                    '09/11/2025',              // tmt
+                    '09/05/2026',              // tat
+                    '67890',                    // id_abk_turun
+                    'PC',                  // nama_mutasi_turun
+                    'Sementara',               // jenis_mutasi_turun
+                    '1',                        // id_jabatan_mutasi_turun
+                    '09/11/2025',              // tmt_turun
+                    '09/05/2026',              // tat_turun
+                    'Mutasi rutin sesuai rotasi' // catatan
+                ],
+                [
+                    'KM SIRIMAU',
+                    '23456',
+                    '2',
+                    'TOD',
+                    'Definitif',
+                    '15/12/2025',
+                    '',                         // tat kosong untuk definitif
+                    '',                         // id_abk_turun kosong
+                    '',                         // nama_mutasi_turun kosong
+                    '',                         // jenis_mutasi_turun kosong
+                    '',                         // id_jabatan_mutasi_turun kosong
+                    '',                         // tmt_turun kosong
+                    '',                         // tat_turun kosong
+                    'Promosi jabatan'
+                ],
+                [
+                    'KM SIRIMAU',
+                    '34567',
+                    '3',
+                    'PC',
+                    'Sementara',
+                    '01/01/2026',
+                    '01/07/2026',
+                    '78901',                    // id_abk_turun ada
+                    'PC',                // nama_mutasi_turun
+                    'Sementara',               // jenis_mutasi_turun
+                    '3',                        // id_jabatan_mutasi_turun sama
+                    '01/01/2026',              // tmt_turun sama
+                    '01/07/2026',              // tat_turun sama
+                    'Penempatan baru dengan pengganti'
+                ]
+            ];
+
+            $row = 2;
+            foreach ($mutasiExampleData as $data) {
+                $col = 'A';
+                foreach ($data as $value) {
+                    $mutasiSheet->setCellValue($col . $row, $value);
+                    $col++;
+                }
+                
+                // Add borders to data rows
+                $mutasiSheet->getStyle("A{$row}:N{$row}")->getBorders()->getAllBorders()
+                    ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+                
+                $row++;
+            }
+
+            // Auto-size columns
+            foreach (range('A', 'N') as $col) {
+                $mutasiSheet->getColumnDimension($col)->setAutoSize(true);
+            }
+            
+            // Create ABK Template Sheet (Sheet kedua)
+            $abkSheet = $spreadsheet->createSheet();
+            $abkSheet->setTitle('Template ABK');
+            
+            // ABK Template headers
+            $abkHeaders = [
+                'A1' => 'id',
+                'B1' => 'nama_abk', 
+                'C1' => 'id_jabatan_tetap',
+                'D1' => 'status_abk'
+            ];
+            
+            foreach ($abkHeaders as $cell => $value) {
+                $abkSheet->setCellValue($cell, $value);
+            }
+            
+            // Style ABK headers
+            $abkSheet->getStyle('A1:D1')->getFont()->setBold(true);
+            $abkSheet->getStyle('A1:D1')->getFill()
                 ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                 ->getStartColor()->setRGB('E8F5E8');
+            $abkSheet->getStyle('A1:D1')->getBorders()->getAllBorders()
+                ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
             
-            // Add example data untuk ABK
-            $exampleData = [
-                ['12345', 'John Doe', 'Nahkoda', 'Organik'],
-                ['23456', 'Ahmad Ali', 'Mualim I', 'Non Organik'],
-                ['34567', 'Budi Santoso', 'Masinis I', 'Organik'],
-                ['45678', 'Siti Aminah', 'Radio Officer', 'Organik']
+            // Add ABK example data
+            $abkExampleData = [
+                ['12345', 'John Doe', '1', 'Organik'],
+                ['23456', 'Ahmad Ali', '2', 'Non Organik'],
+                ['34567', 'Budi Santoso', '3', 'Organik'],
+                ['67890', 'Siti Nurhaliza', '1', 'Organik'],
+                ['78901', 'Rizki Pratama', '3', 'Non Organik']
             ];
             
             $row = 2;
-            foreach ($exampleData as $data) {
+            foreach ($abkExampleData as $data) {
                 $col = 'A';
                 foreach ($data as $value) {
-                    $sheet->setCellValue($col . $row, $value);
+                    $abkSheet->setCellValue($col . $row, $value);
                     $col++;
                 }
+                
+                // Add borders to data rows
+                $abkSheet->getStyle("A{$row}:D{$row}")->getBorders()->getAllBorders()
+                    ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+                
                 $row++;
             }
             
-            // Auto-size columns
+            // Auto-size ABK columns
             foreach (range('A', 'D') as $col) {
-                $sheet->getColumnDimension($col)->setAutoSize(true);
+                $abkSheet->getColumnDimension($col)->setAutoSize(true);
             }
             
-            // Add instructions in separate sheet
+            // Create Instructions Sheet - PERBAIKAN: Hindari karakter khusus
             $instructionSheet = $spreadsheet->createSheet();
             $instructionSheet->setTitle('Instruksi');
             
+            // PERBAIKAN: Gunakan array simple tanpa karakter khusus yang bermasalah
             $instructions = [
-                ['INSTRUKSI IMPORT DATA ABK'],
-                [''],
-                ['1. Kolom yang wajib diisi:'],
-                ['   - NRP: Nomor Registrasi Pokok (hanya angka, 4-20 digit)'],
-                ['   - Nama ABK: Nama lengkap ABK'],
-                [''],
-                ['2. Kolom opsional:'],
-                ['   - Jabatan Tetap: Nama jabatan (akan dicari otomatis di database)'],
-                ['   - Status ABK: Organik, Non Organik, atau Pensiun (default: Organik)'],
-                [''],
-                ['3. Format data:'],
-                ['   - NRP harus unik (tidak boleh sama)'],
-                ['   - Gunakan format Excel (.xlsx atau .xls)'],
-                ['   - Maksimal 1000 baris data'],
-                [''],
-                ['4. Tips:'],
-                ['   - Hapus baris contoh sebelum input data sesungguhnya'],
-                ['   - Pastikan tidak ada baris kosong di tengah data'],
-                ['   - Gunakan opsi "Skip Duplicates" jika tidak ingin import data yang sudah ada']
+                'INSTRUKSI IMPORT DATA MUTASI DAN ABK',
+                '',
+                '--- TEMPLATE MUTASI (Sheet 1) ---',
+                '1. Kolom yang WAJIB diisi:',
+                '   - nama_kapal: Nama kapal tujuan mutasi',
+                '   - id_abk_naik: ID/NRP ABK yang naik ke kapal (harus sudah ada di database)',
+                '   - tmt: Tanggal mulai tugas (format: dd/mm/yyyy)',
+                '',
+                '2. Kolom yang OPSIONAL:',
+                '   - id_jabatan_mutasi: ID jabatan dari database (angka)',
+                '   - nama_mutasi: Nama jabatan yang akan diisi',
+                '   - jenis_mutasi: Sementara atau Definitif (default: Sementara)',
+                '   - tat: Tanggal akhir tugas (kosong jika definitif)',
+                '   - id_abk_turun: ID ABK yang diganti (jika ada)',
+                '   - nama_mutasi_turun: Jabatan ABK yang turun',
+                '   - jenis_mutasi_turun: Jenis mutasi ABK turun',
+                '   - id_jabatan_mutasi_turun: ID jabatan khusus untuk ABK turun',
+                '   - tmt_turun: TMT khusus untuk ABK turun (bisa berbeda)',
+                '   - tat_turun: TAT khusus untuk ABK turun (bisa berbeda)',
+                '   - catatan: Keterangan tambahan',
+                '',
+                '--- TEMPLATE ABK (Sheet 2) ---',
+                '1. Kolom yang WAJIB diisi:',
+                '   - id: Nomor Registrasi Pokok/NRP (hanya angka, 4-20 digit)',
+                '   - nama_abk: Nama lengkap ABK',
+                '   - id_jabatan_tetap: ID jabatan dari database (angka)',
+                '',
+                '2. Kolom yang OPSIONAL:',
+                '   - status_abk: Organik, Non Organik, atau Pensiun (default: Organik)',
+                '',
+                '--- FORMAT DATA ---',
+                '1. Format tanggal: dd/mm/yyyy (contoh: 09/11/2025)',
+                '2. Format ID/NRP: Hanya angka, 4-20 karakter',
+                '3. Gunakan format Excel (.xlsx atau .xls)',
+                '4. Maksimal 1000 baris data per sheet',
+                '',
+                '--- CATATAN PENTING ---',
+                '1. Hapus baris contoh sebelum input data sesungguhnya',
+                '2. Pastikan ABK sudah terdaftar di database sebelum import mutasi',
+                '3. Nama kapal harus sesuai dengan data di sistem',
+                '4. ID jabatan harus sesuai dengan database (lihat master jabatan)',
+                '5. Untuk mutasi definitif, kosongkan field TAT',
+                '6. Untuk mutasi tanpa ABK turun, kosongkan semua field *_turun',
+                '7. Field TMT/TAT turun opsional, jika kosong akan menggunakan TMT/TAT naik',
+                '',
+                '--- CONTOH PENGISIAN ---',
+                'Mutasi dengan pengganti: Isi semua field termasuk id_abk_turun',
+                'Mutasi tanpa pengganti: Kosongkan field yang berkaitan dengan turun',
+                'Mutasi definitif: Kosongkan field TAT dan TAT_turun',
+                'Mutasi dengan waktu berbeda: Isi TMT_turun dan TAT_turun yang berbeda',
+                '',
+                'Jika ada pertanyaan, hubungi administrator sistem.'
             ];
             
             $row = 1;
             foreach ($instructions as $instruction) {
-                $instructionSheet->setCellValue('A' . $row, $instruction[0]);
+                // PERBAIKAN: Set nilai langsung tanpa array wrapping
+                $instructionSheet->setCellValue('A' . $row, $instruction);
+                
+                // Style different sections
                 if ($row === 1) {
                     $instructionSheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+                } elseif (strpos($instruction, '--- ') === 0) {
+                    $instructionSheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(12);
+                } elseif (strpos($instruction, '   -') === 0) {
+                    // Bullet points
+                    $instructionSheet->getStyle('A' . $row)->getFont()->setSize(10);
+                } elseif (preg_match('/^\d+\./', $instruction)) {
+                    // Numbered items
+                    $instructionSheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(11);
                 }
+                
                 $row++;
             }
             
+            // PERBAIKAN: Set column width yang lebih reasonable
             $instructionSheet->getColumnDimension('A')->setWidth(80);
             
-            $filename = 'template_data_abk.xlsx';
+            // Set active sheet back to Mutasi template
+            $spreadsheet->setActiveSheetIndex(0);
+            
+            $filename = 'template_import_mutasi_abk_' . date('Y-m-d') . '.xlsx';
+            
+            // Create writer
             $writer = new Xlsx($spreadsheet);
+            
+            // Set proper headers for download
             $tempFile = tempnam(sys_get_temp_dir(), 'template_');
             $writer->save($tempFile);
             
-            return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
+            Log::info('Template Excel generated successfully', [
+                'filename' => $filename,
+                'sheets' => ['Template Mutasi', 'Template ABK', 'Instruksi'],
+                'temp_file' => $tempFile
+            ]);
             
-        } else {
-            // PDF template - simple instruction
-            $data = ['type' => 'abk_template'];
-            $pdf = PDF::loadView('kelolaABK.template-pdf', $data);
-            return $pdf->download('template_format_abk.pdf');
+            return response()->download($tempFile, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+            ])->deleteFileAfterSend(true);
+            
+        } catch (\Exception $e) {
+            Log::error('Template download error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+            
+            return response()->json([
+                'error' => 'Gagal download template: ' . $e->getMessage()
+            ], 500);
         }
-        
-    } catch (\Exception $e) {
-        Log::error('Template download error: ' . $e->getMessage());
-        return response()->json(['error' => 'Gagal download template'], 500);
     }
-}
 
     /**
      * Import data from file
@@ -987,23 +1172,98 @@ public function getRiwayatHistory(Request $request)
 private function importMutasi($file, $skipDuplicates)
 {
     try {
-        // Implementasi import mutasi
+        $originalFilename = $file->getClientOriginalName();
+        
+        // Simpan riwayat import ke database
+        $riwayat = RiwayatImportExport::create([
+            'nama_file' => $originalFilename,
+            'tipe' => 'import',
+            'jenis' => 'mutasi',
+            'status' => 'processing',
+            'jumlah_data' => 0,
+            'jumlah_berhasil' => 0,
+            'jumlah_gagal' => 0,
+            'keterangan' => 'Import mutasi dimulai',
+            'user_id' => Auth::id()
+        ]);
+        
+        DB::beginTransaction();
+        
+        // Create import instance
+        $import = new MutasiImport($skipDuplicates);
+        
+        // Import the file
+        Excel::import($import, $file);
+        
+        // Get statistics
+        $stats = $import->getStats();
+        
+        DB::commit();
+        
+        $totalProcessed = $stats['imported'] + $stats['skipped'] + $stats['failed'];
+        
+        // Prepare response message
+        $message = "Import mutasi selesai. ";
+        $message .= "{$stats['imported']} data berhasil diimport";
+        
+        if ($stats['skipped'] > 0) {
+            $message .= ", {$stats['skipped']} data dilewati";
+        }
+        
+        if ($stats['failed'] > 0) {
+            $message .= ", {$stats['failed']} data gagal";
+        }
+        
+        // Update riwayat import
+        $status = $stats['failed'] > 0 ? 'warning' : 'success';
+        $keterangan = $message;
+        
+        if (!empty($stats['errors'])) {
+            $keterangan .= "\n\nDetail Error:\n" . implode("\n", array_slice($stats['errors'], 0, 5));
+            if (count($stats['errors']) > 5) {
+                $keterangan .= "\n... dan " . (count($stats['errors']) - 5) . " error lainnya";
+            }
+        }
+        
+        $riwayat->update([
+            'status' => $status,
+            'jumlah_data' => $totalProcessed,
+            'jumlah_berhasil' => $stats['imported'],
+            'jumlah_gagal' => $stats['failed'],
+            'jumlah_dilewati' => $stats['skipped'],
+            'keterangan' => $keterangan
+        ]);
+        
         return response()->json([
             'success' => true,
-            'message' => 'Import mutasi berhasil (demo)',
-            'total_records' => 0,
-            'success_records' => 0,
-            'skipped_records' => 0,
-            'failed_records' => 0,
-            'errors' => []
+            'message' => $message,
+            'total_records' => $totalProcessed,
+            'success_records' => $stats['imported'],
+            'skipped_records' => $stats['skipped'],
+            'failed_records' => $stats['failed'],
+            'errors' => $stats['errors'],
+            'riwayat_id' => $riwayat->id
         ]);
         
     } catch (\Exception $e) {
-        Log::error('Import mutasi error: ' . $e->getMessage());
+        DB::rollback();
+        
+        // Update riwayat jika ada error
+        if (isset($riwayat)) {
+            $riwayat->update([
+                'status' => 'failed',
+                'keterangan' => 'Import mutasi gagal: ' . $e->getMessage()
+            ]);
+        }
+        
+        Log::error('Import Mutasi error: ' . $e->getMessage(), [
+            'trace' => $e->getTraceAsString()
+        ]);
+        
         return response()->json([
             'success' => false,
-            'message' => 'Import mutasi belum diimplementasikan: ' . $e->getMessage()
-        ], 501);
+            'message' => 'Gagal import data mutasi: ' . $e->getMessage()
+        ], 500);
     }
 }
 
