@@ -1344,7 +1344,7 @@ function showMutasiTable(mutasis) {
 }
 
 
-// Perbaikan fungsi createTableRow dengan format data yang benar
+// Perbaikan fungsi createTableRow - Fokus pada ABK Turun
 function createTableRow(mutasi) {
     const tr = document.createElement('tr');
     
@@ -1384,6 +1384,37 @@ function createTableRow(mutasi) {
         periode = `${tmtDate.toLocaleDateString('id-ID')} - ${tatDate.toLocaleDateString('id-ID')}`;
     }
     
+    // PERBAIKAN: Logika ABK Turun yang lebih sederhana
+    let abkTurunHtml = '';
+    
+    // Cek berbagai kemungkinan field ABK turun
+    const namaAbkTurun = mutasi.nama_lengkap_turun || 
+                        mutasi.abk_turun?.nama || 
+                        mutasi.abk_turun?.nama_abk || 
+                        null;
+    
+    const jabatanTetapTurun = mutasi.jabatan_tetap_turun_nama || 
+                             mutasi.abk_turun?.jabatan_tetap || 
+                             mutasi.abk_turun?.jabatan_tetap_nama || 
+                             mutasi.jabatan_turun_nama ||
+                             '-';
+    
+    const jabatanMutasiTurun = mutasi.jabatan_mutasi_turun_nama || 
+                              mutasi.abk_turun?.jabatan_mutasi || 
+                              mutasi.abk_turun?.jabatan_mutasi_nama ||
+                              '-';
+    
+    if (namaAbkTurun) {
+        abkTurunHtml = `
+            <div class="fw-bold">${namaAbkTurun}</div>
+            <small class="text-muted">
+                ${jabatanTetapTurun} → ${jabatanMutasiTurun}
+            </small>
+        `;
+    } else {
+        abkTurunHtml = '<span class="text-muted">-</span>';
+    }
+    
     if (isSubmitted) {
         tr.classList.add('submitted');
     }
@@ -1408,14 +1439,7 @@ function createTableRow(mutasi) {
             </small>
         </td>
         <td>
-            ${mutasi.nama_lengkap_turun ? `
-                <div class="fw-bold">${mutasi.nama_lengkap_turun}</div>
-                <small class="text-muted">
-                    ${mutasi.jabatan_tetap_turun_nama || '-'} → ${mutasi.jabatan_mutasi_turun_nama || '-'}
-                </small>
-            ` : `
-                <span class="text-muted">-</span>
-            `}
+            ${abkTurunHtml}
         </td>
         <td>
             <span class="status-badge status-${mutasi.status_mutasi.toLowerCase()}">
@@ -1747,7 +1771,7 @@ window.openUploadModal = function(mutasiId) {
     }, 300);
 };
 
-// Tambahkan fungsi updateTableRow yang hilang
+// Tambahkan fungsi updateTableRow yang hilang - PERBAIKAN untuk ABK Turun
 function updateTableRow(mutasiId, updatedMutasi) {
     if (!dataTable) return;
     
@@ -1771,6 +1795,14 @@ function updateTableRow(mutasiId, updatedMutasi) {
                               updatedMutasi.dokumen.familisasi || 
                               updatedMutasi.dokumen.lampiran;
         
+        // Format periode dari TMT dan TAT
+        let periode = '-';
+        if (updatedMutasi.TMT && updatedMutasi.TAT) {
+            const tmtDate = new Date(updatedMutasi.TMT);
+            const tatDate = new Date(updatedMutasi.TAT);
+            periode = `${tmtDate.toLocaleDateString('id-ID')} - ${tatDate.toLocaleDateString('id-ID')}`;
+        }
+        
         if (isSubmitted) {
             tr.classList.add('submitted');
         }
@@ -1785,20 +1817,20 @@ function updateTableRow(mutasiId, updatedMutasi) {
                 ${isSubmitted ? '<br><small class="badge bg-success">Submitted</small>' : ''}
             </td>
             <td>
-                <div>${updatedMutasi.periode || '-'}</div>
+                <div>${periode}</div>
                 <small class="text-muted">${updatedMutasi.jenis_mutasi || 'Definitif'}</small>
             </td>
             <td>
-                <div class="fw-bold">${updatedMutasi.abk_naik.nama}</div>
+                <div class="fw-bold">${updatedMutasi.nama_lengkap_naik || updatedMutasi.abk_naik?.nama || '-'}</div>
                 <small class="text-muted">
-                    ${updatedMutasi.abk_naik.jabatan_tetap} → ${updatedMutasi.abk_naik.jabatan_mutasi}
+                    ${updatedMutasi.jabatan_tetap_naik_nama || updatedMutasi.abk_naik?.jabatan_tetap || '-'} → ${updatedMutasi.jabatan_mutasi_nama || updatedMutasi.abk_naik?.jabatan_mutasi || '-'}
                 </small>
             </td>
             <td>
-                ${updatedMutasi.abk_turun ? `
-                    <div class="fw-bold">${updatedMutasi.abk_turun.nama}</div>
+                ${(updatedMutasi.ada_abk_turun && (updatedMutasi.nama_lengkap_turun || updatedMutasi.abk_turun?.nama)) ? `
+                    <div class="fw-bold">${updatedMutasi.nama_lengkap_turun || updatedMutasi.abk_turun?.nama}</div>
                     <small class="text-muted">
-                        ${updatedMutasi.abk_turun.jabatan_tetap} → ${updatedMutasi.abk_turun.jabatan_mutasi}
+                        ${updatedMutasi.jabatan_tetap_turun_nama || updatedMutasi.abk_turun?.jabatan_tetap || '-'} → ${updatedMutasi.jabatan_mutasi_turun_nama || updatedMutasi.abk_turun?.jabatan_mutasi || '-'}
                     </small>
                 ` : `
                     <span class="text-muted">-</span>
