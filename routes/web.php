@@ -231,15 +231,7 @@ Route::middleware(['auth'])->prefix('abk')->name('abk.')->group(function () {
 
 // API endpoint for notifications
 Route::middleware(['auth'])->group(function() {
-    Route::get('/api/notifications', function() {
-        $notifications = \App\Models\Notification::where('user_id', auth()->id())
-            ->orderBy('created_at', 'desc')
-            ->get();
-        
-        return response()->json([
-            'notifications' => $notifications
-        ]);
-    })->name('api.notifications');
+    Route::get('/api/notifications', [NotificationController::class, 'getNotifications'])->name('api.notifications');
 });
 
 // Notification routes
@@ -251,8 +243,35 @@ Route::prefix('notifications')->name('notifications.')->middleware(['auth'])->gr
     Route::delete('/destroy-all', [NotificationController::class, 'destroyAll'])->name('destroy-all');
 });
 
+// Route testing (hapus setelah selesai testing)
+Route::get('/test-notification', function() {
+    try {
+        $notification = \App\Services\NotificationService::createTestNotification();
+        return response()->json([
+            'success' => true,
+            'message' => 'Test notification created successfully',
+            'notification' => $notification
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ], 500);
+    }
+})->middleware('auth');
+
 // Pastikan route untuk mutasi menggunakan resource lengkap
 Route::resource('mutasi', MutasiController::class);
 
 // Atau jika ingin lebih spesifik, tambahkan route delete:
 Route::delete('/mutasi/{id}', [MutasiController::class, 'destroy'])->name('mutasi.destroy');
+
+// Tambahkan di web.php jika route monitoring.index belum ada
+Route::middleware(['auth'])->prefix('monitoring')->name('monitoring.')->group(function () {
+    Route::get('/', function() {
+        // Redirect ke halaman yang sesuai, misalnya mutasi index
+        return redirect()->route('mutasi.index');
+    })->name('index');
+    
+    Route::get('/detail/{id}', [MonitoringController::class, 'detail'])->name('detail');
+});

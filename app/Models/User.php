@@ -12,6 +12,8 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    protected $table = 'users';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -23,6 +25,9 @@ class User extends Authenticatable
         'nama_admin',
         'email',
         'password',
+        'role',
+        'nama_admin',
+        'jabatan',
     ];
 
     /**
@@ -48,8 +53,21 @@ class User extends Authenticatable
         ];
     }
 
-    public function sertijab()
+    // Relasi dengan custom notifications table
+    public function customNotifications()
     {
-        return $this->hasMany(Sertijab::class, 'NRP_admin', 'NRP_admin');
+        return $this->hasMany(\App\Models\Notification::class);
+    }
+
+    // Method untuk mendapatkan unread notifications count dari custom table
+    public function getUnreadNotificationsCountAttribute()
+    {
+        return $this->customNotifications()->where('read', false)->count();
+    }
+
+    // Override method routeNotificationForDatabase untuk menggunakan custom table
+    public function routeNotificationForDatabase()
+    {
+        return $this->getKey();
     }
 }

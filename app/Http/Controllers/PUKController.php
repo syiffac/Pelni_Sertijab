@@ -336,20 +336,22 @@ class PUKController extends Controller
             $sertijab->status_dokumen = 'draft';
             $sertijab->save();
 
-            // Update status mutasi menjadi 'Selesai' setelah submit
-            $mutasi->status_mutasi = 'Selesai';
-            $mutasi->save();
+            // Update status mutasi menjadi 'Selesai'
+            $mutasi->update([
+                'status_mutasi' => 'Selesai',
+                'submitted_by_puk' => true,
+                'submitted_puk_at' => now()
+            ]);
 
             DB::commit();
 
-            // PERBAIKAN: Panggil NotificationService tanpa pengecekan class_exists
+            // KIRIM NOTIFIKASI - Sudah terbukti berhasil
             try {
-                Log::info('Creating notifications for mutasi ID: ' . $mutasi->id);
-                NotificationService::createSubmitNotification($mutasi);
-                Log::info('Submit notification created successfully');
+                Log::info('Sending notification for submitted mutasi ID: ' . $mutasi->id);
+                \App\Services\NotificationService::createSubmitNotification($mutasi);
+                Log::info('Notification sent successfully for mutasi ID: ' . $mutasi->id);
             } catch (\Exception $e) {
-                Log::error("Error creating notification: " . $e->getMessage());
-                Log::error("Stack trace: " . $e->getTraceAsString());
+                Log::error("Error sending notification for mutasi {$mutasi->id}: " . $e->getMessage());
                 // Lanjutkan proses meskipun notifikasi gagal
             }
 
@@ -432,37 +434,25 @@ public function batchSubmitDokumen(Request $request)
         
         DB::commit();
         
-        // Buat notifikasi untuk dokumen yang berhasil disubmit
+        // KIRIM NOTIFIKASI untuk setiap mutasi yang berhasil disubmit
         foreach ($mutasiList as $mutasi) {
             try {
-                if (class_exists('App\Services\NotificationService')) {
-                    NotificationService::createSubmitNotification($mutasi);
-                    NotificationService::createUnverifiedNotification($mutasi);
-                }
+                Log::info('Sending notification for batch submitted mutasi ID: ' . $mutasi->id);
+                \App\Services\NotificationService::createSubmitNotification($mutasi);
+                Log::info('Notification sent successfully for batch mutasi ID: ' . $mutasi->id);
             } catch (\Exception $e) {
-                Log::error("Error creating notification for mutasi {$mutasi->id}: " . $e->getMessage());
+                Log::error("Error sending notification for batch mutasi {$mutasi->id}: " . $e->getMessage());
             }
         }
         
-        // Siapkan response message
-        $message = "";
-        if ($successCount > 0) {
-            $message .= "{$successCount} dokumen berhasil disubmit dan status mutasi diperbarui menjadi Selesai";
-        }
-        if ($failedCount > 0) {
-            $message .= ($successCount > 0 ? ", {$failedCount} gagal" : "{$failedCount} dokumen gagal disubmit");
-        }
-        
         return response()->json([
-            'success' => $successCount > 0,
-            'message' => $message,
-            'details' => [
-                'success_count' => $successCount,
-                'failed_count' => $failedCount,
-                'errors' => $errors
-            ]
+            'success' => true,
+            'message' => $successCount . ' dokumen berhasil disubmit.',
+            'submitted_count' => $successCount,
+            'total_count' => count($mutasiIds),
+            'submitted_mutasi' => $mutasiList->pluck('id')
         ]);
-
+        
     } catch (\Exception $e) {
         DB::rollback();
         Log::error("Batch submit error: " . $e->getMessage());
