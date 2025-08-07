@@ -225,11 +225,6 @@
                                     </td>
                                     <td>
                                         <div class="action-buttons-mini">
-                                            <button class="btn-action btn-view" 
-                                                    onclick="viewMutasi({{ $mutasi->id }})"
-                                                    title="Lihat Detail">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
                                             <button class="btn-action btn-edit" 
                                                     onclick="editMutasi({{ $mutasi->id }})"
                                                     title="Edit Mutasi">
@@ -281,19 +276,6 @@
 </div>
 
 <!-- Modal Detail Mutasi -->
-<div class="modal fade" id="detailMutasiModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Detail Mutasi</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="detailMutasiContent">
-                <!-- Content will be loaded dynamically -->
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Modal Konfirmasi Hapus -->
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
@@ -736,16 +718,6 @@
     transition: var(--transition);
 }
 
-.btn-view {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.btn-view:hover {
-    background: #bfdbfe;
-    transform: scale(1.05);
-}
-
 .btn-edit {
     background: #fef3c7;
     color: #92400e;
@@ -987,56 +959,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // Global variable untuk menyimpan ID mutasi yang akan dihapus dan data row
 let mutasiToDelete = null;
 let mutasiRowData = null;
-
-function viewMutasi(id) {
-    // Show loading in modal
-    const modalContent = document.getElementById('detailMutasiContent');
-    modalContent.innerHTML = `
-        <div class="text-center py-4">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2 text-muted">Memuat detail mutasi...</p>
-        </div>
-    `;
-    
-    // Show modal first
-    const modal = new bootstrap.Modal(document.getElementById('detailMutasiModal'));
-    modal.show();
-    
-    // Load detail mutasi dengan URL yang benar
-    fetch(`{{ route('mutasi.index') }}/${id}`, {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            modalContent.innerHTML = data.html;
-        } else {
-            throw new Error(data.message || 'Gagal memuat detail mutasi');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        modalContent.innerHTML = `
-            <div class="alert alert-danger text-center">
-                <i class="bi bi-exclamation-triangle fs-1 text-danger mb-3"></i>
-                <h5>Gagal Memuat Detail</h5>
-                <p class="mb-0">${error.message}</p>
-            </div>
-        `;
-        showNotification('Gagal memuat detail mutasi', 'error');
-    });
-}
 
 function editMutasi(id) {
     // PERBAIKAN: Gunakan route helper yang benar
