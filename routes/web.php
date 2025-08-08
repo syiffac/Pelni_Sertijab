@@ -229,18 +229,17 @@ Route::middleware(['auth'])->prefix('abk')->name('abk.')->group(function () {
     Route::delete('/{id}', [ABKController::class, 'destroy'])->name('destroy');
 });
 
-// API endpoint for notifications
+// Notification routes - PERBAIKAN URUTAN ROUTE
 Route::middleware(['auth'])->group(function() {
+    // Route destroy-all HARUS SEBELUM route parameter {notification}
+    Route::delete('/notifications/destroy-all', [NotificationController::class, 'destroyAll'])->name('notifications.destroy-all');
+    
+    // Route lainnya
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    
+    // API endpoint
     Route::get('/api/notifications', [NotificationController::class, 'getNotifications'])->name('api.notifications');
-});
-
-// Notification routes
-Route::prefix('notifications')->name('notifications.')->middleware(['auth'])->group(function () {
-    Route::get('/', [NotificationController::class, 'index'])->name('index');
-    Route::get('/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
-    Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
-    Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-as-read');
-    Route::delete('/destroy-all', [NotificationController::class, 'destroyAll'])->name('destroy-all');
 });
 
 // Route testing (hapus setelah selesai testing)
