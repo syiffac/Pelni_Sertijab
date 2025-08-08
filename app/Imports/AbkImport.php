@@ -48,16 +48,10 @@ class AbkImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailu
                 return null;
             }
 
-            // Cari jabatan berdasarkan nama
-            $jabatanId = $this->getJabatanId($row['jabatan_tetap'] ?? '');
-            if (!$jabatanId) {
-                $jabatanId = 1; // Default jabatan jika tidak ditemukan
-            }
-
             $abk = ABKNew::create([
                 'id' => $row['id'],
                 'nama_abk' => $row['nama_abk'],
-                'id_jabatan_tetap' => $jabatanId,
+                'id_jabatan_tetap' => $row['id_jabatan_tetap'],
                 'status_abk' => $this->normalizeStatus($row['status_abk'] ?? 'Organik'),
             ]);
 
@@ -91,7 +85,7 @@ class AbkImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailu
                 }
             ],
             'nama_abk' => 'required|string|max:255|min:2',
-            'jabatan_tetap' => 'nullable|string|max:255',
+            'id_jabatan_tetap' => 'required|max:255',
             'status_abk' => 'nullable|string|in:Organik,Non Organik,Pensiun'
         ];
     }
